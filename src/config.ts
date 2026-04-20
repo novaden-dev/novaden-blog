@@ -1,6 +1,6 @@
 export const SITE = {
   website: "https://novaden.dev", // replace this with your deployed domain
-  author: "Sat Naing",
+  author: "NovaDen",
   profile: "https://satnaing.dev/",
   desc: "A minimal, responsive and SEO-friendly Astro blog theme.",
   title: "AstroPaper",
