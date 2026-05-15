@@ -1,0 +1,43 @@
+---
+import { getCollection } from "astro:content";
+import Main from "@/layouts/Main.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import getUniqueSeries from "@/utils/getUniqueSeries";
+import { SITE } from "@/config";
+
+const posts = await getCollection("blog");
+const seriesList = getUniqueSeries(posts);
+---
+
+<Layout title={`Series | ${SITE.title}`}>
+  <Header />
+  <Main
+    pageTitle="Series"
+    pageDesc="Multi-part series, ordered from the beginning."
+  >
+    {
+      seriesList.length === 0 ? (
+        <p class="opacity-70">No series yet.</p>
+      ) : (
+        <ul class="flex flex-col gap-4">
+          {seriesList.map(({ series, seriesName, count }) => (
+            <li>
+              <a
+                href={`/series/${series}`}
+                class="text-lg font-semibold hover:text-accent"
+              >
+                {seriesName}
+              </a>
+              <span class="ms-2 text-sm opacity-70">
+                ({count} {count === 1 ? "post" : "posts"})
+              </span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </Main>
+  <Footer />
+</Layout>

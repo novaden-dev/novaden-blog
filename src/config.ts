@@ -4,7 +4,7 @@ export const SITE = {
   profile: "https://novaden.dev/",
   desc: "Something is getting cooked.",
   title: "NovaDen",
-  ogImage: "astropaper-og.jpg",
+  ogImage: "og.png",
   lightAndDarkMode: true,
   postPerIndex: 4,
   postPerPage: 4,
