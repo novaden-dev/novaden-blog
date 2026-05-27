@@ -3,4 +3,4 @@ layout: ../layouts/AboutLayout.astro
 title: "About"
 ---
 
-Something is getting cooked.
+This is my notes hub. Part learning diary, part blog, part public scratchpad. Some of it is polished. Some of it is rough.

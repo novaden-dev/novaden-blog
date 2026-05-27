@@ -2,7 +2,7 @@ export const SITE = {
   website: "https://novaden.dev",
   author: "NovaDen",
   profile: "https://novaden.dev/",
-  desc: "Something is getting cooked.",
+  desc: "This is my notes hub. Part learning diary, part blog, part public scratchpad. Some of it is polished. Some of it is rough.",
   title: "NovaDen",
   ogImage: "og.png",
   lightAndDarkMode: true,
