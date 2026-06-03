@@ -1,0 +1,81 @@
+---
+import type { MarkdownHeading } from "astro";
+
+type Props = {
+  headings: MarkdownHeading[];
+};
+
+const { headings } = Astro.props;
+
+// Only surface section/subsection headings; deeper levels add noise.
+const tocHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
+---
+
+{
+  tocHeadings.length > 1 && (
+    <aside
+      id="toc"
+      aria-label="Table of contents"
+      data-pagefind-ignore
+      class="fixed top-24 left-[calc(50%+25rem)] hidden max-h-[calc(100vh-8rem)] w-56 overflow-y-auto xl:block"
+    >
+      <h2 class="mb-2 text-sm font-semibold text-foreground/80">Contents</h2>
+      <nav>
+        <ul class="space-y-1 text-sm">
+          {tocHeadings.map(heading => (
+            <li class:list={[{ "ms-3": heading.depth === 3 }]}>
+              <a
+                href={"#" + heading.slug}
+                data-toc-link={heading.slug}
+                class="toc-link block py-0.5 text-foreground/65 transition-colors hover:text-accent"
+              >
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </aside>
+  )
+}
+
+<script is:inline data-astro-rerun>
+  function initToc() {
+    const links = Array.from(document.querySelectorAll("[data-toc-link]"));
+    if (links.length === 0) return;
+
+    const linkBySlug = new Map(
+      links.map(link => [link.getAttribute("data-toc-link"), link])
+    );
+
+    const setActive = slug => {
+      for (const link of links) {
+        link.classList.toggle(
+          "text-accent",
+          link.getAttribute("data-toc-link") === slug
+        );
+        link.classList.toggle(
+          "font-medium",
+          link.getAttribute("data-toc-link") === slug
+        );
+      }
+    };
+
+    const headings = Array.from(linkBySlug.keys())
+      .map(slug => document.getElementById(slug))
+      .filter(Boolean);
+
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        }
+      },
+      { rootMargin: "0px 0px -75% 0px", threshold: 1 }
+    );
+
+    for (const heading of headings) observer.observe(heading);
+  }
+  initToc();
+  document.addEventListener("astro:after-swap", initToc);
+</script>
