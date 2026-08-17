@@ -5,9 +5,8 @@ title: Git Foundations
 slug: git-foundations
 featured: false
 draft: false
-tags:
-  - tech
-  - notes
+tags: ["tech"]
+category: notes
 description: The mental model behind Git. The three areas, commits as snapshots, branches as pointers, HEAD, remotes, merge vs rebase, and the reflog.
 ---
 

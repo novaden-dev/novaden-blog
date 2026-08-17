@@ -6,9 +6,8 @@ title: "Penetration Testing Fundamentals"
 slug: penetration-testing-process
 featured: false
 draft: false
-tags:
-  - security
-  - notes
+tags: ["security"]
+category: notes
 description: "What penetration testing is, the three engagement types (black, grey, white box), the domains you can test, and the process the work moves through."
 ---
 

@@ -5,10 +5,8 @@ title: Information Disclosure Vulnerabilities
 slug: information-disclosure
 featured: false
 draft: false
-tags:
-  - security
-  - web
-  - reconnaissance
+tags: ["security", "web"]
+category: notes
 description: An overview of Information Disclosure vulnerabilities, testing techniques, and remediation strategies.
 ---
 

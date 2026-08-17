@@ -5,10 +5,8 @@ title: OS Command Injection
 slug: os-command-injection
 featured: false
 draft: false
-tags:
-  - security
-  - injection
-  - osint
+tags: ["security", "web"]
+category: notes
 description: An overview of OS Command Injection, detection techniques, exploitation methods, and remediation strategies.
 ---
 

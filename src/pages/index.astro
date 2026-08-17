@@ -7,16 +7,59 @@ import Socials from "@/components/Socials.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import Card from "@/components/Card.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
+import getPostsByCategory from "@/utils/getPostsByCategory";
+import getPostsBySeries from "@/utils/getPostsBySeries";
+import { slugifyStr } from "@/utils/slugify";
+import { getPath } from "@/utils/getPath";
+import { CATEGORIES } from "@/utils/categories";
 import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
-import { SITE } from "@/config";
 import { SOCIALS } from "@/constants";
 
 const posts = await getCollection("blog");
 
 const sortedPosts = getSortedPosts(posts);
 const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
-const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+
+// The homepage is a map, not a feed: each content kind gets the shape that
+// matches how it's actually browsed.
+
+// Notes is a library you search by topic → surface its topics, not its
+// newest posts. Count tags across notes posts and sort by volume.
+const notesPosts = getPostsByCategory(posts, "notes");
+const topicCounts = new Map<string, { name: string; count: number }>();
+for (const post of notesPosts) {
+  for (const tag of post.data.tags) {
+    const slug = slugifyStr(tag);
+    const entry = topicCounts.get(slug) ?? { name: tag, count: 0 };
+    entry.count += 1;
+    topicCounts.set(slug, entry);
+  }
+}
+// Nicer labels for the format tags that double as useful browse entries.
+const TOPIC_LABELS: Record<string, string> = {
+  cheatsheet: "cheat sheets",
+  "tool-guide": "tool guides",
+};
+const notesTopics = Array.from(topicCounts.entries())
+  .map(([slug, { name, count }]) => ({
+    slug,
+    name: TOPIC_LABELS[slug] ?? name,
+    count,
+  }))
+  .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+// Homelab is a sequence you start at the beginning → a series strip.
+const homelabPosts = getPostsBySeries(posts, "homelab");
+const homelabFirst = homelabPosts.at(0);
+const homelabLast = homelabPosts.at(-1);
+
+// Journal entries are read newest-first → a short recent list. Exclude the
+// homelab series (it has its own strip) and anything already in Featured.
+const journalPosts = getPostsByCategory(posts, "journal");
+const recentEssays = journalPosts.filter(
+  ({ data }) => !data.series && !data.featured
+);
 ---
 
 <Layout>
@@ -59,10 +102,7 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
       featuredPosts.length > 0 && (
         <section
           id="featured"
-          class:list={[
-            "pt-12 pb-6",
-            { "border-b border-border": recentPosts.length > 0 },
-          ]}
+          class:list={["pt-12 pb-6", "border-b border-border"]}
         >
           <h2 class="text-2xl font-semibold tracking-wide">Featured</h2>
           <ul>
@@ -74,14 +114,102 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
       )
     }
 
+    {/* Notes → browse-by-topic map */}
     {
-      recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
-          <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
+      notesTopics.length > 0 && (
+        <section id="notes" class="border-b border-border pt-12 pb-8">
+          <div class="flex items-baseline justify-between gap-4">
+            <h2 class="text-2xl font-semibold tracking-wide">
+              <a href="/categories/notes/" class="hover:text-accent">
+                Notes
+              </a>
+            </h2>
+            <a
+              href="/categories/notes/"
+              class="text-sm whitespace-nowrap opacity-80 hover:text-accent"
+            >
+              Browse all {notesPosts.length} →
+            </a>
+          </div>
+          <p class="mt-1 mb-4 opacity-80">{CATEGORIES.notes.description}</p>
+          <ul class="flex flex-wrap gap-2.5">
+            {notesTopics.map(topic => (
+              <li>
+                <a
+                  href={`/tags/${topic.slug}/`}
+                  class="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:border-accent hover:text-accent"
+                >
+                  <span>{topic.name}</span>
+                  <span class="opacity-60">{topic.count}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {/* Homelab → series strip with a clear starting point */}
+    {
+      homelabPosts.length > 0 && homelabFirst && (
+        <section id="homelab" class="border-b border-border pt-12 pb-8">
+          <div class="flex items-baseline justify-between gap-4">
+            <h2 class="text-2xl font-semibold tracking-wide">
+              <a href="/series/homelab/" class="hover:text-accent">
+                The Homelab Saga
+              </a>
+            </h2>
+            <a
+              href="/series/homelab/"
+              class="text-sm whitespace-nowrap opacity-80 hover:text-accent"
+            >
+              All {homelabPosts.length} parts →
+            </a>
+          </div>
+          <p class="mt-1 mb-4 opacity-80">
+            A running build log — from a mini-PC bought instead of therapy to a
+            governed cluster.
+          </p>
+          <a
+            href={getPath(homelabFirst.id, homelabFirst.filePath)}
+            class="group inline-flex items-baseline gap-2 text-lg font-medium text-accent"
+          >
+            <span class="decoration-dashed underline-offset-4 group-hover:underline">
+              Start at the beginning — {homelabFirst.data.title}
+            </span>
+            <IconArrowRight class="inline-block size-4 rtl:-rotate-180" />
+          </a>
+          {homelabLast && (
+            <p class="mt-1 text-sm opacity-70">
+              {homelabPosts.length} parts so far, up to {homelabLast.data.title}.
+            </p>
+          )}
+        </section>
+      )
+    }
+
+    {/* Journal → short recent list (chronological is right here) */}
+    {
+      recentEssays.length > 0 && (
+        <section id="journal" class="pt-12 pb-6">
+          <div class="flex items-baseline justify-between gap-4">
+            <h2 class="text-2xl font-semibold tracking-wide">
+              <a href="/categories/journal/" class="hover:text-accent">
+                Journal
+              </a>
+            </h2>
+            <a
+              href="/categories/journal/"
+              class="text-sm whitespace-nowrap opacity-80 hover:text-accent"
+            >
+              Browse all {journalPosts.length} →
+            </a>
+          </div>
+          <p class="mt-1 mb-2 opacity-80">{CATEGORIES.journal.description}</p>
           <ul>
-            {recentPosts.map(
+            {recentEssays.map(
               (data, index) =>
-                index < SITE.postPerIndex && <Card variant="h3" {...data} />
+                index < 3 && <Card variant="h3" {...data} />
             )}
           </ul>
         </section>

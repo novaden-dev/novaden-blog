@@ -5,10 +5,8 @@ title: File Upload Vulnerabilities
 slug: file-upload-vulnerabilities
 featured: false
 draft: false
-tags:
-  - security
-  - web
-  - file-system
+tags: ["security", "web"]
+category: notes
 description: An overview of File Upload vulnerabilities, bypass techniques, and remediation strategies.
 ---
 

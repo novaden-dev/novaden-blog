@@ -26,3 +26,6 @@ pnpm-debug.log*
 # pagefind
 
 public/pagefind
+
+# temporary content backups pending deletion
+_TO_BE_DELETED_*/

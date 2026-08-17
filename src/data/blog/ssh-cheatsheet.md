@@ -5,12 +5,8 @@ title: SSH Cheat Sheet
 slug: ssh-cheatsheet
 featured: false
 draft: false
-tags:
-  - linux
-  - networking
-  - security
-  - cheatsheet
-  - notes
+tags: ["linux", "networking", "security", "cheatsheet"]
+category: notes
 description: A quick-reference of the SSH commands I actually use, from key generation and copying through port forwarding, file transfer, jump hosts, and sshd hardening.
 ---
 

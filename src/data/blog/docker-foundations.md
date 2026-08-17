@@ -5,10 +5,8 @@ title: Docker Foundations
 slug: docker-foundations
 featured: false
 draft: false
-tags:
-  - containers
-  - docker
-  - notes
+tags: ["containers"]
+category: notes
 description: The mental model behind Docker. What containers actually are, how they differ from VMs, image layers, the Dockerfile, networking, volumes, and registries.
 ---
 

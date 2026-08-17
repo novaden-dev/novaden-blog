@@ -8,19 +8,26 @@ The goal: a repeatable system that scales across many certifications and topics,
 
 ---
 
-## The Three Post Archetypes
+## Categories and Archetypes
 
-Every post on this blog is one of three things. Mixing them is the main thing to avoid.
+Every post has a **category** — its *kind*, set in frontmatter as `category:`. This is the primary axis the site navigates by. There are three, split by how a post is **read**, not what it's **about**:
 
-| Archetype | Job | Voice | Lives in |
+| Category | The reader… | Voice | Examples |
+|---|---|---|---|
+| **Notes** | *looks it up* — returns to it mid-task | Third-person, evergreen | nmap, ssh, linux, web vulns, cheat sheets |
+| **Journal** | *reads it* — once, start to finish | First-person, time-bound | the homelab saga, "Why I hate LinkedIn", a job-hunt story, a Redis war story |
+| **Cert Reviews** | *reads it* to decide on a cert | First-person | an OSCP review |
+
+The split is by **shape, not subject**. "How Redis improved a system I built" is deeply technical, but it's a *story you read start to finish*, so it's **Journal** — while a Redis cheat sheet is **Notes**. The same topic can live in both; only the category differs (subject is carried by tags). Naming the category by subject (e.g. "Technical") was rejected: it strands the first evergreen-but-non-technical post — a salary-negotiation guide is Notes, not Journal. See [Decisions Made](#decisions-made).
+
+Within **Notes**, a post takes one of two shapes. Mixing them is the main thing to avoid:
+
+| Shape | Job | Voice | Lives in |
 |---|---|---|---|
 | **Atom** | Teach one concept | Third-person, instructional | `src/data/blog/<topic>-<concept>.md` |
 | **Cheat sheet** | Quick-reference real commands for one task family | Third-person, terse | `src/data/blog/<topic>-cheatsheet.md` |
-| **Cert review** | Meta / journey post about a certification | First-person | `src/data/blog/<cert>-review.md` |
 
-Knowledge lives in **atoms**. Commands you'd type live in **cheat sheets**. Personal experience and course reviews live in **cert reviews**. Cert reviews link to atoms; they do not re-teach.
-
-A fourth informal category exists: **personal / journey posts** (homelab series, life, career). These follow the same formatting and tagging rules as other posts but don't fit one of the three archetypes above.
+Knowledge lives in **atoms**. Commands you'd type live in **cheat sheets**. **Cert Reviews** are their own category (first-person; review and journey, zero teaching) — they link to atoms, never re-teach. **Journal** posts (homelab, life, career, opinions, war stories) follow the same formatting and tagging rules as everything else; they're simply the *read-once* kind.
 
 ---
 
@@ -171,50 +178,40 @@ The atoms-vs-courses problem: every certification covers some material you've al
 - If the cert covers a gap your atom doesn't address, expand the atom or write a new atom for the gap.
 - The cert review is the curator, not the content.
 
-So a Linux explainer that you happened to write while studying CDP is still `[linux, notes]`, not `[cdp, linux, notes]`. The CDP cert review is `[cdp, certification]` and links to that atom. Writing OSCP later, you reuse the same atom; the new cert review links to it again.
+So a Linux explainer that you happened to write while studying CDP is still `category: notes` + `[linux]`, not `[cdp, linux]`. The CDP cert review is `category: cert-review` + `[cdp, devsecops]` and links to that atom. Writing OSCP later, you reuse the same atom; the new cert review links to it again.
 
 ---
 
 ## Tag Scheme
 
-Tags split across **three independent axes**. A post can have one or more tags from each.
+The **category** (above) is its own frontmatter field, not a tag — it carries the *kind* axis. Tags carry the two remaining axes.
 
 ### Axis 1: Topic tags (1 or more, open vocabulary)
-What the post is *about*. The primary filter readers use.
+What the post is *about*. The primary filter readers use, and **shared across categories** — a `redis` Note and a `redis` Journal post carry the same tag; only `category` differs.
 
-Examples in use today: `linux`, `security`, `tech`, `personal`, `fundamentals`, `homelab`, `web`, `containers`, `kubernetes`, `networking`, `iac`, `cloud`, `cdp`, `oscp`, `active-directory`, `htb`.
+Examples in use today: `security`, `web`, `linux`, `networking`, `devsecops`, `containers`, `android`, `fedora`, `selfhosting`, `tech`, `git`. Journal-leaning topics that will grow as you write: `career`, `life`. `fundamentals` stays available for tool-agnostic explainers that don't fit a more specific topic (e.g. HDD vs SSD).
 
 **Rules:**
 
 - Every post has at least one topic tag.
 - Pick the most specific tag that's useful. `linux` beats `tech` for a Linux-specific post. `kubernetes` beats `containers` when it's specifically k8s.
-- Cert names ARE topic tags. A CDP cert review is tagged `cdp`. Content that incidentally appeared in the CDP curriculum is **not** — it's tagged by what it teaches (`linux`, `containers`, etc.).
-- Open vocabulary, but resist thin tags. If you'd only ever use a tag for one post, fold it into a broader one. Promote a tag to standalone once it covers 5+ posts.
+- Cert names ARE topic tags on cert reviews. An OSCP review is tagged `oscp`. Content that incidentally appeared in the OSCP curriculum is **not** — it's tagged by what it teaches (`linux`, `active-directory`, etc.).
+- Open vocabulary, but resist thin tags. Fold a tag used on fewer than ~5 posts into a broader one; promote it to standalone once it earns 5+. (`selfhosting` earned promotion at 9 homelab/teardown posts; `injection`, `cache`, `file-system`, `reconnaissance` were folded into `security`/`web`.)
 
-### Axis 2: Format tags (0 or 1)
-The *shape* of the post. Optional.
+### Axis 2: Format tags (0 or 1) — Notes only
+The *shape* of a Note. Optional.
 
 | Tag | When to add | Example |
 |-----|-------------|---------|
-| `writeups` | Step-by-step compromise of a specific machine or lab, with console output | HTB Nibbles compromise |
 | `cheatsheet` | Terse reference, mostly command dumps and syntax tables, assumes you know the tool | Linux cheat sheet |
 | `tool-guide` | Tutorial that teaches a specific tool end-to-end (intro prose + commands + flag explanations) | A from-scratch hydra or nmap walkthrough |
+| `writeups` | Step-by-step compromise of a specific machine or lab, with console output | HTB Nibbles compromise |
 
 **`cheatsheet` vs `tool-guide`:** both cover tools, but reader intent differs. Cheat sheets are for reference while working ("what flag do I need?"). Tool guides are for learning ("how do I use this tool?"). If a file opens with "X is a Y used for Z" and walks through usage with context, it's `tool-guide`. If it's mostly commands with minimal prose, it's `cheatsheet`.
 
-Format tags are mutually exclusive in practice. A post is `writeups`, `cheatsheet`, OR `tool-guide`, not two.
+Format tags are mutually exclusive in practice. A post is `cheatsheet`, `tool-guide`, OR `writeups` — or none (a plain atom has no format tag).
 
-### Axis 3: Meta tags (0 or 1)
-The *role* of the post in the content system.
-
-| Tag | When to add |
-|-----|-------------|
-| `notes` | Knowledge content. Atoms and cheat sheets. The post teaches a concept, explains a model, or serves as reference. |
-| `certification` | Cert reviews. The post is about your experience taking a certification. |
-
-Meta tags are mutually exclusive: a post is either `notes` (knowledge) or `certification` (cert review), not both.
-
-Personal posts, journey posts (homelab series), and life content get **no meta tag**. The absence of a meta tag signals "this is not knowledge content or a cert review."
+> **Retired:** the old `notes` / `certification` **meta** tags are gone. They encoded the post's *kind* via the tag list; that job now belongs to the `category` field. Don't add them — `category: notes` and `category: cert-review` carry the same signal, cleanly separated from topic.
 
 ---
 
@@ -222,39 +219,38 @@ Personal posts, journey posts (homelab series), and life content get **no meta t
 
 Numbered for use as a decision aid when you're tagging a post:
 
-1. **Pick the topic tag(s) first.** Always at least one. Pick the most specific useful one. Add more if multiple topics genuinely apply (e.g. `[linux, fedora]` for a Fedora-specific Linux post).
-2. **Add a format tag only if the post is clearly a writeup, cheat sheet, or tool guide.** Most atoms don't get a format tag.
-3. **Add the meta tag if applicable:** `notes` for atoms and cheat sheets; `certification` for cert reviews. Personal and journey posts get no meta tag.
-4. **Format tags and meta tags never stand alone.** Every post has at least one topic tag.
+1. **Set the category first.** `notes`, `journal`, or `cert-review`. Decide by *shape* — is this looked-up (Notes) or read-once (Journal / Cert Review)? — not by subject.
+2. **Pick the topic tag(s).** Always at least one. Pick the most specific useful one. Add more if multiple topics genuinely apply (e.g. `[linux, fedora]` for a Fedora-specific post).
+3. **Add a format tag only if it's a Note with a clear shape:** `cheatsheet`, `tool-guide`, or `writeups`. Most atoms get none.
+4. **Format tags never stand alone.** Every post has at least one topic tag.
 5. **`cheatsheet` vs `tool-guide`:** apply the reader-intent test in the section above.
-6. **Series go in `series:` + `seriesOrder:` frontmatter, never as tags.** No `homelab` tag — the homelab series is structurally grouped by the series field, with `tech` as the topic tag.
+6. **Series go in `series:` + `seriesOrder:` frontmatter, never as tags.** Series is orthogonal to category — a Journal post (the homelab saga) or a Note can belong to one. No `homelab` tag: the series field groups the saga, and `selfhosting` carries the subject.
 7. **Drafts use Astro's `draft: true` frontmatter, not a tag.** Status is not a topic.
 
 ---
 
 ## Worked Examples
 
-| Content | Tags |
-|---|---|
-| Linux foundations atom | `[linux, notes]` |
-| Linux cheat sheet | `[linux, cheatsheet, notes]` |
-| HTB Nibbles writeup | `[security, htb, writeups, notes]` |
-| OSCP info-gathering command dump | `[security, oscp, cheatsheet, notes]` |
-| Hydra from-scratch walkthrough | `[security, tool-guide, notes]` |
-| Nmap tool walkthrough | `[security, networking, tool-guide, notes]` |
-| Git rebase reference | `[tech, cheatsheet, notes]` |
-| AD exploitation guide (prose explainer) | `[security, active-directory, notes]` |
-| HDD vs SSD explainer | `[fundamentals, notes]` |
-| TCP/IP explainer | `[networking, fundamentals, notes]` |
-| CDP cert review | `[cdp, devsecops, certification]` |
-| OSCP cert review | `[oscp, security, certification]` |
-| Windows-to-Fedora migration story | `[linux, fedora, personal]` |
-| Resume strategy | `[personal]` |
-| "What's cooking" blog intro | `[personal]` |
-| Tearing it down (homelab retrospective) | `[tech, personal]` |
-| Homelab v1.0 (part of series) | `[tech]` + `series: homelab, seriesOrder: 1.0` |
+| Content | `category` | `tags` |
+|---|---|---|
+| Linux foundations atom | `notes` | `[linux]` |
+| Linux cheat sheet | `notes` | `[linux, cheatsheet]` |
+| Nmap tool walkthrough | `notes` | `[security, networking, tool-guide]` |
+| Web cache deception explainer | `notes` | `[security, web]` |
+| Git rebase reference | `notes` | `[tech, cheatsheet]` |
+| OSCP info-gathering command dump | `notes` | `[security, oscp, cheatsheet]` |
+| HTB Nibbles writeup | `notes` | `[security, htb, writeups]` |
+| HDD vs SSD explainer | `notes` | `[fundamentals]` |
+| "How Redis improved a system I built" | `journal` | `[redis]` |
+| Why I hate LinkedIn | `journal` | `[career]` |
+| Finding-a-job journey | `journal` | `[career]` |
+| Windows-to-Fedora migration story | `journal` | `[linux, fedora]` |
+| Tearing it down (homelab retrospective) | `journal` | `[selfhosting]` |
+| Homelab v1.0 (part of series) | `journal` | `[selfhosting]` + `series: homelab, seriesOrder: 1.0` |
+| OSCP cert review | `cert-review` | `[oscp, security]` |
+| CDP cert review | `cert-review` | `[cdp, devsecops]` |
 
-Note: `fundamentals` is still a useful topic tag for tool-agnostic explainers that don't fit a more specific topic (e.g. HDD vs SSD). But for things that DO have a specific topic (`linux`, `kubernetes`, `networking`), use the specific one.
+Note the Redis pair: a Redis cheat sheet is `notes` + `[redis, cheatsheet]`, the war story is `journal` + `[redis]`. Same topic, different category. And `fundamentals` stays useful for tool-agnostic explainers that don't fit a more specific topic — but when a specific topic exists (`linux`, `kubernetes`, `networking`), use it.
 
 ---
 
@@ -262,18 +258,19 @@ Note: `fundamentals` is still a useful topic tag for tool-agnostic explainers th
 
 These document *what was decided and why*, including rejected alternatives. They exist to prevent re-litigating settled questions.
 
+- **`category` is a first-class field — the *kind* axis.** It replaces the old `notes`/`certification` meta tags, which tried to encode a post's kind inside the tag list. Three values: `notes`, `journal`, `cert-review`. Kind drives navigation (the homepage and `/categories` are built on it); subject (tags) and shape (format tags) are separate axes that no longer have to share slots with it.
+- **Categories named by *shape*, not *subject*.** "Notes vs Journal" = looked-up vs read-once. Rejected alternatives: **"Technical"** (strands the first evergreen-but-non-technical post — a salary-negotiation guide is reference-shaped but not technical) and **"Personal"** (mislabels a technical war story like "How Redis improved my system," which is read-once → Journal, not personal-life). The defining trait is how a post is read, not what it's about; subject lives in tags. This is the same function-vs-subject reasoning that keeps the atom/cheat-sheet split clean.
+- **Meta tags (`notes`, `certification`) retired** into `category`. A `[linux]` explainer (`category: notes`) and a `[linux]` Linux-journey post (`category: journal`) are now distinguished by the field, not by a tag.
+- **`selfhosting` promoted to a real topic tag** (9 homelab + teardown posts, past the 5+ threshold). It replaces the blanket `tech` tag on homelab content. The `series: homelab` field still groups the saga; the tag now carries the actual subject.
 - **Open topic vocabulary** (not a closed subject set). Closed 4-subject vocab (`fundamentals`/`security`/`tech`/`personal`) was too coarse: `linux` is more useful than `fundamentals` for filtering. Open vocab is more granular, future-proof, and aligns with how readers actually search.
-- **Three independent axes** (topic + format + meta). Meta tags carry signal orthogonal to subject and format. They distinguish "this is knowledge content" from "this is personal" even when both could share a topic tag.
-- **`notes` meta tag.** Separates knowledge content from personal/journey posts. Without it, a `[linux]`-tagged Linux explainer and a `[linux]`-tagged "my Linux journey" post are indistinguishable.
-- **`certification` meta tag.** Separates cert reviews from other content. Lets readers find all cert reviews via one tag.
-- **Cert names ARE topic tags for cert reviews.** A CDP cert review is `[cdp, certification]`. But content that incidentally appeared in the CDP curriculum is NOT tagged `cdp` — it's tagged by what it teaches. This keeps atoms reusable across certs.
+- **Cert names ARE topic tags for cert reviews.** An OSCP cert review is `category: cert-review` + `[oscp, security]`. But content that incidentally appeared in the OSCP curriculum is NOT tagged `oscp` — it's tagged by what it teaches. This keeps atoms reusable across certs.
 - **No `cert-prep` tag.** The cert boundary is not a topic. Atoms tag by their actual topic (`linux`, `active-directory`, etc.).
-- **No `homelab` tag.** Homelab content uses `series: homelab` + `seriesOrder:` frontmatter, tagged `tech`. Series grouping replaces the tag need.
+- **No `homelab` tag.** Homelab content uses `series: homelab` + `seriesOrder:` frontmatter, tagged `selfhosting`. Series grouping replaces the tag need.
 - **No `draft` tag.** Use Astro's `draft: true` frontmatter. Status is not a topic.
 - **No `web-security` sub-tag.** Folded into `security` until web content reaches 5+ posts. Splitting creates thin tags.
 - **No offensive/defensive security split.** Current corpus is 95% offensive; revisit when defensive posts reach 5+.
 - **No `infrastructure` or `product` tag.** Too thin on their own; folded into `tech`.
-- **Format tags and meta tags never stand alone.** Every post has at least one topic tag.
+- **Format tags never stand alone.** Every post has at least one topic tag.
 
 ---
 
@@ -286,7 +283,8 @@ pubDatetime: 2026-05-27T00:00:00Z
 modDatetime: 2026-05-27T00:00:00Z   # optional; set when significantly revised
 title: "..."
 slug: "..."                          # must match filename minus .md
-tags: ["linux", "notes"]             # topic + optional format + optional meta
+category: notes                      # notes | journal | cert-review
+tags: ["linux"]                      # topic (1+) + optional format tag (Notes only)
 description: "One concrete sentence describing what's in this post."
 draft: false                         # true for stubs / work-in-progress
 series: "homelab"                    # optional, only for series posts
@@ -299,7 +297,7 @@ featured: false
 
 ## Series Support
 
-The taxonomy has no "series" tag by design. Series is a **structural** concept, not a topic. For multi-part content like the 14-post Novaden homelab sequence (v0.1, v1.1, …), the Astro content schema has two optional fields.
+The taxonomy has no "series" tag by design. Series is a **structural** concept — orthogonal to category. Any kind can be a series: the homelab saga is `category: journal` + `series: homelab`, and a future multi-part Active Directory deep-dive could be `category: notes` + `series: ad-attacks`. For multi-part content like the Novaden homelab sequence (v0.1, v1.1, …), the Astro content schema has two optional fields.
 
 **Schema** (in `src/content.config.ts`):
 
@@ -311,16 +309,17 @@ seriesOrder: z.number().optional(),
 **Usage:**
 
 ```yaml
-tags: ["tech"]
+category: journal
+tags: ["selfhosting"]
 series: "homelab"
 seriesOrder: 0.1
 ```
 
 **Current series:**
 
-| Series slug | Source | Count | Topic tag |
-|-------------|--------|-------|-----------|
-| `homelab` | `SecondBrain/.../Novaden/v*.md` | 14 | `tech` |
+| Series slug | Category | Count | Topic tag |
+|-------------|----------|-------|-----------|
+| `homelab` | `journal` | 7 (more pending migration) | `selfhosting` |
 
 Series pages (e.g. `/series/homelab`) are an Astro dynamic route; the schema extension is the prerequisite. Do not invent a topic tag for a series — the series field replaces that need.
 
@@ -404,7 +403,7 @@ Subfolders (`notes/`, `certifications/`) are a future option when post count jus
 1. List every concept the cert covered.
 2. For each, check: does an atom exist? If yes, link to it. If no, write the missing atom first (tagged by topic, not by cert).
 3. Write the review post with links, opinions, and experience. No teaching.
-4. Tag it `[<cert>, certification]` plus any relevant topic tags (e.g. `devsecops`, `security`).
+4. Set `category: cert-review` and tag it `[<cert>, …]` plus any relevant topic tags (e.g. `devsecops`, `security`).
 
 ---
 
@@ -460,15 +459,15 @@ The blog corpus is partially migrated. The remaining batch is pending.
 
 For every new post:
 
-- [ ] Archetype is clear: atom, cheat sheet, cert review, or personal/journey
+- [ ] `category` is set: `notes`, `journal`, or `cert-review` (decided by shape — looked-up vs read-once)
+- [ ] If a Note, its shape is clear: atom or cheat sheet
 - [ ] If atom: there is a concept being taught (not just commands listed)
 - [ ] If cheat sheet: every command has a `# what you want` comment above it, with real values
 - [ ] If cert review: zero teaching; only review + links to atoms
-- [ ] Voice matches archetype (third-person for atoms/cheat sheets, first-person for cert reviews and journeys)
+- [ ] Voice matches the kind (third-person for Notes, first-person for Journal and Cert Reviews)
 - [ ] At least one topic tag, picked at the most specific useful level
-- [ ] Format tag (`writeups`/`cheatsheet`/`tool-guide`) added only if the shape matches
-- [ ] Meta tag added: `notes` for atoms/cheat sheets, `certification` for cert reviews, nothing for personal/journey
-- [ ] No format or meta tag standing alone (every post has at least one topic tag)
+- [ ] Format tag (`cheatsheet`/`tool-guide`/`writeups`) added only if it's a Note whose shape matches
+- [ ] No format tag standing alone (every post has at least one topic tag); no retired `notes`/`certification` meta tags
 - [ ] Series posts use `series:` + `seriesOrder:` frontmatter, not a series tag
 - [ ] Atom links to its cheat sheet; cheat sheet links back to its atom(s)
 - [ ] Frontmatter is complete and `description` is one concrete sentence

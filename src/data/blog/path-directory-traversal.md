@@ -5,10 +5,8 @@ title: Path/Directory Traversal
 slug: path-directory-traversal
 featured: false
 draft: false
-tags:
-  - security
-  - web
-  - file-system
+tags: ["security", "web"]
+category: notes
 description: An overview of Path/Directory Traversal vulnerabilities, exploitation techniques, and remediation strategies.
 ---
 

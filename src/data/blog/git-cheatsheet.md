@@ -5,10 +5,8 @@ title: Git Cheat Sheet
 slug: git-cheatsheet
 featured: false
 draft: false
-tags:
-  - tech
-  - cheatsheet
-  - notes
+tags: ["tech", "cheatsheet"]
+category: notes
 description: A growing quick-reference of the Git commands I actually reach for. Staging, branching, rebasing, undoing things, and recovering from a bad day.
 ---
 

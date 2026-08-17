@@ -5,10 +5,8 @@ title: Linux Cheat Sheet
 slug: linux-cheatsheet
 featured: false
 draft: false
-tags:
-  - linux
-  - cheatsheet
-  - notes
+tags: ["linux", "cheatsheet"]
+category: notes
 description: A growing quick-reference of the Linux commands I actually reach for day to day, from navigation and search to processes, services, and packages.
 ---
 

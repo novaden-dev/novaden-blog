@@ -5,10 +5,8 @@ title: Server-Side Request Forgery (SSRF)
 slug: server-side-request-forgery
 featured: false
 draft: false
-tags:
-  - security
-  - web
-  - network
+tags: ["security", "web"]
+category: notes
 description: An overview of Server-Side Request Forgery (SSRF) vulnerabilities, bypass techniques, and remediation strategies.
 ---
 

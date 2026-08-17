@@ -5,10 +5,8 @@ title: NoSQL Injection
 slug: nosql-injection
 featured: false
 draft: false
-tags:
-  - security
-  - databases
-  - injection
+tags: ["security", "web"]
+category: notes
 description: An overview of NoSQL Injection types, identification techniques, and remediation strategies.
 ---
 

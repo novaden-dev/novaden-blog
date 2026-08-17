@@ -5,9 +5,8 @@ title: Linux Foundations
 slug: linux-foundations
 featured: false
 draft: false
-tags:
-  - linux
-  - notes
+tags: ["linux"]
+category: notes
 description: The mental model behind Linux. Components, distributions, filesystem hierarchy, the shell, paths, redirection, and the permissions system.
 ---
 
