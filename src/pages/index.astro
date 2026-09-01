@@ -3,32 +3,37 @@ import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Socials from "@/components/Socials.astro";
-import LinkButton from "@/components/LinkButton.astro";
-import Card from "@/components/Card.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
 import getPostsByCategory from "@/utils/getPostsByCategory";
 import getPostsBySeries from "@/utils/getPostsBySeries";
 import { slugifyStr } from "@/utils/slugify";
 import { getPath } from "@/utils/getPath";
 import { CATEGORIES } from "@/utils/categories";
-import IconRss from "@/assets/icons/IconRss.svg";
-import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
-import { SOCIALS } from "@/constants";
+import { OSCP, NOW, GITBOOK } from "@/constants";
+import { SITE } from "@/config";
+import "@/styles/landing.css";
+
+// The front door is a router, not a feed: it says what lives here and hands
+// you the right entrance. The feed is /posts.
 
 const posts = await getCollection("blog");
-
 const sortedPosts = getSortedPosts(posts);
-const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
 
-// The homepage is a map, not a feed: each content kind gets the shape that
-// matches how it's actually browsed.
-
-// Notes is a library you search by topic → surface its topics, not its
-// newest posts. Count tags across notes posts and sort by volume.
 const notesPosts = getPostsByCategory(posts, "notes");
+const journalPosts = getPostsByCategory(posts, "journal");
+const homelabPosts = getPostsBySeries(posts, "homelab");
+const featuredPosts = sortedPosts
+  .filter(({ data }) => data.featured)
+  .slice(0, 3);
+const latestPosts = sortedPosts.slice(0, 5);
+
+const projects = (
+  await getCollection("projects", ({ data }) => !data.draft)
+).sort((a, b) => a.data.order - b.data.order);
+
+// Topic counts across everything, biggest first.
 const topicCounts = new Map<string, { name: string; count: number }>();
-for (const post of notesPosts) {
+for (const post of sortedPosts) {
   for (const tag of post.data.tags) {
     const slug = slugifyStr(tag);
     const entry = topicCounts.get(slug) ?? { name: tag, count: 0 };
@@ -36,12 +41,11 @@ for (const post of notesPosts) {
     topicCounts.set(slug, entry);
   }
 }
-// Nicer labels for the format tags that double as useful browse entries.
 const TOPIC_LABELS: Record<string, string> = {
   cheatsheet: "cheat sheets",
   "tool-guide": "tool guides",
 };
-const notesTopics = Array.from(topicCounts.entries())
+const topics = Array.from(topicCounts.entries())
   .map(([slug, { name, count }]) => ({
     slug,
     name: TOPIC_LABELS[slug] ?? name,
@@ -49,189 +53,682 @@ const notesTopics = Array.from(topicCounts.entries())
   }))
   .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
-// Homelab is a sequence you start at the beginning → a series strip.
-const homelabPosts = getPostsBySeries(posts, "homelab");
-const homelabFirst = homelabPosts.at(0);
-const homelabLast = homelabPosts.at(-1);
+// "Homelab v1.2 — The Supply Chain" reads better split into a version badge
+// and a title, which is also how the series is actually navigated.
+const homelabParts = homelabPosts.map((post, i) => {
+  const match = post.data.title.match(/^Homelab\s+(v[\d.]+)\s*[—–-]\s*(.+)$/);
+  return {
+    href: getPath(post.id, post.filePath),
+    version: match?.[1] ?? `${i + 1}`,
+    title: match?.[2] ?? post.data.title,
+  };
+});
+const homelabStart = homelabParts[0]?.href ?? "/series/homelab/";
 
-// Journal entries are read newest-first → a short recent list. Exclude the
-// homelab series (it has its own strip) and anything already in Featured.
-const journalPosts = getPostsByCategory(posts, "journal");
-const recentEssays = journalPosts.filter(
-  ({ data }) => !data.series && !data.featured
-);
+const newestDate = sortedPosts.at(0)?.data.pubDatetime;
+const updatedStamp = newestDate
+  ? newestDate.toLocaleDateString("en-GB", {
+      month: "short",
+      year: "numeric",
+      timeZone: SITE.timezone,
+    })
+  : "";
+
+const fmtDate = (date: Date) =>
+  date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: SITE.timezone,
+  });
+
+const description =
+  "Security notes, small apps, and a homelab build log. Some of it is polished. Most of it is me finding out in public.";
 ---
 
-<Layout>
-  <Header />
-  <main id="main-content" data-layout="index" class="app-layout">
-    <section id="hero" class:list={["pt-8 pb-6", "border-b border-border"]}>
-      <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
-        NovaDen
-      </h1>
-      <a
-        target="_blank"
-        href="/rss.xml"
-        class="inline-block"
-        aria-label="rss feed"
-        title="RSS Feed"
-      >
-        <IconRss
-          width={20}
-          height={20}
-          class="scale-125 stroke-accent stroke-3 rtl:-rotate-90"
-        />
-        <span class="sr-only">RSS Feed</span>
-      </a>
+<Layout
+  title={`${SITE.title} — notes, apps, and a homelab that keeps growing`}
+  description={description}
+>
+  <script is:inline>
+    // Marks that the reveal script will run; without it nothing is hidden.
+    document.documentElement.classList.add("js-motion");
+  </script>
 
-      <p>
-      This is my notes hub. Part learning diary, part blog, part public scratchpad. Some of it is polished. Some of it is rough.
-      </p>
+  <div class="landing">
+    <Header />
+
+    <main id="main-content">
       {
-        // only display if at least one social link is enabled
-        SOCIALS.length > 0 && (
-          <div class="mt-4 flex max-sm:flex-col sm:items-center">
-            <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
-            <Socials />
-          </div>
-        )
+        /* ---------------------------------------------------------------- hero */
       }
-    </section>
+      <section class="dots">
+        <div class="l-wrap l-hero l-hero-grid">
+          <div>
+            <span class="badge rise" style="--d: 0ms">
+              <i class="dot-live" aria-hidden="true"></i>
+              Kayra · self-hosted
+            </span>
 
-    {
-      featuredPosts.length > 0 && (
-        <section
-          id="featured"
-          class:list={["pt-12 pb-6", "border-b border-border"]}
-        >
-          <h2 class="text-2xl font-semibold tracking-wide">Featured</h2>
-          <ul>
-            {featuredPosts.map(data => (
-              <Card variant="h3" {...data} />
-            ))}
-          </ul>
-        </section>
-      )
-    }
+            <h1 class="l-h1 rise mt-6" style="--d: 80ms">
+              I write about what I'm building, breaking, and figuring out.
+            </h1>
 
-    {/* Notes → browse-by-topic map */}
-    {
-      notesTopics.length > 0 && (
-        <section id="notes" class="border-b border-border pt-12 pb-8">
-          <div class="flex items-baseline justify-between gap-4">
-            <h2 class="text-2xl font-semibold tracking-wide">
-              <a href="/categories/notes/" class="hover:text-accent">
-                Notes
+            <p class="l-lede rise max-w-[54ch] text-lg" style="--d: 160ms">
+              My personal blog. Posts, notes, a homelab log, and the tools I've
+              made.
+            </p>
+
+            <div
+              class="rise mt-8 flex flex-wrap items-center gap-3"
+              style="--d: 240ms"
+            >
+              <a href="/posts" class="btn btn-primary">
+                Read the latest
+                <span aria-hidden="true">→</span>
               </a>
-            </h2>
+              <a href="/projects" class="btn"> See the tools </a>
+            </div>
+          </div>
+
+          <div class="now-wrap rise" style="--d: 320ms">
+            <aside class="slab now-card">
+              <div class="now-head">
+                <i class="dot-live" aria-hidden="true"></i>
+                right now
+                {
+                  updatedStamp && (
+                    <span class="badge now-stamp">{updatedStamp}</span>
+                  )
+                }
+              </div>
+              <ul class="now-list">
+                {
+                  NOW.map((item, i) => (
+                    <li>
+                      <span
+                        class="now-bullet"
+                        style={`--accent-tile: var(--${["accent", "cyan", "violet"][i % 3]})`}
+                        aria-hidden="true"
+                      />
+                      <span>
+                        <b>{item.label}</b>
+                        <span>{item.text}</span>
+                      </span>
+                    </li>
+                  ))
+                }
+              </ul>
+              <a href="/posts" class="now-link">See what came out of it →</a>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      {
+        /* ---------------------------------------------------------- pick a door */
+      }
+      <section class="l-section">
+        <div class="l-wrap">
+          <p class="l-eyebrow" data-reveal><b>01</b> what's in here</p>
+          <h2 class="l-h2" data-reveal>Pick a door.</h2>
+          <p class="l-lede" data-reveal>
+            Notes get looked up, journals get read once, the homelab is a
+            sequence, and the apps are just there for you to take.
+          </p>
+
+          <div class="bento mt-8">
             <a
               href="/categories/notes/"
-              class="text-sm whitespace-nowrap opacity-80 hover:text-accent"
+              class="slab span-3 t-cyan"
+              data-reveal
+              style="--d: 0ms"
             >
-              Browse all {notesPosts.length} →
+              <div class="flex items-start gap-4">
+                <span class="icon-chip">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 5.5A1.5 1.5 0 0 1 5.5 4H17l3 3v12.5A1.5 1.5 0 0 1 18.5 21h-13A1.5 1.5 0 0 1 4 19.5v-14Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linejoin="round"></path>
+                    <path
+                      d="M8 9h7M8 13h7M8 17h4"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"></path>
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <h3 class="text-xl font-bold">Notes</h3>
+                  <p class="l-lede mt-1 text-sm">
+                    How things actually work, plus the cheat sheets I keep open
+                    while working. Written so future me stops googling the same
+                    thing twice.
+                  </p>
+                </div>
+              </div>
+              <div class="mt-5 flex flex-wrap items-center gap-2 text-sm">
+                <span class="badge">{notesPosts.length} posts</span>
+                {
+                  topics
+                    .slice(0, 3)
+                    .map(topic => <span class="chip">{topic.name}</span>)
+                }
+              </div>
             </a>
-          </div>
-          <p class="mt-1 mb-4 opacity-80">{CATEGORIES.notes.description}</p>
-          <ul class="flex flex-wrap gap-2.5">
-            {notesTopics.map(topic => (
-              <li>
-                <a
-                  href={`/tags/${topic.slug}/`}
-                  class="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:border-accent hover:text-accent"
-                >
-                  <span>{topic.name}</span>
-                  <span class="opacity-60">{topic.count}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )
-    }
 
-    {/* Homelab → series strip with a clear starting point */}
-    {
-      homelabPosts.length > 0 && homelabFirst && (
-        <section id="homelab" class="border-b border-border pt-12 pb-8">
-          <div class="flex items-baseline justify-between gap-4">
-            <h2 class="text-2xl font-semibold tracking-wide">
-              <a href="/series/homelab/" class="hover:text-accent">
-                The Homelab Saga
-              </a>
-            </h2>
+            <a
+              href="/projects"
+              class="slab span-3 t-ember"
+              data-reveal
+              style="--d: 80ms"
+            >
+              <div class="flex items-start gap-4">
+                <span class="icon-chip">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linejoin="round"></path>
+                    <path
+                      d="m4 7.5 8 4.5 8-4.5M12 12v9"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linejoin="round"></path>
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <h3 class="text-xl font-bold">Apps</h3>
+                  <p class="l-lede mt-1 text-sm">
+                    Small things I built because the alternative annoyed me. One
+                    tells me to stand up. One puts my glucose in the top bar.
+                    Both open source.
+                  </p>
+                </div>
+              </div>
+              <div class="mt-5 flex flex-wrap items-center gap-2 text-sm">
+                {
+                  projects.map(project => (
+                    <span class="badge">{project.data.name}</span>
+                  ))
+                }
+              </div>
+            </a>
+
             <a
               href="/series/homelab/"
-              class="text-sm whitespace-nowrap opacity-80 hover:text-accent"
+              class="slab span-2 t-violet"
+              data-reveal
+              style="--d: 160ms"
             >
-              All {homelabPosts.length} parts →
+              <span class="icon-chip">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <rect
+                    x="3"
+                    y="4"
+                    width="18"
+                    height="6"
+                    rx="1.5"
+                    stroke="currentColor"
+                    stroke-width="2"></rect>
+                  <rect
+                    x="3"
+                    y="14"
+                    width="18"
+                    height="6"
+                    rx="1.5"
+                    stroke="currentColor"
+                    stroke-width="2"></rect>
+                  <path
+                    d="M7 7h.01M7 17h.01"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <h3 class="mt-4 text-lg font-bold">The homelab saga</h3>
+              <p class="l-lede mt-1 text-sm">
+                v0.1 to v1.5. A mini-PC bought instead of therapy, slowly
+                turning into something with actual governance.
+              </p>
+              <span class="badge mt-4">{homelabParts.length} parts</span>
             </a>
-          </div>
-          <p class="mt-1 mb-4 opacity-80">
-            A running build log — from a mini-PC bought instead of therapy to a
-            governed cluster.
-          </p>
-          <a
-            href={getPath(homelabFirst.id, homelabFirst.filePath)}
-            class="group inline-flex items-baseline gap-2 text-lg font-medium text-accent"
-          >
-            <span class="decoration-dashed underline-offset-4 group-hover:underline">
-              Start at the beginning — {homelabFirst.data.title}
-            </span>
-            <IconArrowRight class="inline-block size-4 rtl:-rotate-180" />
-          </a>
-          {homelabLast && (
-            <p class="mt-1 text-sm opacity-70">
-              {homelabPosts.length} parts so far, up to {homelabLast.data.title}.
-            </p>
-          )}
-        </section>
-      )
-    }
 
-    {/* Journal → short recent list (chronological is right here) */}
-    {
-      recentEssays.length > 0 && (
-        <section id="journal" class="pt-12 pb-6">
-          <div class="flex items-baseline justify-between gap-4">
-            <h2 class="text-2xl font-semibold tracking-wide">
-              <a href="/categories/journal/" class="hover:text-accent">
-                Journal
-              </a>
-            </h2>
             <a
               href="/categories/journal/"
-              class="text-sm whitespace-nowrap opacity-80 hover:text-accent"
+              class="slab span-2 t-lime"
+              data-reveal
+              style="--d: 240ms"
             >
-              Browse all {journalPosts.length} →
+              <span class="icon-chip">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 20.5 5 16 16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1.5Z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linejoin="round"></path>
+                  <path
+                    d="m14.5 6.5 3 3"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <h3 class="mt-4 text-lg font-bold">Journal</h3>
+              <p class="l-lede mt-1 text-sm">
+                What I did, went through, or think. Occasionally a war story,
+                occasionally me tearing down my own work.
+              </p>
+              <span class="badge mt-4">{journalPosts.length} posts</span>
+            </a>
+
+            <a
+              href={OSCP.url}
+              target="_blank"
+              rel="noopener"
+              class="slab span-2 t-cyan"
+              data-reveal
+              style="--d: 320ms"
+            >
+              <span class="icon-chip">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="8"
+                    stroke="currentColor"
+                    stroke-width="2"></circle>
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="currentColor"
+                    stroke-width="2"></circle>
+                  <path
+                    d="M12 1.5v3.5M12 19v3.5M1.5 12H5M19 12h3.5"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <h3 class="mt-4 text-lg font-bold">
+                The OSCP vault <span aria-hidden="true" class="opacity-60"
+                  >↗</span
+                >
+              </h3>
+              <p class="l-lede mt-1 text-sm">
+                Working notes from the PEN-200 labs. Messy on purpose, rewritten
+                constantly, useful mainly if you're doing the same thing.
+              </p>
+              <span class="badge mt-4">{OSCP.notes}+ notes</span>
             </a>
           </div>
-          <p class="mt-1 mb-2 opacity-80">{CATEGORIES.journal.description}</p>
-          <ul>
-            {recentEssays.map(
-              (data, index) =>
-                index < 3 && <Card variant="h3" {...data} />
-            )}
-          </ul>
-        </section>
-      )
-    }
+        </div>
+      </section>
 
-    <div class="my-8 text-center">
-      <LinkButton href="/posts/">
-        All Posts
-        <IconArrowRight class="inline-block rtl:-rotate-180" />
-      </LinkButton>
-    </div>
-  </main>
-  <Footer />
+      {
+        /* --------------------------------------------------------- start here */
+      }
+      {
+        featuredPosts.length > 0 && (
+          <section class="l-section band-sunk">
+            <div class="l-wrap">
+              <p class="l-eyebrow" data-reveal>
+                <b>02</b> new here?
+              </p>
+              <h2 class="l-h2" data-reveal>
+                Start with these.
+              </h2>
+              <p class="l-lede" data-reveal>
+                The three I send people when they ask what I actually do all
+                day.
+              </p>
+
+              <div class="mt-8 grid gap-4 md:grid-cols-3">
+                {featuredPosts.map((post, i) => (
+                  <a
+                    href={getPath(post.id, post.filePath)}
+                    class="slab p-6"
+                    data-reveal
+                    style={`--d: ${i * 80}ms`}
+                  >
+                    <span class="badge">
+                      {CATEGORIES[post.data.category]?.label ??
+                        post.data.category}
+                    </span>
+                    <h3 class="mt-4 text-lg leading-snug font-bold">
+                      {post.data.title}
+                    </h3>
+                    <p class="l-lede mt-2 line-clamp-3 text-sm">
+                      {post.data.description}
+                    </p>
+                    <p class="mt-4 text-sm" style="color: var(--accent)">
+                      Read it <span aria-hidden="true">→</span>
+                    </p>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+      }
+
+      {
+        /* ------------------------------------------------------ homelab saga */
+      }
+      {
+        homelabParts.length > 0 && (
+          <section class="l-section">
+            <div class="l-wrap grid gap-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+              <div>
+                <p class="l-eyebrow" data-reveal>
+                  <b>03</b> the long one
+                </p>
+                <h2 class="l-h2" data-reveal>
+                  The homelab saga.
+                </h2>
+                <p class="l-lede" data-reveal>
+                  One machine, a few years of questionable decisions, and the
+                  fixes that came after. Read it in order. The mistakes are half
+                  the point.
+                </p>
+                <a href={homelabStart} class="btn btn-sm mt-6" data-reveal>
+                  Start at v0.1
+                  <span aria-hidden="true">→</span>
+                </a>
+              </div>
+
+              <div class="rail">
+                {homelabParts.map((part, i) => (
+                  <a
+                    href={part.href}
+                    class="rail-item"
+                    data-reveal
+                    style={`--d: ${i * 60}ms`}
+                  >
+                    <span class="rail-num">{part.version}</span>
+                    <span>
+                      <span class="rail-title">{part.title}</span>
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        )
+      }
+
+      {/* --------------------------------------------------------- latest */}
+      <section class="l-section">
+        <div class="l-wrap">
+          <p class="l-eyebrow" data-reveal><b>04</b> recently</p>
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <h2 class="l-h2" data-reveal>Latest out of the pile.</h2>
+            <a
+              href="/posts"
+              class="text-sm underline decoration-dashed underline-offset-4"
+              data-reveal
+            >
+              All {sortedPosts.length} posts →
+            </a>
+          </div>
+
+          <div class="mt-6">
+            {
+              latestPosts.map((post, i) => (
+                <a
+                  href={getPath(post.id, post.filePath)}
+                  class="row-post"
+                  data-reveal
+                  style={`--d: ${i * 50}ms`}
+                >
+                  <h3>{post.data.title}</h3>
+                  <div class="row-meta">
+                    <span class="row-kind">
+                      {CATEGORIES[post.data.category]?.label ??
+                        post.data.category}
+                    </span>
+                    <span>{fmtDate(post.data.pubDatetime)}</span>
+                  </div>
+                </a>
+              ))
+            }
+          </div>
+        </div>
+      </section>
+
+      {/* --------------------------------------------------------- topics */}
+      <section class="l-section">
+        <div class="l-wrap">
+          <p class="l-eyebrow" data-reveal><b>05</b> by topic</p>
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <h2 class="l-h2" data-reveal>Or rummage by subject.</h2>
+            <a
+              href="/tags"
+              class="text-sm underline decoration-dashed underline-offset-4"
+              data-reveal
+            >
+              All {topics.length} tags →
+            </a>
+          </div>
+
+          <ul class="mt-6 flex flex-wrap gap-2.5" data-reveal>
+            {
+              topics.slice(0, 18).map(topic => (
+                <li>
+                  <a href={`/tags/${topic.slug}/`} class="chip">
+                    {topic.name} <small>{topic.count}</small>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </section>
+
+      {/* --------------------------------------------------------- archive */}
+      <section class="l-section">
+        <div class="l-wrap">
+          <a
+            href={GITBOOK}
+            target="_blank"
+            rel="noopener"
+            class="slab flex flex-wrap items-center justify-between gap-6 p-6 sm:flex-nowrap"
+            data-reveal
+          >
+            <div class="min-w-0 flex-1">
+              <span class="badge">the previous life</span>
+              <h3 class="mt-3 text-lg font-bold">
+                Before this, there was hackerkayra on GitBook
+                <span aria-hidden="true" class="opacity-60"> ↗</span>
+              </h3>
+              <p class="l-lede mt-1 text-sm">
+                Most of it moved here. The cert reviews (eWPTXv3, eCPPTv3),
+                Proving Grounds writeups and study notes never did, so it stays
+                up.
+              </p>
+            </div>
+            <span
+              class="text-3xl"
+              aria-hidden="true"
+              style="color: var(--soft)"
+            >
+              ↗
+            </span>
+          </a>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------ the machine */}
+      <section class="l-section band-ink">
+        <div class="l-wrap grid items-center gap-10 md:grid-cols-2">
+          <div>
+            <p class="l-eyebrow" data-reveal><b>06</b> under the desk</p>
+            <h2 class="l-h2" data-reveal>
+              It runs on hardware in my apartment.
+            </h2>
+            <p class="l-lede" data-reveal>
+              No managed platform, no vendor dashboard, no uptime promise beyond
+              "the power stayed on". Proxmox on one box, containers behind a
+              tunnel, and backups I actually check. When the power blinks, so
+              does this page.
+            </p>
+            <a href="/series/homelab/" class="btn btn-sm mt-6" data-reveal>
+              How it got here
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+
+          <div class="term" data-reveal data-term>
+            <div class="term-bar">
+              <i></i><i></i><i></i>
+              <span class="ms-2">novaden — status</span>
+            </div>
+            <div class="term-body">
+              <div>
+                <span class="term-prompt">$</span>
+                <span data-term-cmd>novaden status</span><span
+                  class="term-caret"
+                  aria-hidden="true"></span>
+              </div>
+              <table>
+                <tbody>
+                  <tr data-term-row>
+                    <td class="term-key">host</td>
+                    <td class="term-val">proxmox / one mini-pc</td>
+                    <td class="term-ok">up</td>
+                  </tr>
+                  <tr data-term-row>
+                    <td class="term-key">services</td>
+                    <td class="term-val">lxc + docker</td>
+                    <td class="term-ok">30 containers</td>
+                  </tr>
+                  <tr data-term-row>
+                    <td class="term-key">edge</td>
+                    <td class="term-val">caddy + cloudflare tunnel</td>
+                    <td class="term-ok">tls automated</td>
+                  </tr>
+                  <tr data-term-row>
+                    <td class="term-key">this site</td>
+                    <td class="term-val">astro, static</td>
+                    <td class="term-ok">no trackers</td>
+                  </tr>
+                  <tr data-term-row>
+                    <td class="term-key">oscp notes</td>
+                    <td class="term-val">quartz</td>
+                    <td class="term-ok">own subdomain</td>
+                  </tr>
+                  <tr data-term-row>
+                    <td class="term-key">backups</td>
+                    <td class="term-val">restic, off-site</td>
+                    <td class="term-ok">checked</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+  </div>
 </Layout>
 
 <script>
-  document.addEventListener("astro:page-load", () => {
-    const indexLayout = (document.querySelector("#main-content") as HTMLElement)
-      ?.dataset?.layout;
-    if (indexLayout) {
-      sessionStorage.setItem("backUrl", "/");
+  // Motion, all of it optional: everything below is skipped when the visitor
+  // asks for reduced motion, and the page is fully readable without it.
+  function initLanding() {
+    const landing = document.querySelector(".landing");
+    if (!landing) return;
+    document.documentElement.classList.add("js-motion");
+
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reveals = Array.from(landing.querySelectorAll("[data-reveal]"));
+
+    if (still || !("IntersectionObserver" in window)) {
+      reveals.forEach(el => el.classList.add("is-in"));
+      return;
     }
-  });
+
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const el = entry.target as HTMLElement;
+          el.classList.add("is-in");
+          observer.unobserve(el);
+
+          if (el.hasAttribute("data-term")) runTerminal(el);
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.15 }
+    );
+
+    reveals.forEach(el => observer.observe(el));
+
+    /** Type the command, then drop the rows in one at a time. */
+    function runTerminal(term: HTMLElement) {
+      const cmd = term.querySelector("[data-term-cmd]") as HTMLElement | null;
+      const rows = Array.from(
+        term.querySelectorAll("[data-term-row]")
+      ) as HTMLElement[];
+      if (!cmd || term.dataset.ran) return;
+      term.dataset.ran = "true";
+
+      const text = cmd.textContent ?? "";
+      cmd.textContent = "";
+      rows.forEach(row => row.classList.add("term-row-hidden"));
+
+      let i = 0;
+      const type = () => {
+        cmd.textContent = text.slice(0, ++i);
+        if (i < text.length) {
+          setTimeout(type, 45);
+        } else {
+          rows.forEach((row, index) =>
+            setTimeout(
+              () => row.classList.remove("term-row-hidden"),
+              index * 90
+            )
+          );
+        }
+      };
+      setTimeout(type, 250);
+    }
+  }
+
+  document.addEventListener("astro:page-load", initLanding);
 </script>

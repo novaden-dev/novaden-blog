@@ -13,10 +13,7 @@ const categories = getUniqueCategories(posts);
 
 <Layout title={`Categories | ${SITE.title}`}>
   <Header />
-  <Main
-    pageTitle="Categories"
-    pageDesc="Browse by what kind of post it is."
-  >
+  <Main pageTitle="Categories" pageDesc="Browse by what kind of post it is.">
     <ul class="flex flex-col gap-6">
       {
         categories.map(({ category, label, description, count }) => (

@@ -3,6 +3,7 @@ import { glob } from "astro/loaders";
 import { SITE } from "@/config";
 
 export const BLOG_PATH = "src/data/blog";
+export const PROJECTS_PATH = "src/data/projects";
 
 const blog = defineCollection({
   loader: glob({ pattern: "**/[^_]*.md", base: `./${BLOG_PATH}` }),
@@ -26,4 +27,22 @@ const blog = defineCollection({
     }),
 });
 
-export const collections = { blog };
+// Projects are not posts: nobody reads a tool, they use it. So they get their
+// own collection rather than a fourth category, which would break the rule
+// that `category` describes how something is read.
+const projects = defineCollection({
+  loader: glob({ pattern: "**/[^_]*.md", base: `./${PROJECTS_PATH}` }),
+  schema: z.object({
+    name: z.string(),
+    tagline: z.string(),
+    status: z.enum(["shipping", "prototype", "archived"]),
+    stack: z.array(z.string()).default([]),
+    repo: z.string(),
+    releases: z.string().optional(),
+    post: z.string().optional(),
+    order: z.number().default(0),
+    draft: z.boolean().optional(),
+  }),
+});
+
+export const collections = { blog, projects };

@@ -1,7 +1,7 @@
 @plugin "@tailwindcss/typography";
 
 @layer base {
-  /* ===== Override default Tailwind Typography styles ===== */
+  /* ===== Long-form reading ===== */
   .app-prose {
     @apply prose;
 
@@ -13,8 +13,16 @@
       @apply mb-3 text-foreground;
     }
 
+    h2 {
+      @apply mt-12 text-2xl font-bold tracking-tight;
+    }
+
     h3 {
-      @apply italic;
+      @apply mt-8 text-xl font-semibold;
+    }
+
+    h4 {
+      @apply mt-6 font-semibold;
     }
 
     p,
@@ -28,7 +36,7 @@
     }
 
     a {
-      @apply wrap-break-word text-foreground decoration-dashed underline-offset-4 hover:text-accent focus-visible:no-underline;
+      @apply wrap-break-word text-accent decoration-dashed underline-offset-4 hover:decoration-solid focus-visible:no-underline;
     }
 
     ul {
@@ -40,25 +48,28 @@
     }
 
     hr {
-      @apply border-border;
+      @apply my-10 border-t border-dashed border-border;
     }
 
     img {
-      @apply mx-auto border border-border;
+      @apply mx-auto rounded-xl border-2 border-line;
     }
 
     figcaption {
-      @apply opacity-75;
+      @apply text-soft;
     }
 
+    /* Wide tables scroll in their own box rather than pushing the page. */
     table {
+      @apply block overflow-x-auto sm:table;
+
       th,
       td {
-        @apply border border-border p-2;
+        @apply border border-border p-2 align-top;
       }
 
       th {
-        @apply py-1.5;
+        @apply bg-muted py-1.5 text-start;
       }
 
       code {
@@ -66,16 +77,17 @@
       }
     }
 
+    /* Inline code reads as a chip; code inside a block resets back out. */
     code {
-      @apply rounded bg-muted/75 p-1 wrap-break-word text-foreground before:content-none after:content-none;
+      @apply rounded-md border border-border bg-muted/70 px-1.5 py-0.5 text-[0.9em] wrap-break-word before:content-none after:content-none;
     }
 
     .astro-code code {
-      @apply flex-[1_0_100%] bg-inherit p-0;
+      @apply flex-[1_0_100%] border-0 bg-inherit p-0;
     }
 
     blockquote {
-      @apply border-s-accent/80 wrap-break-word opacity-80;
+      @apply rounded-e-xl border-s-4 border-s-accent bg-card px-5 py-1 wrap-break-word not-italic;
     }
 
     details {
@@ -91,13 +103,15 @@
     }
   }
 
-  /* ===== Code Blocks & Syntax Highlighting ===== */
+  /* ===== Code blocks =====
+     Shiki keeps its syntax colours; the ground is ours, so blocks sit on the
+     same paper as the rest of the page instead of a white or navy slab. */
   .astro-code {
-    @apply flex border bg-(--shiki-light-bg) text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
+    @apply flex rounded-xl border-2 border-line bg-card text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
   }
 
   html[data-theme="dark"] .astro-code {
-    @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
+    @apply bg-muted text-(--shiki-dark) [&_span]:text-(--shiki-dark);
   }
 
   /* Styles for Shiki transformers */
@@ -110,7 +124,7 @@
       @apply relative inline-block w-full bg-red-500/20 before:absolute before:-left-3 before:text-red-500 before:content-['-'];
     }
     .line.highlighted {
-      @apply inline-block w-full bg-slate-400/20;
+      @apply inline-block w-full bg-accent/10;
     }
     .highlighted-word {
       @apply rounded-sm border border-border px-0.5 py-px;

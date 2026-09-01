@@ -75,3 +75,34 @@ export const SHARE_LINKS: Social[] = [
     icon: IconMail,
   },
 ] as const;
+
+// The OSCP vault is a separate repo (Quartz) on its own subdomain, so its
+// numbers can't be counted at build time. Bump them when the vault grows.
+// The blog that came before this one. Most of it was migrated here; the cert
+// reviews and Proving Grounds writeups still only exist there.
+export const GITBOOK = "https://kayra.gitbook.io/hackerkayra";
+
+export const OSCP = {
+  url: "https://oscp.novaden.dev/",
+  notes: 160,
+  labs: 68,
+  techniques: 59,
+  tools: 27,
+} as const;
+
+// The "right now" card on the landing page. Three lines, present tense.
+// Edit these when the work changes; the date stamp comes from the newest post.
+export const NOW = [
+  {
+    label: "OSCP prep",
+    text: `PEN-200 labs, ${OSCP.labs} machines written up so far.`,
+  },
+  {
+    label: "Homelab v2",
+    text: "Rebuilding the whole thing as one reviewed repo.",
+  },
+  {
+    label: "Secure code review",
+    text: "Turning the OWASP guide into something I can actually work from.",
+  },
+] as const;

@@ -11,6 +11,7 @@ import BackButton from "@/components/BackButton.astro";
 import BackToTopButton from "@/components/BackToTopButton.astro";
 import TableOfContents from "@/components/TableOfContents.astro";
 import { getPath } from "@/utils/getPath";
+import { CATEGORIES } from "@/utils/categories";
 import { slugifyStr } from "@/utils/slugify";
 import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
 import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
@@ -94,11 +95,14 @@ const nextPost =
   >
     <h1
       transition:name={slugifyStr(title.replaceAll(".", "-"))}
-      class="inline-block text-2xl font-bold text-accent sm:text-3xl"
+      class="text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl"
     >
       {title}
     </h1>
-    <div class="my-2 flex items-center gap-2">
+    <div class="mt-4 mb-2 flex flex-wrap items-center gap-3 text-soft">
+      <span class="row-kind text-xs tracking-wider uppercase">
+        {CATEGORIES[post.data.category]?.label ?? post.data.category}
+      </span>
       <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
       <span
         aria-hidden="true"
@@ -109,14 +113,11 @@ const nextPost =
       >
       <EditPost {hideEditPost} {post} class="max-sm:hidden" />
     </div>
-    <article
-      id="article"
-      class="app-prose mt-8 w-full max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"
-    >
+    <article id="article" class="app-prose mt-10 w-full max-w-app">
       <Content />
     </article>
 
-    <hr class="my-8 border-dashed" />
+    <hr class="my-10 border-t border-dashed border-border" />
 
     <EditPost class="sm:hidden" {hideEditPost} {post} />
 
@@ -128,7 +129,7 @@ const nextPost =
 
     <ShareLinks />
 
-    <hr class="my-6 border-dashed" />
+    <hr class="my-8 border-t border-dashed border-border" />
 
     <!-- Previous/Next Post Buttons -->
     <div data-pagefind-ignore class="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -136,12 +137,14 @@ const nextPost =
         prevPost && (
           <a
             href={getPath(prevPost.id, prevPost.filePath)}
-            class="flex w-full gap-1 hover:opacity-75"
+            class="slab flex w-full gap-2 p-4"
           >
             <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
             <div>
-              <span>Previous Post</span>
-              <div class="text-sm text-accent/85">{prevPost.title}</div>
+              <span class="text-xs tracking-wider text-soft uppercase">
+                Previous
+              </span>
+              <div class="text-sm font-medium">{prevPost.title}</div>
             </div>
           </a>
         )
@@ -150,11 +153,13 @@ const nextPost =
         nextPost && (
           <a
             href={getPath(nextPost.id, nextPost.filePath)}
-            class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"
+            class="slab flex w-full justify-end gap-2 p-4 text-end sm:col-start-2"
           >
             <div>
-              <span>Next Post</span>
-              <div class="text-sm text-accent/85">{nextPost.title}</div>
+              <span class="text-xs tracking-wider text-soft uppercase">
+                Next
+              </span>
+              <div class="text-sm font-medium">{nextPost.title}</div>
             </div>
             <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
           </a>
@@ -245,12 +250,10 @@ const nextPost =
         computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
 
       // Determine the top positioning class
-      const topClass = hasFileNameOffset
-        ? "top-(--file-name-offset)"
-        : "-top-3";
+      const topClass = hasFileNameOffset ? "top-(--file-name-offset)" : "top-2";
 
       const copyButton = document.createElement("button");
-      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.className = `copy-code absolute end-2 ${topClass} rounded-md border border-border bg-card px-2 py-1 text-xs leading-4 text-foreground font-medium hover:text-accent`;
       copyButton.innerHTML = copyButtonLabel;
       codeBlock.setAttribute("tabindex", "0");
       codeBlock.appendChild(copyButton);

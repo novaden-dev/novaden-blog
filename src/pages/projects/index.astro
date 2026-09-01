@@ -1,0 +1,89 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Main from "@/layouts/Main.astro";
+import { SITE } from "@/config";
+
+const projects = (
+  await getCollection("projects", ({ data }) => !data.draft)
+).sort((a, b) => a.data.order - b.data.order);
+
+const rendered = await Promise.all(
+  projects.map(async project => ({
+    ...project,
+    Content: (await render(project)).Content,
+  }))
+);
+---
+
+<Layout
+  title={`Projects | ${SITE.title}`}
+  description="Small apps I built because the alternative annoyed me."
+>
+  <Header />
+  <Main
+    pageTitle="Projects"
+    pageDesc="Small things I built because the alternative annoyed me. Open source, still moving."
+  >
+    <ul class="flex flex-col gap-6">
+      {
+        rendered.map(project => (
+          <li class="slab p-6">
+            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-2">
+              <h2 class="text-xl font-bold tracking-tight">
+                {project.data.name}
+              </h2>
+              <span class={`status status-${project.data.status}`}>
+                {project.data.status}
+              </span>
+            </div>
+
+            <p class="mt-1 font-medium">{project.data.tagline}</p>
+
+            <div class="app-prose mt-3 max-w-none text-sm">
+              <project.Content />
+            </div>
+
+            <div class="mt-5 flex flex-wrap items-center gap-2">
+              {project.data.stack.map(tech => (
+                <span class="chip">{tech}</span>
+              ))}
+            </div>
+
+            <div class="mt-5 flex flex-wrap items-center gap-3">
+              <a
+                href={project.data.repo}
+                target="_blank"
+                rel="noopener"
+                class="btn btn-sm"
+              >
+                Source <span aria-hidden="true">↗</span>
+              </a>
+              {project.data.releases && (
+                <a
+                  href={project.data.releases}
+                  target="_blank"
+                  rel="noopener"
+                  class="btn btn-sm"
+                >
+                  Download <span aria-hidden="true">↗</span>
+                </a>
+              )}
+              {project.data.post && (
+                <a
+                  href={`/posts/${project.data.post}`}
+                  class="text-sm text-accent underline decoration-dashed underline-offset-4"
+                >
+                  How it got built →
+                </a>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </Main>
+  <Footer />
+</Layout>

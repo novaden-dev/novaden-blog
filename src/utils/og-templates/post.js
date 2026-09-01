@@ -5,7 +5,7 @@ import loadGoogleFonts from "../loadGoogleFont";
 
 // const markup = html`<div
 //       style={{
-//         background: "#fefbfb",
+//         background: "#f2eee3",
 //         width: "100%",
 //         height: "100%",
 //         display: "flex",
@@ -18,8 +18,8 @@ import loadGoogleFonts from "../loadGoogleFont";
 //           position: "absolute",
 //           top: "-1px",
 //           right: "-1px",
-//           border: "4px solid #000",
-//           background: "#ecebeb",
+//           border: "4px solid #17161c",
+//           background: "#ff5a1f",
 //           opacity: "0.9",
 //           borderRadius: "4px",
 //           display: "flex",
@@ -32,8 +32,8 @@ import loadGoogleFonts from "../loadGoogleFont";
 
 //       <div
 //         style={{
-//           border: "4px solid #000",
-//           background: "#fefbfb",
+//           border: "4px solid #17161c",
+//           background: "#fffdf7",
 //           borderRadius: "4px",
 //           display: "flex",
 //           justifyContent: "center",
@@ -99,7 +99,7 @@ export default async post => {
       type: "div",
       props: {
         style: {
-          background: "#fefbfb",
+          background: "#fffdf7",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -114,8 +114,8 @@ export default async post => {
                 position: "absolute",
                 top: "-1px",
                 right: "-1px",
-                border: "4px solid #000",
-                background: "#ecebeb",
+                border: "4px solid #17161c",
+                background: "#ff5a1f",
                 opacity: "0.9",
                 borderRadius: "4px",
                 display: "flex",
@@ -130,8 +130,8 @@ export default async post => {
             type: "div",
             props: {
               style: {
-                border: "4px solid #000",
-                background: "#fefbfb",
+                border: "4px solid #17161c",
+                background: "#fffdf7",
                 borderRadius: "4px",
                 display: "flex",
                 justifyContent: "center",

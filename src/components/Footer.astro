@@ -1,32 +1,78 @@
 ---
-import type { HTMLAttributes } from "astro/types";
-import Socials from "./Socials.astro";
+// Site footer — the full site map, since the header is deliberately short.
+import { SITE } from "@/config";
+import { SOCIALS, OSCP, GITBOOK } from "@/constants";
 
-const currentYear = new Date().getFullYear();
+type Props = { noMarginTop?: boolean };
 
-type Props = {
-  noMarginTop?: boolean;
-} & HTMLAttributes<"footer">;
+const { noMarginTop = false } = Astro.props;
 
-const { noMarginTop = false, class: className, ...attrs } = Astro.props;
+const year = new Date().getFullYear();
+const mail = SOCIALS.find(s => s.name === "Mail")?.href ?? "/about";
+const elsewhere = SOCIALS.filter(s => s.name !== "Mail");
 ---
 
-<footer
-  class:list={["app-layout", { "mt-auto": !noMarginTop }, className]}
-  {...attrs}
->
-  <div
-    class:list={[
-      "py-6 sm:py-4",
-      "border-t border-border",
-      "flex flex-col items-center justify-between sm:flex-row-reverse",
-    ]}
-  >
-    <Socials />
-    <div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row">
-      <span>Copyright &#169; {currentYear}</span>
-      <span class="hidden sm:inline">&nbsp;|&nbsp;</span>
-      <span>All rights reserved.</span>
+<footer class:list={["l-foot", { "mt-0!": noMarginTop }]}>
+  <div class="l-wrap py-14">
+    <div class="l-foot-grid grid gap-10 sm:grid-cols-2">
+      <div>
+        <h3 class="text-2xl font-bold tracking-tight">Poke around.</h3>
+        <p class="l-lede mt-2 text-sm">
+          Everything here is public on purpose. If something is wrong or you
+          want the long version of a post, mail me.
+        </p>
+        <a href={mail} class="btn btn-sm mt-5">
+          Say hi
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+
+      <div>
+        <h4>Read</h4>
+        <div class="l-foot-links">
+          <a href="/posts">All posts</a>
+          <a href="/projects">Projects</a>
+          <a href="/categories/notes/">Notes</a>
+          <a href="/categories/journal/">Journal</a>
+          <a href="/series/homelab/">Homelab saga</a>
+          <a href="/archives">Archives</a>
+        </div>
+      </div>
+
+      <div>
+        <h4>Browse</h4>
+        <div class="l-foot-links">
+          <a href="/tags">Tags</a>
+          <a href="/categories">Categories</a>
+          <a href="/series">Series</a>
+          <a href="/search">Search</a>
+          <a href="/rss.xml">RSS</a>
+        </div>
+      </div>
+
+      <div>
+        <h4>Elsewhere</h4>
+        <div class="l-foot-links">
+          <a href={OSCP.url} target="_blank" rel="noopener">OSCP notes ↗</a>
+          <a href={GITBOOK} target="_blank" rel="noopener">Old GitBook ↗</a>
+          {
+            elsewhere.map(social => (
+              <a href={social.href} target="_blank" rel="noopener">
+                {social.name} ↗
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="mt-12 flex flex-col gap-2 border-t border-border pt-6 text-xs text-soft sm:flex-row sm:items-center sm:justify-between"
+    >
+      <span>© {year} {SITE.title}. Written by hand, hosted at home.</span>
+      <span
+        >No newsletter. No cookie banner. No popup asking for your email.</span
+      >
     </div>
   </div>
 </footer>

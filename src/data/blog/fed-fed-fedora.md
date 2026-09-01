@@ -7,7 +7,7 @@ featured: false
 draft: false
 tags: ["linux", "fedora"]
 category: journal
-description: How a dying laptop, a warranty saga, and a "your Windows license only supports one display language" middle finger pushed me to Fedora KDE — and what worked, broke, and surprised me.
+description: A dying laptop, a Lenovo warranty saga, and Windows telling me my license only supports one display language pushed me to Fedora KDE. Notes on what worked, what broke, and a few things I didn't expect.
 ---
 
 I don't know the exact breaking point. I was fine on Windows, if you ignore the "Finish setting up your account" nag, the forced Microsoft account, the ads/news in the start menu, and the few other messy things here and there. Yet, I've always wanted to move to Linux, the superior, open-source operating system, but never had the time. Then my laptop made the decision for me, random crashes followed by blue screens. Normally, I would have opened the back and started checking what's messed up but it was still in warranty and I was a bit overloaded off to the service center it goes.
@@ -32,15 +32,9 @@ A proper farewell from Windows I assume.
 
 I wanted something good-looking, stable, and supports the software I use on daily basis, I checked reddit and multiple other blog posts and at times it felt like it is a religious war, everyone claiming what they are using is the superior OS that everyone should use.
 
-- Ubuntu: popular, but there is the snap situation and then it's too mainstream.
-- Arch: superior in many ways… if you survive the installation.
-- Linux Mint: Windows-7 vibes. Your grandma (the chill and boring one) would love it.
-- Debian, CentOS, and many others.
+Ubuntu's popular but there's the whole snap situation and honestly it just felt too mainstream. Arch is supposedly superior in every way, if you survive the install, which I did not have the patience for. Mint gave me Windows-7 vibes, the kind of distro your chill grandma would be fine with. Then Debian, CentOS, a bunch of others I skimmed and forgot about within the hour.
 
-As I didn't want to go down a huge rabbit hole, I settled on Fedora. It checked my boxes, frequent updates yet stable. It comes in 2 flavors, KDE or GNOME. Rabbit Hole #2.
-
-- KDE lets you customize *everything.* literally, *everything.*
-- GNOME allows some customization via extensions, but nowhere near KDE.
+As I didn't want to go down a huge rabbit hole, I settled on Fedora. It checked my boxes, frequent updates yet stable. It comes in 2 flavors, KDE or GNOME. Rabbit Hole #2. KDE lets you customize literally everything, GNOME lets you customize some of everything through extensions, nowhere near KDE's level though.
 
 KDE sounded better, but with great customization sometimes come great bugs. Reddit says KDE can be less stable than GNOME, others said it's solid now. I took the risk and went KDE. Install was smooth and straightforward. I'd already created the USB with Fedora Media Writer.
 
@@ -74,47 +68,29 @@ Then, randomly: "maliit-keyboard killed by SIGABRT" popped up, in Turkish. I don
 
 ## App Sources in the Store (What's What)
 
-In Fedora's app store, you'll see three flavors:
+In Fedora's app store, you'll see three flavors: Fedora Flatpak, curated by Fedora directly, fewer apps but sandboxed; Flathub, the big public Flatpak repo, way more apps, still sandboxed; and Fedora Linux (RPM), installed via `dnf`, not sandboxed, best when you actually need deep system access like drivers or CLI tools.
 
-- Fedora Flatpak – curated by Fedora; fewer apps; sandboxed.
-- Flathub – the big public Flatpak repo; more apps; sandboxed.
-- Fedora Linux (RPM) – installed via `dnf`; *not* sandboxed; best for drivers/low-level stuff or when you need deep system integration.
-
-Rule of thumb: If there's a Fedora Flatpak, use that. If not, use Flathub. Use RPMs when you need tight OS access (drivers, CLI tools, IDEs that need to poke around a lot, etc.).
+What I ended up doing: grab the Fedora Flatpak if one exists, fall back to Flathub if not, and only reach for the RPM when something needs to poke around the system more than a sandbox allows.
 
 I started installing my applications and at one point I saw: "Multiple matches of pycharm-community;2025.2.0.1-1.fc42;…copr…" Neat. Point 2 on the I fucked up scoreboard...
 
 ### The Good
 
-#### KDE Connect
+KDE Connect embarrasses Windows "Phone Link." Install the app on your phone and you got file browsing, clipboard sharing, and remote control that actually feels like magic.
 
-It embarrasses Windows "Phone Link." Install the app on your phone and you got file browsing, clipboard sharing, and remote control that actually feels like magic.
+Performance is just… better. Typical day for me: two .NET backends, one Next.js frontend, one Electron desktop app, each in its own VSCodium instance, plus Cloud SQL proxy, pgAdmin, AI coding agents (Claude Code/Codex/Cursor/etc.), Zoom, and multiple browser profiles. A few brief freezes when RAM is fully utilized but just the fact that I can run all of this and the laptop not crashing is amazing.
 
-#### Performance
+I can also tweak literally everything, which matters because I get bored fast. Still on the default widget for now, but I can already see myself messing with the layout eventually.
 
-Fedora's performance is just… better. Typical day for me: two .NET backends, one Next.js frontend, one Electron desktop app, each in its own VSCodium instance, plus Cloud SQL proxy, pgAdmin, AI coding agents (Claude Code/Codex/Cursor/etc.), Zoom, and multiple browser profiles. A few brief freezes when RAM is fully utilized but just the fact that I can run all of this and the laptop not crashing is amazing.
+Virtual desktops I finally use properly, backend on one desktop, frontend on another. Pretty sure Windows has something like this but I never touched it, here it's daily use. Update from later: I stopped relying on it as much once I got a second monitor, but it's still handy.
 
-#### Customization
-
-I can tweak literally everything. I get bored fast, and even though I am still on the default widget, I can definitely see myself tweaking around and playing with the layout.
-
-#### Virtual Desktops
-
-I finally use them properly. Backend on one desktop, frontend on another. I believe there is such an option on Windows but I never used it, here it's daily use. 
-
-Future update, I stopped using it that much because I got a second screen but still it's quite useful to have.
-
-#### "Where's My Mouse?" and OS Zoom
-
-If you move your mouse repeatedly, the cursor grows. Apparently I spin it when stressed or bored, this feature made me more aware of the times I do this. There's also an OS-level zoom I discovered by panic when I enabled it by accident and freaked out for minutes trying to figure out what happened.
+Then there's the mouse thing: move it around repeatedly and the cursor grows. Turns out I spin it when I'm stressed or bored, so this feature made me way more aware of when I'm doing that. There's also an OS-level zoom I discovered by accident and spent a solid few minutes panicking about before figuring out what happened.
 
 <figure><img src="/images/migrated/fedora-04-os-zoom.png" alt="" width="162"><figcaption></figcaption></figure>
 
-Plus: shortcuts everywhere. I just hate using the mouse, I am more of a keyboard guy, having the ability to create different shortcuts is just amazing.
+And shortcuts, everywhere. I hate using the mouse, I'm a keyboard guy, being able to bind whatever shortcut I want is great.
 
-#### Scripting and Systemctl
-
-I wanted something to yell at me every 40 minutes to stop being a shrimp over the laptop. (I have been messing up my neck and back with 300hrs+ working months lately) On Windows I remember trying to do this with Task Scheduler and it wasn't a pleasant experience.
+Last one: I wanted something to yell at me every 40 minutes to stop hunching over the laptop. (300hrs+ months lately have not been kind to my neck and back.) On Windows I remember trying this with Task Scheduler and it wasn't a pleasant experience.
 
 ```bash
 mkdir -p ~/.local/bin
@@ -247,6 +223,6 @@ It simply restarts the service. The reason why added the sleep 7 is because with
 
 ## Verdict
 
-No regrets. Fedora KDE gives me performance, control, and fewer corporate handcuffs. Sure, I had a few "why is this in Turkish" moments, an accidental screen-reader seance, one Sweet KDE install crash, and some desktop-icon moving on their own. But overall the experience is excellent. If you can survive a warranty saga and a light Linux learning curve, the payoff is worth it.
+No regrets so far. I get better performance, more control, and a lot fewer corporate handcuffs than I had on Windows. Along the way there was the random Turkish popping up everywhere, an accidental screen-reader seance, a SweetKDE install that just refused to work, and desktop icons rearranging themselves for reasons that turned out to be my own fault. None of that outweighs the actual experience of using this thing daily. Warranty saga aside, if you've got a bit of patience for a Linux learning curve, it's worth doing.
 
 <figure><img src="/images/migrated/fedora-06-verdict.png" alt="" width="188"><figcaption></figcaption></figure>

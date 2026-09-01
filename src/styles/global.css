@@ -1,23 +1,64 @@
 @import "tailwindcss";
 @import "./typography.css";
+@import "./ui.css";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
+/* ---------------------------------------------------------------------------
+   Palette — one set for the whole site.
+
+   Warm paper and ink, ember as the single accent, three secondary accents used
+   only as flat fills on tiles. `--border` is the hairline; `--line` is the hard
+   2px ink edge that cards and buttons are drawn with.
+   --------------------------------------------------------------------------- */
+
 :root,
 html[data-theme="light"] {
-  --background: #fdfdfd;
-  --foreground: #282728;
-  --accent: #006cac;
-  --muted: #e6e6e6;
-  --border: #ece9e9;
+  --background: #f2eee3;
+  --foreground: #17161c;
+  --accent: #ff5a1f;
+  --muted: #e8e3d4;
+  --border: #dcd6c6;
+
+  --card: #fffdf7;
+  --line: #17161c;
+  --soft: #5b5766;
+  --shadow: #17161c;
+  --dot: rgba(23, 22, 28, 0.16);
+
+  --cyan: #0d8ba6;
+  --violet: #6a4ce6;
+  --lime: #b6d900;
+
+  --on-accent: #fffdf7;
+  --on-cyan: #fffdf7;
+  --on-violet: #fffdf7;
+  --on-lime: #17161c;
+  --on-mark: #17161c;
 }
 
 html[data-theme="dark"] {
-  --background: #212737;
-  --foreground: #eaedf3;
+  --background: #0e0e14;
+  --foreground: #f1eee5;
   --accent: #ff6b01;
-  --muted: #343f60;
-  --border: #ab4b08;
+  --muted: #1e1e28;
+  --border: #2a2833;
+
+  --card: #17171f;
+  --line: #35333f;
+  --soft: #a09cae;
+  --shadow: #2b2936;
+  --dot: rgba(241, 238, 229, 0.13);
+
+  --cyan: #35c7e0;
+  --violet: #a58bff;
+  --lime: #cbf24a;
+
+  --on-accent: #17110a;
+  --on-cyan: #08181c;
+  --on-violet: #140f26;
+  --on-lime: #14180a;
+  --on-mark: #17110a;
 }
 
 @theme inline {
@@ -27,6 +68,9 @@ html[data-theme="dark"] {
   --color-accent: var(--accent);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-soft: var(--soft);
 }
 
 @layer base {
@@ -59,8 +103,11 @@ html[data-theme="dark"] {
   @apply mx-auto w-full max-w-app px-4;
 }
 
-.active-nav {
-  @apply underline decoration-wavy decoration-2 underline-offset-8;
+/* Wide layout, for pages that lay out in columns rather than read top to
+   bottom (the home page, listings that use the full width). */
+@utility app-layout-wide {
+  @apply mx-auto w-full px-[clamp(1rem,4vw,2.5rem)];
+  max-width: 74rem;
 }
 
 /* Source: https://piccalil.li/blog/a-more-modern-css-reset/ */

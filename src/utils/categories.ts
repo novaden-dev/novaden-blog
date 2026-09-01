@@ -26,4 +26,8 @@ export const CATEGORIES = {
 export type CategoryKey = keyof typeof CATEGORIES;
 
 // Display order on the homepage and category index.
-export const CATEGORY_ORDER: CategoryKey[] = ["notes", "journal", "cert-review"];
+export const CATEGORY_ORDER: CategoryKey[] = [
+  "notes",
+  "journal",
+  "cert-review",
+];

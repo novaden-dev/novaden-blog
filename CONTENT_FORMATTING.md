@@ -78,13 +78,15 @@ Do not use `#` (h1) or `####` (h4) in post bodies.
 
 ## Remediation Section
 
-Every post should end with a `## Remediation` section. Structure it as follows:
+Posts that describe a **vulnerability class** end with a `## Remediation` section. Structure it as follows:
 
 1. An **introductory sentence or short paragraph** summarizing the prevention strategy.
 2. A **bullet (unordered) list** using dashes (`-`) of actionable remediation steps.
 3. If the section is extensive, group items under a `### General Guidelines` subheading.
 
 Do not use ordered (numbered) lists in Remediation.
+
+**When it does not apply:** posts about a *process* rather than a *flaw* (methodology, tooling, setup, workflow) have nothing to remediate. Do not bolt a Remediation section onto them. End them on whatever section actually finishes the argument.
 
 ---
 
@@ -154,7 +156,7 @@ Every post file must end with a single trailing newline.
 - [ ] Plain language, no AI-prose words (`overwhelmingly`, `composable`, `leverage`, etc.)
 - [ ] No invented causation in explanations
 - [ ] Code blocks are fenced (` ``` `) with a language specifier
-- [ ] Remediation uses a dash (`-`) bullet list with an intro sentence (security posts only)
+- [ ] Remediation uses a dash (`-`) bullet list with an intro sentence (vulnerability-class posts only; not methodology or tooling posts)
 - [ ] Tables are used for comparison data where appropriate
 - [ ] Blockquotes use bold labels (`**Note:**`, `**Tip:**`, `**Danger:**`, `**Gotcha:**`)
 - [ ] Inline code is backtick-wrapped
