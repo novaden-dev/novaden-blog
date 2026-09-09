@@ -1,0 +1,426 @@
+---
+import { getCollection } from "astro:content";
+import getSortedPosts from "@/utils/getSortedPosts";
+import getPostsByCategory from "@/utils/getPostsByCategory";
+import getUniqueSeries from "@/utils/getUniqueSeries";
+import { getPath } from "@/utils/getPath";
+import { slugifyStr } from "@/utils/slugify";
+import { CATEGORIES, CATEGORY_ORDER } from "@/utils/categories";
+import { OSCP, GITBOOK } from "@/constants";
+import { SITE } from "@/config";
+
+// The shell is the same on every page, so it works out the places itself
+// rather than making each page pass them down.
+
+type Crumb = { label: string; href?: string };
+
+type Props = {
+  /* The path bar reads like a path: novaden / notes / http-request-smuggling */
+  path?: Crumb[];
+  /* Which sidebar place is the current one. */
+  place?: string;
+};
+
+const { path = [], place } = Astro.props;
+
+const posts = await getCollection("blog", ({ data }) => !data.draft);
+const sorted = getSortedPosts(posts);
+
+const projects = (
+  await getCollection("projects", ({ data }) => !data.draft)
+).sort((a, b) => a.data.order - b.data.order);
+
+const places = CATEGORY_ORDER.map(key => ({
+  key,
+  label: CATEGORIES[key].label.toLowerCase(),
+  href: `/categories/${key}/`,
+  count: getPostsByCategory(posts, key).length,
+  kind: key,
+})).filter(entry => entry.count > 0);
+
+const seriesList = getUniqueSeries(posts);
+
+const pinnedCount = posts.filter(post => post.data.featured).length;
+
+const tags = Array.from(
+  posts
+    .flatMap(post => post.data.tags)
+    .reduce((map, tag) => {
+      const slug = slugifyStr(tag);
+      const entry = map.get(slug) ?? { name: tag, count: 0 };
+      entry.count += 1;
+      return map.set(slug, entry);
+    }, new Map<string, { name: string; count: number }>())
+    .entries()
+)
+  .map(([slug, value]) => ({ slug, ...value }))
+  .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+  .slice(0, 8);
+
+const newest = sorted.at(0)?.data.pubDatetime;
+const updated = newest
+  ? newest.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: SITE.timezone,
+    })
+  : "";
+
+// Everything the jump palette can reach, as one small payload.
+const index = [
+  ...sorted.map(post => ({
+    t: post.data.title,
+    h: getPath(post.id, post.filePath),
+    k: post.data.category,
+  })),
+  ...projects.map(project => ({
+    t: project.data.name,
+    h: "/projects",
+    k: "apps",
+  })),
+];
+---
+
+<div class="bar">
+  <a class="bar-brand" href="/"><i aria-hidden="true"></i>novaden</a>
+
+  <nav class="bar-path" aria-label="Path">
+    {
+      path.length === 0 ? (
+        <span class="here">~</span>
+      ) : (
+        path.map((crumb, i) => (
+          <>
+            <span class="sep" aria-hidden="true">
+              /
+            </span>
+            {crumb.href && i < path.length - 1 ? (
+              <a href={crumb.href}>{crumb.label}</a>
+            ) : (
+              <span class="here">{crumb.label}</span>
+            )}
+          </>
+        ))
+      )
+    }
+  </nav>
+
+  <div class="bar-right">
+    <button class="bar-btn" type="button" data-jump-open>
+      jump <kbd>⌘K</kbd>
+    </button>
+    <a class="bar-btn bar-icon" href="/search" aria-label="Full-text search">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle
+          cx="10.5"
+          cy="10.5"
+          r="6.5"
+          stroke="currentColor"
+          stroke-width="2"></circle>
+        <path
+          d="m16 16 5 5"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"></path>
+      </svg>
+    </a>
+    <button
+      class="bar-btn bar-icon"
+      type="button"
+      id="theme-btn"
+      aria-label="Toggle theme"
+    >
+      <svg
+        class="icon-moon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M20 15A8.5 8.5 0 0 1 9 4a8.5 8.5 0 1 0 11 11Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"></path>
+      </svg>
+      <svg
+        class="icon-sun"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"
+        ></circle>
+        <path
+          d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="side" aria-label="Places">
+    <div class="side-group">
+      <p class="side-label">Places</p>
+      <a
+        class="side-link"
+        href="/"
+        data-kind="all"
+        aria-current={place === "all" ? "page" : undefined}
+      >
+        <span class="side-dot" aria-hidden="true"></span>
+        <span class="side-name">everything</span>
+        <span class="side-count">{sorted.length}</span>
+      </a>
+      {
+        pinnedCount > 0 && (
+          <a
+            class="side-link"
+            href="/starred"
+            aria-current={place === "starred" ? "page" : undefined}
+          >
+            <span class="side-star" aria-hidden="true">
+              ★
+            </span>
+            <span class="side-name">starred</span>
+            <span class="side-count">{pinnedCount}</span>
+          </a>
+        )
+      }
+      {
+        places.map(entry => (
+          <a
+            class="side-link"
+            href={entry.href}
+            data-kind={entry.kind}
+            aria-current={place === entry.key ? "page" : undefined}
+          >
+            <span class="side-dot" aria-hidden="true" />
+            <span class="side-name">{entry.label}</span>
+            <span class="side-count">{entry.count}</span>
+          </a>
+        ))
+      }
+      <a
+        class="side-link"
+        href="/projects"
+        data-kind="apps"
+        aria-current={place === "apps" ? "page" : undefined}
+      >
+        <span class="side-dot" aria-hidden="true"></span>
+        <span class="side-name">apps</span>
+        <span class="side-count">{projects.length}</span>
+      </a>
+      <a
+        class="side-link"
+        href={OSCP.url}
+        target="_blank"
+        rel="noopener"
+        data-kind="external"
+      >
+        <span class="side-dot" aria-hidden="true"></span>
+        <span class="side-name">oscp vault</span>
+        <span class="side-count">↗</span>
+      </a>
+    </div>
+
+    {
+      seriesList.length > 0 && (
+        <div class="side-group">
+          <p class="side-label">Series</p>
+          {seriesList.map(entry => (
+            <a
+              class="side-link"
+              href={`/series/${entry.series}/`}
+              data-kind="series"
+              aria-current={place === entry.series ? "page" : undefined}
+            >
+              <span class="side-dot" aria-hidden="true" />
+              <span class="side-name">{entry.seriesName.toLowerCase()}</span>
+              <span class="side-count">{entry.count}</span>
+            </a>
+          ))}
+        </div>
+      )
+    }
+
+    <div class="side-group">
+      <p class="side-label">Tags</p>
+      {
+        tags.map(tag => (
+          <a class="side-link" href={`/tags/${tag.slug}/`}>
+            <span class="side-dot" aria-hidden="true" />
+            <span class="side-name">{tag.name.toLowerCase()}</span>
+            <span class="side-count">{tag.count}</span>
+          </a>
+        ))
+      }
+      <a class="side-link" href="/tags">
+        <span class="side-dot" aria-hidden="true"></span>
+        <span class="side-name" style="color: var(--chrome-dim)">all tags…</span
+        >
+      </a>
+    </div>
+
+    <p class="side-note">
+      Runs on a mini-PC in my apartment. When the power blinks, so does this.
+    </p>
+  </nav>
+
+  <main class="pane" id="main-content">
+    <slot />
+  </main>
+</div>
+
+<footer class="statusbar">
+  <span><b>{sorted.length}</b> posts</span>
+  <span>updated <b>{updated}</b></span>
+  <span class="max-sm:hidden">self-hosted · no trackers</span>
+  <span class="statusbar-right">
+    <a href={GITBOOK} target="_blank" rel="noopener">gitbook ↗</a>
+    <a href="/rss.xml">rss</a>
+    <a href="/about">about</a>
+  </span>
+</footer>
+
+<div class="jump" id="jump" hidden>
+  <div class="jump-panel" role="dialog" aria-modal="true" aria-label="Jump to">
+    <label class="jump-box">
+      <span class="filter-caret" aria-hidden="true">›</span>
+      <input
+        id="jump-input"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="jump to…"
+        aria-label="Jump to a post"
+      />
+    </label>
+    <div class="jump-results" id="jump-results"></div>
+    <div class="jump-foot">
+      <span>↑↓ move</span><span>↵ open</span><span>esc close</span>
+    </div>
+  </div>
+</div>
+
+<script
+  is:inline
+  id="jump-index"
+  type="application/json"
+  set:html={JSON.stringify(index)}
+/>
+
+<script>
+  // The jump palette: ⌘K / ctrl-K anywhere, or "/" when not already typing.
+  function initJump() {
+    const overlay = document.getElementById("jump");
+    const input = document.getElementById("jump-input") as HTMLInputElement;
+    const list = document.getElementById("jump-results");
+    const raw = document.getElementById("jump-index")?.textContent;
+    if (!overlay || !input || !list || !raw) return;
+
+    const items: { t: string; h: string; k: string }[] = JSON.parse(raw);
+    let active = 0;
+
+    const render = (query: string) => {
+      const q = query.trim().toLowerCase();
+      const hits = (
+        q ? items.filter(item => item.t.toLowerCase().includes(q)) : items
+      ).slice(0, 12);
+      active = 0;
+      list.innerHTML = hits.length
+        ? hits
+            .map(
+              (item, i) =>
+                `<a href="${item.h}" data-kind="${item.k}" class="${i === 0 ? "is-active" : ""}"><span>${item.t.replace(/[<>&]/g, "")}</span><span class="jump-kind">${item.k}</span></a>`
+            )
+            .join("")
+        : `<p class="empty">nothing matches “${query.replace(/[<>&]/g, "")}”</p>`;
+    };
+
+    const links = () => Array.from(list.querySelectorAll("a"));
+
+    const move = (step: number) => {
+      const all = links();
+      if (all.length === 0) return;
+      all[active]?.classList.remove("is-active");
+      active = (active + step + all.length) % all.length;
+      all[active]?.classList.add("is-active");
+      all[active]?.scrollIntoView({ block: "nearest" });
+    };
+
+    const open = () => {
+      overlay.hidden = false;
+      input.value = "";
+      render("");
+      input.focus();
+    };
+    const close = () => {
+      overlay.hidden = true;
+    };
+
+    input.addEventListener("input", () => render(input.value));
+
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) close();
+    });
+
+    document
+      .querySelectorAll("[data-jump-open]")
+      .forEach(button => button.addEventListener("click", open));
+
+    document.addEventListener("keydown", event => {
+      const typing = /^(INPUT|TEXTAREA)$/.test(
+        document.activeElement?.tagName ?? ""
+      );
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        if (overlay.hidden) {
+          open();
+        } else {
+          close();
+        }
+        return;
+      }
+
+      if (event.key === "/" && !typing && overlay.hidden) {
+        event.preventDefault();
+        open();
+        return;
+      }
+
+      if (overlay.hidden) return;
+
+      if (event.key === "Escape") close();
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        move(1);
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        move(-1);
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        links()[active]?.click();
+      }
+    });
+  }
+
+  initJump();
+  document.addEventListener("astro:after-swap", initJump);
+</script>

@@ -1,0 +1,19 @@
+---
+import { getCollection } from "astro:content";
+import Pane from "@/layouts/Pane.astro";
+import FileList from "@/components/FileList.astro";
+import getSortedPosts from "@/utils/getSortedPosts";
+
+const posts = await getCollection("blog", ({ data }) => !data.draft);
+const pinned = getSortedPosts(posts).filter(post => post.data.featured);
+---
+
+<Pane
+  title="starred"
+  desc="The ones I would hand someone who asked what I actually do. Pinned by hand, not by traffic."
+  stat={`${pinned.length} items`}
+  path={[{ label: "starred" }]}
+  place="starred"
+>
+  <FileList groups={[{ label: "pinned", posts: pinned, star: true }]} />
+</Pane>

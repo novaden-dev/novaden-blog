@@ -1,28 +1,48 @@
 @plugin "@tailwindcss/typography";
 
 @layer base {
-  /* ===== Long-form reading ===== */
+  /* ===== Long-form reading =====
+     The shell is mono everywhere else. Inside an article that inverts: the
+     body is Newsreader, the headings are Chivo, and mono is kept for the
+     things that are looked at rather than read — code, captions, table
+     headers. Nothing in here is a card. */
   .app-prose {
     @apply prose;
+
+    font-family: var(--font-read);
 
     h1,
     h2,
     h3,
-    h4,
+    h4 {
+      @apply mb-3 text-foreground;
+      font-family: var(--font-display);
+      letter-spacing: -0.02em;
+      text-wrap: balance;
+    }
+
     th {
       @apply mb-3 text-foreground;
     }
 
+    /* A hairline separates sections instead of empty space, so a long
+       reference note stays scannable. */
     h2 {
-      @apply mt-12 text-2xl font-bold tracking-tight;
+      @apply mt-11 border-t border-border pt-5 text-2xl font-bold;
     }
 
     h3 {
-      @apply mt-8 text-xl font-semibold;
+      @apply mt-8 text-xl font-bold;
     }
 
     h4 {
       @apply mt-6 font-semibold;
+    }
+
+    p,
+    li {
+      font-size: 1.02rem;
+      line-height: 1.72;
     }
 
     p,
@@ -33,6 +53,12 @@
     table,
     code {
       @apply text-foreground;
+    }
+
+    figcaption,
+    th {
+      font-family: var(--font-app);
+      font-size: 0.78rem;
     }
 
     a {
@@ -48,11 +74,11 @@
     }
 
     hr {
-      @apply my-10 border-t border-dashed border-border;
+      @apply my-10 border-t border-border;
     }
 
     img {
-      @apply mx-auto rounded-xl border-2 border-line;
+      @apply mx-auto rounded-xs border border-border;
     }
 
     figcaption {
@@ -79,15 +105,21 @@
 
     /* Inline code reads as a chip; code inside a block resets back out. */
     code {
-      @apply rounded-md border border-border bg-muted/70 px-1.5 py-0.5 text-[0.9em] wrap-break-word before:content-none after:content-none;
+      @apply rounded-xs border border-border bg-sheet px-1.5 py-0.5 text-[0.84em] wrap-break-word before:content-none after:content-none;
+      font-family: var(--font-app);
     }
 
     .astro-code code {
       @apply flex-[1_0_100%] border-0 bg-inherit p-0;
     }
 
+    /* A note in the margin of a printout, not a pull quote. */
     blockquote {
-      @apply rounded-e-xl border-s-4 border-s-accent bg-card px-5 py-1 wrap-break-word not-italic;
+      @apply rounded-xs border-s-2 border-s-accent bg-sheet px-5 py-2 wrap-break-word not-italic;
+      font-family: var(--font-app);
+      font-size: 0.84rem;
+      line-height: 1.65;
+      color: var(--soft);
     }
 
     details {
@@ -107,11 +139,11 @@
      Shiki keeps its syntax colours; the ground is ours, so blocks sit on the
      same paper as the rest of the page instead of a white or navy slab. */
   .astro-code {
-    @apply flex rounded-xl border-2 border-line bg-card text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
+    @apply flex rounded-xs border border-border bg-sheet text-(--shiki-light) outline-border [&_span]:text-(--shiki-light);
   }
 
   html[data-theme="dark"] .astro-code {
-    @apply bg-muted text-(--shiki-dark) [&_span]:text-(--shiki-dark);
+    @apply bg-sheet text-(--shiki-dark) [&_span]:text-(--shiki-dark);
   }
 
   /* Styles for Shiki transformers */
@@ -127,7 +159,7 @@
       @apply inline-block w-full bg-accent/10;
     }
     .highlighted-word {
-      @apply rounded-sm border border-border px-0.5 py-px;
+      @apply rounded-xs border border-border px-0.5 py-px;
     }
   }
 }

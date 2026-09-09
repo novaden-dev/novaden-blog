@@ -4,14 +4,15 @@ pubDatetime: 2026-06-02T00:00:00Z
 title: "Android Pentesting Cheat Sheet"
 slug: "android-cheatsheet"
 description: "Quick-reference commands for Android pentesting: adb device interaction, apktool, APK signing, and jadx decompilation."
-tags: ["android", "security", "cheatsheet", "notes"]
+tags: ["android", "security", "cheatsheet"]
+category: notes
 draft: false
 featured: false
 ---
 
 > **Note:** These are working notes and still in progress.
 
-A living quick-reference for the commands used when pentesting Android apps. For the model behind any of this (activities, intents, attack surface, RE methodology), see [Android Pentesting](/posts/android-pentesting).
+A living quick-reference for the commands used when pentesting Android apps. For the model behind any of this (app components, data storage, attack surface, RE methodology), see [Android App Fundamentals](/posts/android-fundamentals).
 
 ## Device Setup
 

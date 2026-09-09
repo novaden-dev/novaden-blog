@@ -1,13 +1,9 @@
 ---
 import { getCollection } from "astro:content";
-import Main from "@/layouts/Main.astro";
-import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
-import Card from "@/components/Card.astro";
+import Pane from "@/layouts/Pane.astro";
+import FileList from "@/components/FileList.astro";
 import getUniqueSeries from "@/utils/getUniqueSeries";
 import getPostsBySeries from "@/utils/getPostsBySeries";
-import { SITE } from "@/config";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -26,17 +22,12 @@ const posts = await getCollection("blog");
 const seriesPosts = getPostsBySeries(posts, series);
 ---
 
-<Layout title={`Series: ${seriesName} | ${SITE.title}`}>
-  <Header />
-  <Main
-    pageTitle={[`Series:`, `${seriesName}`]}
-    titleTransition={series}
-    pageDesc={`All posts in the "${seriesName}" series, in order.`}
-  >
-    <h1 slot="title" transition:name={series}>{`Series:${series}`}</h1>
-    <ul>
-      {seriesPosts.map(data => <Card {...data} />)}
-    </ul>
-  </Main>
-  <Footer />
-</Layout>
+<Pane
+  title={String(seriesName).toLowerCase()}
+  desc="A sequence. Read it in order, or drop in anywhere — every part links back."
+  stat={`${seriesPosts.length} parts, in order`}
+  path={[{ label: "series", href: "/series/" }, { label: String(series) }]}
+  place={String(series)}
+>
+  <FileList posts={seriesPosts} numbered />
+</Pane>

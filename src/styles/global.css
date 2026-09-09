@@ -1,76 +1,98 @@
 @import "tailwindcss";
 @import "./typography.css";
-@import "./ui.css";
+@import "./shell.css";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /* ---------------------------------------------------------------------------
-   Palette — one set for the whole site.
+   Palette — the workspace.
 
-   Warm paper and ink, ember as the single accent, three secondary accents used
-   only as flat fills on tiles. `--border` is the hairline; `--line` is the hard
-   2px ink edge that cards and buttons are drawn with.
+   NovaDen is a shell you are inside, so the page has two grounds, not one:
+
+     CHROME  the frame — path bar, sidebar, status strip. Always the darker of
+             the two, in BOTH themes, so the shell always reads as chrome.
+     PANE    the content area. Paper in light, near-black in dark.
+
+   Ember marks one thing only: where you are (the selected row, the current
+   place, the caret). The KIND colours are `ls --color` — a hue per category so
+   a listing can be read by shape before it is read by word. They are never
+   decoration and never used for anything but kind.
    --------------------------------------------------------------------------- */
 
 :root,
 html[data-theme="light"] {
-  --background: #f2eee3;
-  --foreground: #17161c;
-  --accent: #ff5a1f;
-  --muted: #e8e3d4;
-  --border: #dcd6c6;
+  --chrome: #22252a;
+  --chrome-ink: #d8d6d0;
+  --chrome-dim: #83878f;
+  --chrome-rule: #34383f;
+  --chrome-hover: #2c3037;
 
-  --card: #fffdf7;
-  --line: #17161c;
-  --soft: #5b5766;
-  --shadow: #17161c;
-  --dot: rgba(23, 22, 28, 0.16);
+  --background: #f6f4ef; /* the pane */
+  --foreground: #191b1f;
+  --soft: #565b63;
+  --faint: #8d9199;
+  --rule: #ddd9d0;
+  --sheet: #ece9e2;
+  --card: #fffefb;
 
-  --cyan: #0d8ba6;
-  --violet: #6a4ce6;
-  --lime: #b6d900;
+  --accent: #e0521c;
+  --on-accent: #fffefb;
 
-  --on-accent: #fffdf7;
-  --on-cyan: #fffdf7;
-  --on-violet: #fffdf7;
-  --on-lime: #17161c;
-  --on-mark: #17161c;
+  --k-notes: #2a7fa0;
+  --k-journal: #b3781a;
+  --k-cert: #bf4b5a;
+  --k-series: #4d8a37;
+  --k-apps: #1c8a74;
+  --k-external: #6f5bbf;
 }
 
 html[data-theme="dark"] {
-  --background: #0e0e14;
-  --foreground: #f1eee5;
-  --accent: #ff6b01;
-  --muted: #1e1e28;
-  --border: #2a2833;
+  --chrome: #0f1114;
+  --chrome-ink: #cbc9c3;
+  --chrome-dim: #71767f;
+  --chrome-rule: #23262b;
+  --chrome-hover: #1a1d21;
 
-  --card: #17171f;
-  --line: #35333f;
-  --soft: #a09cae;
-  --shadow: #2b2936;
-  --dot: rgba(241, 238, 229, 0.13);
+  --background: #191c20;
+  --foreground: #e6e4de;
+  --soft: #9ca1a9;
+  --faint: #6b7079;
+  --rule: #2a2e34;
+  --sheet: #212429;
+  --card: #1f2227;
 
-  --cyan: #35c7e0;
-  --violet: #a58bff;
-  --lime: #cbf24a;
+  --accent: #ff6b2e;
+  --on-accent: #1a0c04;
 
-  --on-accent: #17110a;
-  --on-cyan: #08181c;
-  --on-violet: #140f26;
-  --on-lime: #14180a;
-  --on-mark: #17110a;
+  --k-notes: #5fb3d4;
+  --k-journal: #e0a33c;
+  --k-cert: #e8737f;
+  --k-series: #8fc866;
+  --k-apps: #5fd4b0;
+  --k-external: #a48fd4;
 }
 
 @theme inline {
-  --font-app: var(--font-google-sans-code);
+  /* `--font-app` is mono and is the document default: this is a shell, so the
+     resting voice is the utility voice. Reading and headings opt out. */
+  --font-app: var(--font-mono);
+  --font-display: var(--font-chivo);
+  --font-read: var(--font-newsreader);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
+  --color-chrome: var(--chrome);
   --color-card: var(--card);
-  --color-line: var(--line);
+  --color-sheet: var(--sheet);
   --color-soft: var(--soft);
+  --color-faint: var(--faint);
+  --color-border: var(--rule);
+  --color-rule: var(--rule);
+
+  /* Kept so the older pages still compile while they are migrated. */
+  --color-muted: var(--sheet);
+  --color-line: var(--rule);
 }
 
 @layer base {
@@ -83,7 +105,7 @@ html[data-theme="dark"] {
     @apply overflow-y-scroll scroll-smooth;
   }
   body {
-    @apply flex min-h-svh flex-col bg-background font-app text-foreground selection:bg-accent/75 selection:text-background;
+    @apply flex min-h-svh flex-col bg-chrome font-app text-foreground selection:bg-accent selection:text-(--on-accent);
   }
   a,
   button {

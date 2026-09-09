@@ -1,0 +1,36 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Shell from "@/layouts/Shell.astro";
+import { SITE } from "@/config";
+
+// Every page that is not an article is a pane: a name, a count, a sentence,
+// then whatever the pane holds.
+
+type Crumb = { label: string; href?: string };
+
+type Props = {
+  title: string;
+  desc?: string;
+  /* Right-aligned count, e.g. "43 items". */
+  stat?: string;
+  path?: Crumb[];
+  place?: string;
+  /* Page <title>; defaults to the pane name. */
+  head?: string;
+};
+
+const { title, desc, stat, path = [], place, head } = Astro.props;
+---
+
+<Layout title={`${head ?? title} | ${SITE.title}`} description={desc}>
+  <Shell {path} {place}>
+    <header class="pane-head">
+      <div class="pane-head-row">
+        <h1 class="pane-title">{title}</h1>
+        {stat && <p class="pane-stat">{stat}</p>}
+      </div>
+      {desc && <p class="pane-desc">{desc}</p>}
+    </header>
+    <slot />
+  </Shell>
+</Layout>

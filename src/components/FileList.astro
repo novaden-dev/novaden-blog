@@ -1,0 +1,191 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getPath } from "@/utils/getPath";
+import { CATEGORIES } from "@/utils/categories";
+import { SITE } from "@/config";
+
+// One listing, everywhere. A post is a file: a kind square, a name, its kind,
+// its date, and a one-line description underneath for scanning.
+//
+// Rows can be split into groups the way a file manager floats pinned items
+// above the rest. Filtering hides a group's header once none of its rows
+// survive, so a filter never leaves an empty heading behind.
+
+type Group = {
+  label: string;
+  /* One short line of context, shown beside the label. */
+  note?: string;
+  posts: CollectionEntry<"blog">[];
+  /* Star the rows instead of colouring them by kind. */
+  star?: boolean;
+};
+
+type Props = {
+  posts?: CollectionEntry<"blog">[];
+  groups?: Group[];
+  /* Show the client-side filter box above the listing. */
+  filter?: boolean;
+  /* Series listings number their rows instead of colouring them by kind. */
+  numbered?: boolean;
+};
+
+const { posts, groups, filter = false, numbered = false } = Astro.props;
+
+const sections: Group[] = groups ?? [{ label: "", posts: posts ?? [] }];
+
+const toFile = (post: CollectionEntry<"blog">, i: number) => {
+  const match = post.data.title.match(/^.*?\s(v[\d.]+)\s*[—–-]\s*(.+)$/);
+  return {
+    href: getPath(post.id, post.filePath),
+    title: numbered ? (match?.[2] ?? post.data.title) : post.data.title,
+    n: numbered ? (match?.[1] ?? String(i + 1)) : null,
+    desc: post.data.description,
+    kind: post.data.category,
+    kindLabel: (
+      CATEGORIES[post.data.category]?.label ?? post.data.category
+    ).toLowerCase(),
+    date: post.data.pubDatetime.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      timeZone: SITE.timezone,
+    }),
+    year: post.data.pubDatetime.getUTCFullYear(),
+    search:
+      `${post.data.title} ${post.data.description} ${post.data.category} ${post.data.tags.join(" ")}`.toLowerCase(),
+  };
+};
+
+const total = sections.reduce((sum, group) => sum + group.posts.length, 0);
+---
+
+<div data-filelist>
+  {
+    filter && (
+      <label class="filter">
+        <span class="filter-caret" aria-hidden="true">
+          ›
+        </span>
+        <input
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="filter by name, tag or kind"
+          aria-label="Filter this listing"
+          data-filter-input
+        />
+        <kbd data-filter-count>{total}</kbd>
+      </label>
+    )
+  }
+
+  <div class="cols" aria-hidden="true">
+    <span>name</span><span class="k">kind</span><span class="r">date</span>
+  </div>
+
+  {
+    sections.map(group => (
+      <div class="group" data-group>
+        {group.label && (
+          <p class="group-head" data-group-head>
+            {group.star && (
+              <span class="group-star" aria-hidden="true">
+                ★
+              </span>
+            )}
+            <span class="group-name">{group.label}</span>
+            {group.note && <span class="group-note">{group.note}</span>}
+            <span class="group-count" data-group-count>
+              {group.posts.length}
+            </span>
+          </p>
+        )}
+
+        {group.posts.map((post, i) => {
+          const file = toFile(post, i);
+          return (
+            <a
+              class="file"
+              href={file.href}
+              data-kind={file.kind}
+              data-search={file.search}
+            >
+              <span class="file-name">
+                {file.n ? (
+                  <span class="file-n">{file.n}</span>
+                ) : group.star ? (
+                  <span class="file-star" aria-label="pinned">
+                    ★
+                  </span>
+                ) : (
+                  <span class="file-dot" aria-hidden="true" />
+                )}
+                <span class="file-title">{file.title}</span>
+              </span>
+              <span class="file-kind">{file.kindLabel}</span>
+              <span class="file-date r">
+                {file.date} {file.year}
+              </span>
+              {file.desc && <span class="file-desc">{file.desc}</span>}
+            </a>
+          );
+        })}
+      </div>
+    ))
+  }
+
+  {
+    filter && (
+      <p class="empty" data-filter-empty hidden>
+        nothing matches that filter.
+      </p>
+    )
+  }
+</div>
+
+<script>
+  // Filters the listing already on the page — no fetch, no re-render.
+  function initFileList() {
+    for (const list of document.querySelectorAll<HTMLElement>(
+      "[data-filelist]"
+    )) {
+      const input = list.querySelector<HTMLInputElement>("[data-filter-input]");
+      if (!input || input.dataset.wired) continue;
+      input.dataset.wired = "1";
+
+      const count = list.querySelector("[data-filter-count]");
+      const empty = list.querySelector<HTMLElement>("[data-filter-empty]");
+      const groups = Array.from(
+        list.querySelectorAll<HTMLElement>("[data-group]")
+      ).map(group => ({
+        head: group.querySelector<HTMLElement>("[data-group-head]"),
+        tally: group.querySelector<HTMLElement>("[data-group-count]"),
+        rows: Array.from(group.querySelectorAll<HTMLElement>(".file")),
+      }));
+
+      input.addEventListener("input", () => {
+        const query = input.value.trim().toLowerCase();
+        let shown = 0;
+
+        for (const group of groups) {
+          let visible = 0;
+          for (const row of group.rows) {
+            const hit = !query || (row.dataset.search ?? "").includes(query);
+            row.hidden = !hit;
+            if (hit) visible++;
+          }
+          // A heading with nothing under it is noise, so it goes too, and the
+          // count beside it follows the filter rather than the total.
+          if (group.head) group.head.hidden = visible === 0;
+          if (group.tally) group.tally.textContent = String(visible);
+          shown += visible;
+        }
+
+        if (count) count.textContent = String(shown);
+        if (empty) empty.hidden = shown > 0;
+      });
+    }
+  }
+
+  initFileList();
+  document.addEventListener("astro:after-swap", initFileList);
+</script>

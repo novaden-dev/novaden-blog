@@ -1,0 +1,1330 @@
+/* ---------------------------------------------------------------------------
+   The shell.
+
+   Every page on this site is a pane inside one persistent frame:
+
+     PATH BAR   where you are, and how to jump (sticky top)
+     SIDEBAR    the places, with live counts (sticky)
+     PANE       the content — a listing, or an article
+     STATUS     what this workspace is, in facts (pinned on desktop)
+
+   Nothing here is a hero and nothing sells anything. You land inside the
+   workspace and the first thing you see is the index.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --bar-h: 2.75rem;
+  --status-h: 1.75rem;
+  --side-w: 14.5rem;
+}
+
+/* --- frame ---------------------------------------------------------------- */
+
+.shell {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  background: var(--background);
+  min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .shell {
+    grid-template-columns: var(--side-w) minmax(0, 1fr);
+    padding-bottom: var(--status-h);
+  }
+}
+
+/* --- path bar ------------------------------------------------------------- */
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  height: var(--bar-h);
+  padding-inline: 0.85rem;
+  background: var(--chrome);
+  color: var(--chrome-ink);
+  border-bottom: 1px solid var(--chrome-rule);
+  font-family: var(--font-app);
+  font-size: 0.75rem;
+}
+
+.bar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5ch;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--chrome-ink);
+  flex: none;
+}
+
+.bar-brand i {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 1px;
+  flex: none;
+}
+
+/* The path is the page title: novaden / notes / http-request-smuggling */
+.bar-path {
+  display: flex;
+  align-items: center;
+  gap: 0.45ch;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--chrome-dim);
+}
+
+.bar-path a:hover {
+  color: var(--chrome-ink);
+}
+
+.bar-path .sep {
+  opacity: 0.5;
+}
+
+.bar-path .here {
+  color: var(--chrome-ink);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.bar-right {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: none;
+}
+
+.bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6ch;
+  height: 1.75rem;
+  padding-inline: 0.55rem;
+  border: 1px solid var(--chrome-rule);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--chrome-dim);
+  font-family: var(--font-app);
+  font-size: 0.7rem;
+}
+
+.bar-btn:hover {
+  background: var(--chrome-hover);
+  color: var(--chrome-ink);
+  border-color: var(--chrome-dim);
+}
+
+.bar-btn kbd {
+  font: inherit;
+  color: var(--chrome-ink);
+  opacity: 0.7;
+}
+
+.bar-icon {
+  width: 1.75rem;
+  padding: 0;
+  justify-content: center;
+}
+
+/* --- sidebar -------------------------------------------------------------- */
+
+.side {
+  background: var(--chrome);
+  color: var(--chrome-ink);
+  font-family: var(--font-app);
+  font-size: 0.75rem;
+  border-inline-end: 1px solid var(--chrome-rule);
+}
+
+@media (min-width: 1024px) {
+  .side {
+    position: sticky;
+    top: var(--bar-h);
+    height: calc(100dvh - var(--bar-h) - var(--status-h));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--chrome-rule) transparent;
+    padding-block: 0.6rem 1.25rem;
+  }
+}
+
+/* Below 1024 the places become one horizontal strip under the path bar: the
+   same list, scrolled sideways, instead of a menu that has to be opened. */
+@media (max-width: 1023px) {
+  .side {
+    position: sticky;
+    top: var(--bar-h);
+    z-index: 40;
+    display: flex;
+    gap: 0.3rem;
+    padding: 0.4rem 0.6rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--chrome-rule);
+  }
+  .side::-webkit-scrollbar {
+    display: none;
+  }
+  .side-group {
+    display: contents;
+  }
+  .side-label,
+  .side-note {
+    display: none;
+  }
+  .side-link {
+    white-space: nowrap;
+    border-radius: 3px;
+  }
+  .side-count {
+    margin-inline-start: 0.5ch;
+  }
+}
+
+.side-label {
+  padding: 0.9rem 0.85rem 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--chrome-dim);
+}
+
+.side-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6ch;
+  padding: 0.34rem 0.85rem;
+  color: var(--chrome-ink);
+  position: relative;
+}
+
+.side-link:hover {
+  background: var(--chrome-hover);
+}
+
+/* Where you are: an ember bar in the gutter, the way a file manager marks the
+   open folder. */
+.side-link[aria-current] {
+  background: var(--chrome-hover);
+  font-weight: 700;
+}
+
+.side-link[aria-current]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  background: var(--accent);
+}
+
+.side-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 1px;
+  background: var(--kind, var(--chrome-dim));
+}
+
+.side-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side-count {
+  margin-inline-start: auto;
+  color: var(--chrome-dim);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+}
+
+.side-note {
+  padding: 0.8rem 0.85rem 0;
+  margin-top: 0.6rem;
+  border-top: 1px solid var(--chrome-rule);
+  color: var(--chrome-dim);
+  font-size: 0.68rem;
+  line-height: 1.6;
+}
+
+/* --- pane ----------------------------------------------------------------- */
+
+.pane {
+  min-width: 0;
+  background: var(--background);
+}
+
+.pane-head {
+  padding: 1.1rem clamp(0.85rem, 2.5vw, 1.75rem) 0.95rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.pane-head-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+}
+
+.pane-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.pane-desc {
+  margin-top: 0.45rem;
+  font-family: var(--font-read);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--soft);
+  max-width: 66ch;
+}
+
+.pane-stat {
+  margin-inline-start: auto;
+  font-family: var(--font-app);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- filter --------------------------------------------------------------- */
+
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 0.7ch;
+  padding: 0.5rem clamp(0.85rem, 2.5vw, 1.75rem);
+  border-bottom: 1px solid var(--rule);
+  background: var(--sheet);
+  font-family: var(--font-app);
+  font-size: 0.78rem;
+}
+
+.filter-caret {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.filter input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font: inherit;
+  color: var(--foreground);
+}
+
+.filter input::placeholder {
+  color: var(--faint);
+}
+
+.filter kbd {
+  font: inherit;
+  font-size: 0.68rem;
+  color: var(--faint);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 0 0.35rem;
+}
+
+/* --- file list ------------------------------------------------------------ */
+
+.cols,
+.file {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.5rem 5rem;
+  column-gap: 1rem;
+  row-gap: 0;
+  align-items: baseline;
+  padding-inline: clamp(0.85rem, 2.5vw, 1.75rem);
+  font-family: var(--font-app);
+}
+
+.cols {
+  padding-block: 0.45rem;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+  position: sticky;
+  top: var(--bar-h);
+  background: var(--background);
+  z-index: 20;
+}
+
+.cols .r,
+.file .r {
+  text-align: end;
+}
+
+@media (max-width: 1023px) {
+  .cols {
+    top: calc(var(--bar-h) * 2 + 0.3rem);
+  }
+}
+
+.file {
+  padding-block: 0.42rem;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.82rem;
+  position: relative;
+}
+
+.file:hover {
+  background: var(--sheet);
+}
+
+.file:hover::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  background: var(--accent);
+}
+
+.file-name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7ch;
+  min-width: 0;
+}
+
+/* The kind square: `ls --color`, and the only place these hues are used. */
+.file-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 1px;
+  translate: 0 -1px;
+  background: var(--kind, var(--faint));
+}
+
+.file-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.file:hover .file-title {
+  color: var(--accent);
+}
+
+.file-kind,
+.file-date {
+  font-size: 0.7rem;
+  color: var(--faint);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.file-kind {
+  color: var(--kind, var(--faint));
+}
+
+/* The description is a second line, dimmed, clipped to one line — present for
+   scanning, never competing with the name. */
+.file-desc {
+  grid-column: 1 / -1;
+  margin-top: 0.1rem;
+  padding-inline-start: 1.55ch;
+  font-family: var(--font-read);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--soft);
+  max-width: 88ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .cols,
+  .file {
+    grid-template-columns: minmax(0, 1fr) 4.5rem;
+  }
+  .cols .k,
+  .file .file-kind {
+    display: none;
+  }
+}
+
+.empty {
+  padding: 2.5rem clamp(0.85rem, 2.5vw, 1.75rem);
+  font-family: var(--font-app);
+  font-size: 0.8rem;
+  color: var(--faint);
+}
+
+/* --- status strip --------------------------------------------------------- */
+
+.statusbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1.5rem;
+  padding: 0.35rem clamp(0.85rem, 2.5vw, 1.75rem);
+  background: var(--chrome);
+  color: var(--chrome-dim);
+  border-top: 1px solid var(--chrome-rule);
+  font-family: var(--font-app);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+}
+
+.statusbar b {
+  color: var(--chrome-ink);
+  font-weight: 500;
+}
+
+.statusbar a:hover {
+  color: var(--chrome-ink);
+}
+
+.statusbar-right {
+  margin-inline-start: auto;
+  display: flex;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .statusbar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 60;
+    height: var(--status-h);
+    padding-block: 0;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+}
+
+/* --- jump palette --------------------------------------------------------- */
+
+.jump {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: start center;
+  padding: 12vh 1rem 1rem;
+  background: color-mix(in oklab, var(--chrome) 72%, transparent);
+}
+
+.jump[hidden] {
+  display: none;
+}
+
+.jump-panel {
+  width: min(40rem, 100%);
+  background: var(--background);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: 0 1.5rem 3.5rem rgb(0 0 0 / 0.4);
+  overflow: hidden;
+}
+
+.jump-box {
+  display: flex;
+  align-items: center;
+  gap: 0.7ch;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-app);
+  font-size: 0.9rem;
+}
+
+.jump-box input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  font: inherit;
+  color: var(--foreground);
+}
+
+.jump-results {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.jump-results a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-app);
+  font-size: 0.8rem;
+}
+
+.jump-results a:last-child {
+  border-bottom: 0;
+}
+
+.jump-results a.is-active,
+.jump-results a:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.jump-results a.is-active .jump-kind,
+.jump-results a:hover .jump-kind {
+  color: var(--on-accent);
+  opacity: 0.75;
+}
+
+.jump-kind {
+  font-size: 0.7rem;
+  color: var(--kind, var(--faint));
+  white-space: nowrap;
+}
+
+.jump-foot {
+  display: flex;
+  gap: 1.25rem;
+  padding: 0.45rem 0.9rem;
+  border-top: 1px solid var(--rule);
+  background: var(--sheet);
+  font-family: var(--font-app);
+  font-size: 0.66rem;
+  color: var(--faint);
+}
+
+/* --- kind colours --------------------------------------------------------- */
+
+[data-kind="notes"] {
+  --kind: var(--k-notes);
+}
+[data-kind="journal"] {
+  --kind: var(--k-journal);
+}
+[data-kind="cert-review"] {
+  --kind: var(--k-cert);
+}
+[data-kind="series"] {
+  --kind: var(--k-series);
+}
+[data-kind="apps"] {
+  --kind: var(--k-apps);
+}
+[data-kind="external"] {
+  --kind: var(--k-external);
+}
+
+/* ---------------------------------------------------------------------------
+   The reading pane.
+
+   An article is a document open inside the shell. The chrome around it does
+   not change; the pane just stops being a listing and starts being text. No
+   cards, no shadows, no accent except the one that says where you are.
+   --------------------------------------------------------------------------- */
+
+.read {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+  padding: clamp(1.25rem, 3vw, 2.25rem) clamp(0.85rem, 2.5vw, 1.75rem)
+    clamp(2.5rem, 5vw, 4rem);
+}
+
+@media (min-width: 1280px) {
+  .read {
+    grid-template-columns: minmax(0, 44rem) minmax(0, 14rem);
+    justify-content: start;
+    gap: clamp(2rem, 4vw, 3.5rem);
+  }
+}
+
+/* --- masthead ------------------------------------------------------------- */
+
+.read-kind {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-app);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--faint);
+}
+
+.read-kind .k {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6ch;
+  color: var(--kind, var(--faint));
+}
+
+.read-kind .k::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.read-h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3.4vw, 2.5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  margin-top: 0.7rem;
+}
+
+.read-dek {
+  font-family: var(--font-read);
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  line-height: 1.55;
+  color: var(--soft);
+  margin-top: 0.7rem;
+  max-width: 58ch;
+}
+
+.read-by {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-app);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+}
+
+.read-body {
+  margin-top: 1.5rem;
+  max-width: none;
+}
+
+.read-body > :first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.read-foot {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  display: grid;
+  gap: 1.25rem;
+}
+
+/* --- the rail ------------------------------------------------------------- */
+
+.read-rail {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+  font-family: var(--font-app);
+}
+
+@media (min-width: 1280px) {
+  .read-rail {
+    position: sticky;
+    top: calc(var(--bar-h) + 1.5rem);
+    max-height: calc(100dvh - var(--bar-h) - var(--status-h) - 3rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
+  }
+}
+
+.rail-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--foreground);
+  margin-bottom: 0.15rem;
+}
+
+.rail-step {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--soft);
+  position: relative;
+}
+
+.rail-step .n {
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+a.rail-step:hover {
+  color: var(--accent);
+}
+
+/* Where you are, marked the same way the sidebar marks the current place. */
+.rail-step.is-here {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.rail-step.is-here .n {
+  color: var(--accent);
+}
+
+.rail-step.is-here::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -0.6rem;
+  width: 2px;
+  background: var(--accent);
+}
+
+.rail-next {
+  display: block;
+  padding: 0.6rem 0.7rem;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+
+.rail-next:hover {
+  border-color: var(--foreground);
+}
+
+.rail-next span {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.rail-next b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 0.15rem;
+}
+
+/* --- contents ------------------------------------------------------------- */
+
+.toc-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toc-list li.is-sub {
+  padding-inline-start: 0.85rem;
+}
+
+.toc-link {
+  display: block;
+  padding: 0.32rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--soft);
+}
+
+.toc-link:hover {
+  color: var(--accent);
+}
+
+.toc-link.is-current {
+  color: var(--foreground);
+  font-weight: 700;
+  box-shadow: inset 2px 0 0 var(--accent);
+  padding-inline-start: 0.5rem;
+}
+
+/* --- prev / next ---------------------------------------------------------- */
+
+.postnav {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .postnav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.postnav a {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-family: var(--font-app);
+}
+
+.postnav a:hover {
+  border-color: var(--foreground);
+}
+
+.postnav span {
+  font-size: 0.6rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.postnav b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 0.15rem;
+}
+
+/* --- tag pills ------------------------------------------------------------ */
+
+.tagrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tagrow a {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-family: var(--font-app);
+  font-size: 0.7rem;
+  color: var(--soft);
+}
+
+.tagrow a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* A numbered listing (a series) puts the step where the kind square goes. */
+.file-n {
+  flex: none;
+  min-width: 2.4rem;
+  color: var(--k-series);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- directory listings --------------------------------------------------- */
+
+/* Tags, categories and series indexes: the same row shape as a file, but the
+   thing being listed is a place rather than a document. */
+.dir {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem;
+  column-gap: 1rem;
+  row-gap: 0;
+  align-items: baseline;
+  padding: 0.55rem clamp(0.85rem, 2.5vw, 1.75rem);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-app);
+  position: relative;
+}
+
+.dir:hover {
+  background: var(--sheet);
+}
+
+.dir:hover::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  background: var(--accent);
+}
+
+.dir-name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7ch;
+  min-width: 0;
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.dir:hover .dir-name {
+  color: var(--accent);
+}
+
+.dir-count {
+  text-align: end;
+  font-size: 0.7rem;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.dir-desc {
+  grid-column: 1 / -1;
+  margin-top: 0.1rem;
+  padding-inline-start: 1.55ch;
+  font-family: var(--font-read);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--soft);
+  max-width: 80ch;
+}
+
+/* A dense grid for tag indexes, where the description would be noise. */
+.dir-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  border-bottom: 1px solid var(--rule);
+}
+
+.dir-grid .dir {
+  align-items: center;
+  border-bottom: 0;
+  border-inline-end: 1px solid var(--rule);
+  padding-inline: 0.85rem;
+}
+
+/* Names in the grid stay on one line so every cell is the same height. */
+.dir-grid .dir-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- project cards -------------------------------------------------------- */
+
+.projects {
+  display: grid;
+  gap: 0;
+}
+
+.project {
+  padding: 1.15rem clamp(0.85rem, 2.5vw, 1.75rem) 1.4rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.project-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.project-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.project-tag {
+  font-family: var(--font-read);
+  font-size: 0.95rem;
+  color: var(--soft);
+  margin-top: 0.2rem;
+}
+
+.project-body {
+  margin-top: 0.6rem;
+  max-width: 72ch;
+}
+
+.project-body p {
+  font-family: var(--font-read);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--soft);
+  margin-bottom: 0.6em;
+}
+
+.project-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+  font-family: var(--font-app);
+  font-size: 0.7rem;
+}
+
+.project-meta .tech {
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--faint);
+}
+
+.project-meta a {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--foreground);
+}
+
+.project-meta a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Status carries a hue and a shape, so it reads before it is read. */
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5ch;
+  font-family: var(--font-app);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kind, var(--faint));
+}
+
+.state::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.state-shipping {
+  --kind: var(--k-apps);
+}
+.state-prototype {
+  --kind: var(--accent);
+}
+.state-archived {
+  --kind: var(--faint);
+}
+
+/* --- plain reading pane (about, 404, search) ------------------------------ */
+
+.pane-read {
+  padding: clamp(1.25rem, 3vw, 2.25rem) clamp(0.85rem, 2.5vw, 1.75rem) 4rem;
+  max-width: 46rem;
+}
+
+.pane-empty {
+  padding: clamp(3rem, 10vw, 6rem) clamp(0.85rem, 2.5vw, 1.75rem);
+  font-family: var(--font-app);
+}
+
+.pane-empty .code {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 12vw, 6rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.pane-empty p {
+  margin-top: 0.75rem;
+  color: var(--soft);
+  font-size: 0.85rem;
+}
+
+.pane-empty .back {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-size: 0.78rem;
+}
+
+.pane-empty .back:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* --- archive year headings ------------------------------------------------ */
+
+.year-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 1.25rem clamp(0.85rem, 2.5vw, 1.75rem) 0.35rem;
+  font-family: var(--font-app);
+}
+
+.year {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.year-count {
+  font-size: 0.68rem;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- pager ---------------------------------------------------------------- */
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.75rem clamp(0.85rem, 2.5vw, 1.75rem);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-app);
+  font-size: 0.75rem;
+}
+
+.pager a:hover {
+  color: var(--accent);
+}
+
+.pager .off {
+  color: var(--faint);
+  opacity: 0.5;
+}
+
+.pager .count {
+  margin-inline-start: auto;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- share row ------------------------------------------------------------ */
+
+.share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-app);
+}
+
+.share-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.share a {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--soft);
+}
+
+.share a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* --- groups --------------------------------------------------------------- */
+
+/* A file manager floats pinned items above the rest under their own heading.
+   Same idea: one listing, two groups, no extra chrome. */
+.group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.75rem clamp(0.85rem, 2.5vw, 1.75rem) 0.4rem;
+  font-family: var(--font-app);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.group + .group .group-head {
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 0.75rem;
+}
+
+.group-note {
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--faint);
+  font-size: 0.7rem;
+}
+
+.group-count {
+  margin-inline-start: auto;
+  font-weight: 400;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ember marks the one thing to look at: the place you are in, and the handful
+   of posts pinned above everything else. Nothing else in the pane uses it. */
+.group-star,
+.file-star {
+  color: var(--accent);
+}
+
+.file-star {
+  flex: none;
+  font-size: 0.72rem;
+  translate: 0 -1px;
+}
+
+.side-star {
+  width: 7px;
+  flex: none;
+  color: var(--accent);
+  font-size: 0.7rem;
+  line-height: 1;
+}

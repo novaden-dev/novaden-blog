@@ -1,21 +1,20 @@
 ---
 import "@pagefind/default-ui/css/ui.css";
-import Main from "@/layouts/Main.astro";
-import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
+import Pane from "@/layouts/Pane.astro";
 import { SITE } from "@/config";
 
 const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
 ---
 
-<Layout title={`Search | ${SITE.title}`}>
-  <Header />
-  <Main pageTitle="Search" pageDesc="Search any article ...">
+<Pane
+  title="search"
+  desc="Full text, across every post. For jumping by title instead, press ⌘K anywhere."
+  path={[{ label: "search" }]}
+>
+  <div class="pane-read">
     <div id="pagefind-search" transition:persist data-backurl={backUrl}></div>
-  </Main>
-  <Footer />
-</Layout>
+  </div>
+</Pane>
 
 <script>
   function initSearch() {
@@ -94,22 +93,21 @@ const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
     --pagefind-ui-font: var(--font-app);
     --pagefind-ui-text: var(--foreground);
     --pagefind-ui-background: var(--background);
-    --pagefind-ui-border: var(--border);
+    --pagefind-ui-border: var(--rule);
     --pagefind-ui-primary: var(--accent);
-    --pagefind-ui-tag: var(--muted);
-    --pagefind-ui-border-radius: 0.75rem;
-    --pagefind-ui-border-width: 2px;
-    --pagefind-ui-image-border-radius: 8px;
-    --pagefind-ui-image-box-ratio: 3 / 2;
+    --pagefind-ui-tag: var(--sheet);
+    --pagefind-ui-border-radius: 3px;
+    --pagefind-ui-border-width: 1px;
 
     form::before {
-      background-color: var(--foreground);
+      background-color: var(--soft);
     }
 
     input {
       font-weight: 400;
-      border: 2px solid var(--line);
-      background: var(--card);
+      font-size: 0.95rem;
+      border: 1px solid var(--rule);
+      background: var(--sheet);
     }
 
     input:focus-visible {
@@ -117,18 +115,16 @@ const backUrl = SITE.showBackButton ? `${Astro.url.pathname}` : "/";
     }
 
     .pagefind-ui__result-title a {
-      color: var(--accent);
-      outline-offset: 1px;
-      outline-color: var(--accent);
-      text-decoration-style: dashed;
-      text-underline-offset: 4px;
+      color: var(--foreground);
+      font-weight: 500;
     }
 
-    .pagefind-ui__result-title a:focus-visible,
-    .pagefind-ui__search-clear:focus-visible {
-      text-decoration-line: none;
-      outline-width: 2px;
-      outline-style: dashed;
+    .pagefind-ui__result-title a:hover {
+      color: var(--accent);
+    }
+
+    .pagefind-ui__result-excerpt {
+      font-family: var(--font-read);
     }
 
     .pagefind-ui__result:last-of-type {

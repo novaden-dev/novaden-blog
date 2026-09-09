@@ -60,12 +60,31 @@ export default defineConfig({
   experimental: {
     preserveScriptOrder: true,
     fonts: [
+      // Three voices. Mono is not decoration here: the shell chrome and every
+      // file row are mono because that is what a file listing is. Chivo takes
+      // headings, Newsreader takes anything read at length.
       {
-        name: "Google Sans Code",
-        cssVariable: "--font-google-sans-code",
+        name: "JetBrains Mono",
+        cssVariable: "--font-mono",
         provider: fontProviders.google(),
-        fallbacks: ["monospace"],
-        weights: [300, 400, 500, 600, 700],
+        fallbacks: ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"],
+        weights: [400, 500, 700],
+        styles: ["normal"],
+      },
+      {
+        name: "Chivo",
+        cssVariable: "--font-chivo",
+        provider: fontProviders.google(),
+        fallbacks: ["Helvetica Neue", "Arial", "sans-serif"],
+        weights: [600, 700, 900],
+        styles: ["normal"],
+      },
+      {
+        name: "Newsreader",
+        cssVariable: "--font-newsreader",
+        provider: fontProviders.google(),
+        fallbacks: ["Georgia", "Times New Roman", "serif"],
+        weights: [400, 500, 600],
         styles: ["normal", "italic"],
       },
     ],

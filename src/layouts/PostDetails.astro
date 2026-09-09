@@ -1,15 +1,12 @@
 ---
 import { render, type CollectionEntry } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
-import Tag from "@/components/Tag.astro";
+import Shell from "@/layouts/Shell.astro";
 import Datetime from "@/components/Datetime.astro";
 import EditPost from "@/components/EditPost.astro";
 import ShareLinks from "@/components/ShareLinks.astro";
-import BackButton from "@/components/BackButton.astro";
-import BackToTopButton from "@/components/BackToTopButton.astro";
 import TableOfContents from "@/components/TableOfContents.astro";
+import getPostsBySeries from "@/utils/getPostsBySeries";
 import { getPath } from "@/utils/getPath";
 import { CATEGORIES } from "@/utils/categories";
 import { slugifyStr } from "@/utils/slugify";
@@ -82,92 +79,171 @@ const currentPostIndex = allPosts.findIndex(a => a.id === post.id);
 const prevPost = currentPostIndex !== 0 ? allPosts[currentPostIndex - 1] : null;
 const nextPost =
   currentPostIndex !== allPosts.length ? allPosts[currentPostIndex + 1] : null;
+
+/* ========== "You are here": position in the series ========== */
+
+// A post in a series is read as a step, not as a standalone page, so the rail
+// shows the whole sequence with this one marked. Posts outside a series get
+// the table of contents in that slot instead.
+const seriesName = post.data.series;
+const seriesPosts = seriesName
+  ? getPostsBySeries(posts, slugifyStr(seriesName))
+  : [];
+const seriesIndex = seriesPosts.findIndex(entry => entry.id === post.id);
+
+// "Homelab v1.2 — The Supply Chain" reads better split into a version and a
+// title, which is also how the series is actually navigated.
+const steps = seriesPosts.map((entry, i) => {
+  const match = entry.data.title.match(/^.*?\s(v[\d.]+)\s*[—–-]\s*(.+)$/);
+  return {
+    href: getPath(entry.id, entry.filePath),
+    n: match?.[1] ?? String(i + 1),
+    title: match?.[2] ?? entry.data.title,
+    here: entry.id === post.id,
+  };
+});
+const here = seriesIndex >= 0 ? steps[seriesIndex] : undefined;
+const nextStep = seriesIndex >= 0 ? steps[seriesIndex + 1] : undefined;
+
+const kindLabel = (
+  CATEGORIES[post.data.category]?.label ?? post.data.category
+).toLowerCase();
+
+const path = [
+  { label: kindLabel, href: `/categories/${post.data.category}/` },
+  ...(seriesName
+    ? [
+        {
+          label: slugifyStr(seriesName),
+          href: `/series/${slugifyStr(seriesName)}/`,
+        },
+      ]
+    : []),
+  { label: post.id },
+];
 ---
 
 <Layout {...layoutProps}>
-  <Header />
-  <BackButton />
-  <TableOfContents {headings} />
-  <main
-    id="main-content"
-    class:list={["app-layout pb-12", { "mt-8": !SITE.showBackButton }]}
-    data-pagefind-body
-  >
-    <h1
-      transition:name={slugifyStr(title.replaceAll(".", "-"))}
-      class="text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl"
-    >
-      {title}
-    </h1>
-    <div class="mt-4 mb-2 flex flex-wrap items-center gap-3 text-soft">
-      <span class="row-kind text-xs tracking-wider uppercase">
-        {CATEGORIES[post.data.category]?.label ?? post.data.category}
-      </span>
-      <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
-      <span
-        aria-hidden="true"
-        class:list={[
-          "max-sm:hidden",
-          { hidden: !SITE.editPost.enabled || hideEditPost },
-        ]}>|</span
-      >
-      <EditPost {hideEditPost} {post} class="max-sm:hidden" />
-    </div>
-    <article id="article" class="app-prose mt-10 w-full max-w-app">
-      <Content />
-    </article>
-
-    <hr class="my-10 border-t border-dashed border-border" />
-
-    <EditPost class="sm:hidden" {hideEditPost} {post} />
-
-    <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
-      {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
-    </ul>
-
-    <BackToTopButton />
-
-    <ShareLinks />
-
-    <hr class="my-8 border-t border-dashed border-border" />
-
-    <!-- Previous/Next Post Buttons -->
-    <div data-pagefind-ignore class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      {
-        prevPost && (
-          <a
-            href={getPath(prevPost.id, prevPost.filePath)}
-            class="slab flex w-full gap-2 p-4"
-          >
-            <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
-            <div>
-              <span class="text-xs tracking-wider text-soft uppercase">
-                Previous
+  <Shell {path} place={post.data.category}>
+    <div class="read" data-pagefind-body data-kind={post.data.category}>
+      <article>
+        <p class="read-kind">
+          <span class="k">{kindLabel}</span>
+          {
+            seriesName && here && (
+              <span>
+                {slugifyStr(seriesName)} · {here.n}
               </span>
-              <div class="text-sm font-medium">{prevPost.title}</div>
-            </div>
-          </a>
-        )
-      }
-      {
-        nextPost && (
-          <a
-            href={getPath(nextPost.id, nextPost.filePath)}
-            class="slab flex w-full justify-end gap-2 p-4 text-end sm:col-start-2"
-          >
-            <div>
-              <span class="text-xs tracking-wider text-soft uppercase">
-                Next
+            )
+          }
+          <Datetime {pubDatetime} {modDatetime} {timezone} />
+        </p>
+
+        <h1
+          transition:name={slugifyStr(title.replaceAll(".", "-"))}
+          class="read-h1"
+        >
+          {title}
+        </h1>
+
+        {description && <p class="read-dek">{description}</p>}
+
+        <div class="read-by">
+          <span>{author}</span>
+          {
+            seriesName && seriesIndex >= 0 && (
+              <span>
+                step {seriesIndex + 1} of {steps.length}
               </span>
-              <div class="text-sm font-medium">{nextPost.title}</div>
-            </div>
-            <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
-          </a>
-        )
-      }
+            )
+          }
+          <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+        </div>
+
+        <div id="article" class="app-prose read-body">
+          <Content />
+        </div>
+
+        <div class="read-foot" data-pagefind-ignore>
+          <ul class="tagrow">
+            {
+              tags.map(tag => (
+                <li>
+                  <a href={`/tags/${slugifyStr(tag)}/`}>{tag}</a>
+                </li>
+              ))
+            }
+          </ul>
+
+          <ShareLinks />
+
+          <div class="postnav">
+            {
+              prevPost && (
+                <a href={getPath(prevPost.id, prevPost.filePath)}>
+                  <IconChevronLeft class="mt-1 inline-block size-3.5 flex-none rtl:rotate-180" />
+                  <div class="min-w-0">
+                    <span>previous</span>
+                    <b>{prevPost.title}</b>
+                  </div>
+                </a>
+              )
+            }
+            {
+              nextPost && (
+                <a
+                  href={getPath(nextPost.id, nextPost.filePath)}
+                  class="justify-end text-end sm:col-start-2"
+                >
+                  <div class="min-w-0">
+                    <span>next</span>
+                    <b>{nextPost.title}</b>
+                  </div>
+                  <IconChevronRight class="mt-1 inline-block size-3.5 flex-none rtl:rotate-180" />
+                </a>
+              )
+            }
+          </div>
+        </div>
+      </article>
+
+      <aside class="read-rail" data-pagefind-ignore>
+        {
+          steps.length > 1 && (
+            <nav aria-label={`Posts in the ${seriesName} series`}>
+              <p class="rail-label">You are here</p>
+              {steps.map(step =>
+                step.here ? (
+                  <div class="rail-step is-here" aria-current="page">
+                    <span class="n">{step.n}</span>
+                    <span>{step.title}</span>
+                  </div>
+                ) : (
+                  <a class="rail-step" href={step.href}>
+                    <span class="n">{step.n}</span>
+                    <span>{step.title}</span>
+                  </a>
+                )
+              )}
+            </nav>
+          )
+        }
+
+        {
+          nextStep && (
+            <a class="rail-next" href={nextStep.href}>
+              <span>next in series</span>
+              <b>
+                {nextStep.n} — {nextStep.title}
+              </b>
+            </a>
+          )
+        }
+
+        <TableOfContents {headings} />
+      </aside>
     </div>
-  </main>
-  <Footer />
+  </Shell>
 </Layout>
 
 <script is:inline data-astro-rerun>

@@ -1,24 +1,37 @@
 ---
 import { getCollection } from "astro:content";
-import Main from "@/layouts/Main.astro";
-import Layout from "@/layouts/Layout.astro";
-import Tag from "@/components/Tag.astro";
-import Header from "@/components/Header.astro";
-import Footer from "@/components/Footer.astro";
+import Pane from "@/layouts/Pane.astro";
 import getUniqueTags from "@/utils/getUniqueTags";
-import { SITE } from "@/config";
+import getPostsByTag from "@/utils/getPostsByTag";
 
 const posts = await getCollection("blog");
 
-let tags = getUniqueTags(posts);
+const tags = getUniqueTags(posts)
+  .map(({ tag, tagName }) => ({
+    tag,
+    tagName,
+    count: getPostsByTag(posts, tag).length,
+  }))
+  .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
 ---
 
-<Layout title={`Tags | ${SITE.title}`}>
-  <Header />
-  <Main pageTitle="Tags" pageDesc="All the tags used in posts.">
-    <ul class="flex flex-wrap gap-6">
-      {tags.map(({ tag, tagName }) => <Tag {tag} {tagName} />)}
-    </ul>
-  </Main>
-  <Footer />
-</Layout>
+<Pane
+  title="tags"
+  desc="Topic, not shape. A post has one category and as many tags as it needs."
+  stat={`${tags.length} tags`}
+  path={[{ label: "tags" }]}
+>
+  <div class="cols" aria-hidden="true">
+    <span>name</span><span class="r">items</span>
+  </div>
+  <div class="dir-grid">
+    {
+      tags.map(({ tag, tagName, count }) => (
+        <a class="dir" href={`/tags/${tag}/`}>
+          <span class="dir-name">{tagName.toLowerCase()}</span>
+          <span class="dir-count">{count}</span>
+        </a>
+      ))
+    }
+  </div>
+</Pane>
