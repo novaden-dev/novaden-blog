@@ -1,84 +1,42 @@
 ---
 author: Kayra
 pubDatetime: 2024-12-27T00:00:00Z
-title: "Homelab v0.1 — Why I Bought a Mini-PC Instead of Therapy"
+title: "Homelab v0.1 – Why I Bought a Mini-PC Instead of Therapy"
 slug: homelab-v0-1-why-i-bought-a-mini-pc-instead-of-therapy
 featured: false
 draft: false
 tags: ["selfhosting"]
 category: journal
-series: homelab
-seriesOrder: 0.1
 description: The hardware-shopping-and-hallucinating-an-architecture origin story of this homelab series. Also known as "how I replaced therapy with a GMKtec K8 Plus."
 ---
 
-## 0.1.1 Introduction: The Gateway Drug
+You wake up one day and wonder _why am I not getting good morning messages_, and you have some money to spend because, unlike your peers, you gave up on marriage. After some thinking and multiple chats with LLMs, you end up with 2 options: I can do therapy, or I can buy a homelab and set up a local LLM gf. I decided on the homelab.
 
-It's been a while since I doubled down on FOSS. I finally ditched Windows for Fedora, and I am using more and more open-source alternatives for most of my software. That switch was just the start. It was the gateway drug to my new addiction: **Homelabbing**.
+Let's define it first: a homelab is a personal, at-home computer setup used to experiment with servers, networks, and software. I have been looking more and more into free open-source apps, most of which need a place to be hosted. With the rise of LLMs, I have also been creating a few scripts here and there of my own, and sometimes you need a place to host these. Then I wanted to practice a few things in IT: get better at DevOps, security tools, architecture, etc. The mix of all of these made homelabbing a good new hobby. I could've bought a simple, cheap VPS. However, on these you can't host your own SIEM, IDS, or IPS, and you can't be sure it will exist when the AI revolution/takeover comes, so I wanted something that I could take with me to a farm off-grid and be able to have all my apps/tools. A toxic relationship with tech, I guess.
 
-Homelabbing is a hobby that involves building things, screaming at 12 AM _"FUCK, HOW DIDN'T I NOTICE THIS EARLIER?"_ or _"WHY THE FUCK IS IT NOT WORKING!?"_ It costs you a lot of money, social aura, and brain nerves, and gets you a Vitamin D deficiency. However, it can be done from the comfort of your desk, and that feeling when things finally link up and start working is just on another level.
+I started with a simple thing:
 
-It usually starts like this: "I want to replace Google Cloud," or "I want full control over my data," or "I want a virtual girlfriend to tell me _Keep Going Honey, it gets better._" Then, you keep digging yourself deeper into the rabbit hole until you end up with a full data center with firewalls, SIEM, IDS, IPS, while your government calls to ask about the suspiciously increasing electricity usage.
+- Nextcloud, which is a bunch of services. Think Microsoft 365, but open-source.
+- EVE-NG for spawning network labs.
+- A Kali Linux machine to sound scary.
+- A small local AI model for the "Good Mornings", "Keep going honey", and other such messages.
+- A blog maybe? Some custom apps.
 
-I _started_ with something simple:
+So, shopping time. I started checking the hardware I would get. I thought of a Raspberry Pi, but I need something that will grow with me. A Raspberry Pi is good for small scripts or apps, but not what I had in mind. So I found out about mini PCs, basically a PC that's small. After detailed research (read: a few Reddit posts), I decided on the GMKtec K8 Plus: good hardware, nothing fancy, but good enough for most of my needs. And it has Oculink support, which means I can add an eGPU later when my AI model (aka gf) needs an upgrade and I have the money for it.
 
-- **Nextcloud** (Bye, Google)
-- **EVE-NG** & **Kali Linux** (Labs)
-- **VPN** & **n8n** (Utility)
-- A small local **AI model**
-- My blog rants & custom apps
+I then started with the plan: Ubuntu Server, then Nextcloud, the local model, etc. But then, I am not sure if I have a thing for complicating my life and taking the hard route, or if it was actually justified, but I moved from a simple server to a virtualization operating system. Let's say I want to spawn a Windows machine to test something, or I want to test myself and see if I can get past installing Arch. Doing that on an Ubuntu server wouldn't be that easy. So, a hypervisor for the host operating system. VMware ESXi, I remember that one from one of my internships, but VMware killed their free version and I want to be relying more on FOSS. Proxmox is a good open-source alternative. Now that this is solved, the network diagram.
 
-Pretty simple, right? I have the experience. I have the technical knowledge. It's just practice for professional services. (Spoiler: It was not simple).
+I will have some hacking tools, and then my personal data. These should be isolated from each other. Then I will have public-facing apps, and those should be in a DMZ. I logged into the router admin page and it doesn't have VLAN support. I can buy a new one, or I can host my own firewall and do the isolation using that (see, it is the thing I told you about: complicating shit. Maybe it is part of the hobby rules or something.)
 
-## 0.1.2 Buying Hardware I Definitely Don't Need
+Then that night it went something like this:
 
-I settled on the **GMKtec K8 Plus**, but I spent a lot of time justifying the purchase before pulling the trigger.
+- I will have multiple public apps, and will probably need a reverse proxy. Enter Caddy.
+- I would love to have analytics without giving the data to Google. Enter Matomo.
+- Some monitoring and visibility. Enter Prometheus & Grafana.
+- Some security, source code scanning. Enter SonarQube.
+- ...
 
-My first thought was, naturally, a **Raspberry Pi**. It's the standard for home labs. However, a Pi is designed for lightweight services. My plan involved running multiple resource-heavy VMs (EVE-NG, Kali Linux), storage-intensive apps like Nextcloud, and potentially local AI models. That led me to the world of **Mini PCs**, full desktop performance in a tiny form factor.
-
-I initially looked at the **GMKtec K6** as a budget-friendly option. It looked good on paper, but further research (reading Reddit comments) revealed consistent reports of thermal issues and fan noise. Since this device would be running 24/7 on my desk (optimistic, naive me), I couldn't compromise on cooling. That's when I found the **K8 Plus**. It's the upgraded version of the K6, addressing many of the thermal concerns while staying within my budget.
-
-- **Ryzen 7 8845HS (8 Cores / 16 Threads):** Since I plan to virtualize extensively, having 16 threads is critical to keep things running smoothly without resource contention.
-- **Radeon 780M iGPU:** It is powerful enough to handle basic local AI models out of the box.
-- **32GB RAM & 1TB SSD:** The minimum entry fee for a lab this size. Anything less would choke under the weight of my poor architectural decisions.
-- **Oculink Support:** This was a key differentiator. It gives me the option to connect an external desktop GPU (eGPU) later if I need more power, providing a clear upgrade path.
-
-Compared to other models with similar specs, the K8 Plus offered the best price-to-performance ratio. Everything else was significantly more expensive for the same hardware. When the Black Friday discounts hit, I made the purchase.
-
-## 0.1.3 The Plan (A.K.A. The Hallucination)
-
-Before I even got my hands on the device, I started planning how my setup would look. The idea was to just throw an Ubuntu server on it and run my apps, right? :)
-
-I listed out my needs:
-
-- Nextcloud
-- Local AI Model
-- n8n Flows
-- EVE-NG & Kali Linux
-- Custom Apps & Blogs
-
-Okay, simple. But then the voices of reason (and paranoia) kicked in. How do I host all of this on a single Ubuntu Server without it becoming a security and computing nightmare? That's when I realized I needed virtualization. I know VMware ESXi, so I figured I would just use that. However, VMware killed their free version. Also, I'm trying to be a FOSS purist here. **Proxmox** it is. An open-source, enterprise-grade hypervisor. Good. The host OS is solved.
-
-Now for the network diagram. I had two simple rules:
-
-- My hacker tools (Kali/EVE-NG) should _not_ be able to talk to my personal photos (Nextcloud).
-- My public-facing apps should _not_ have access to my private internal network.
-
-No big deal. I'll just set up **VLANs**. I logged into my ISP-provided router to configure them. Turns out my router has no VLAN support. I either had to buy a new router, or I could just deploy a virtual firewall. I decided to deploy **pfSense** as a VM to manage the entire network, handle VLANs, and enforce rules. That was the moment I realized I was trapped like a butterfly drawn to an insect-eating flower. (I absolutely loved it).
-
-So we have Proxmox and pfSense. Still manageable. But then I started digging the rabbit hole:
-
-- I have public apps, so I need a reverse proxy. **Enter Caddy.**
-- I need analytics without Google spying on me. **Enter Matomo.**
-- I need to know if the server is actually alive. **Enter Prometheus & Grafana.**
-- I need to scan my code for vulnerabilities. **Enter SonarQube.**
-- I need to aggregate logs because I apparently hate sleep. **Enter Wazuh.**
-
-You get the idea. The rabbit hole didn't just have a bottom; it had a basement.
-
-## 0.1.4 The "Final" Architecture
-
-I spent the rest of the night trying to keep my eyes open, drawing lines and boxes. The result was this "final" architecture diagram:
+I ended up with this architecture:
 
 ![My Homelab Architecture](/images/migrated/MyHomeLab.png)
 
