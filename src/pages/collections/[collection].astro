@@ -1,0 +1,72 @@
+---
+import { render } from "astro:content";
+import Pane from "@/layouts/Pane.astro";
+import FileList from "@/components/FileList.astro";
+import { getCollections } from "@/utils/collections";
+
+export async function getStaticPaths() {
+  const collections = await getCollections();
+  return collections.map(collection => ({
+    params: { collection: collection.id },
+    props: { collection },
+  }));
+}
+
+const { collection } = Astro.props;
+const { title, description, kind, status } = collection.entry.data;
+
+// The collection's own introduction is content, so it is rendered from the
+// collection file rather than assembled from its members.
+const { Content } = await render(collection.entry);
+
+const ordered = kind === "series";
+// "in order" said nothing: a sequence is ordered by definition, and the pane
+// already numbers its rows. The state that does vary is the status, so that is
+// what the header carries.
+const stat = ordered
+  ? `${collection.steps.length} parts`
+  : `${collection.items.length} entries`;
+
+// An introduction is worth a band of the header only when there is one.
+const hasIntro = (collection.entry.body ?? "").trim().length > 0;
+---
+
+<Pane
+  {title}
+  desc={description}
+  {stat}
+  pill={status}
+  path={[
+    { label: "collections", href: "/collections/" },
+    { label: collection.id },
+  ]}
+  place={collection.id}
+>
+  {
+    hasIntro && (
+      <div class="pane-intro">
+        <Content />
+      </div>
+    )
+  }
+
+  <FileList
+    groups={[
+      {
+        label: ordered ? "the sequence" : "contents",
+        posts: collection.steps.map(item => item.post),
+        numbered: ordered,
+      },
+      ...(collection.extras.length > 0
+        ? [
+            {
+              label: "alongside",
+              note: "related, not part of the sequence",
+              posts: collection.extras.map(item => item.post),
+              numbered: false,
+            },
+          ]
+        : []),
+    ]}
+  />
+</Pane>

@@ -6,7 +6,7 @@ slug: "mobile-security-testing-foundations"
 description: "The orientation for mobile app security testing: how the OWASP MAS project fits together, static versus dynamic analysis, the L1/L2/R/P profiles, the two-binary approach, and why scanner output is a lead rather than a verdict."
 tags: ["mobile", "security"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

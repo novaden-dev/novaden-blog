@@ -6,7 +6,7 @@ slug: "llm-foundations"
 description: "The vocabulary you need to read AI security material: weights, fine-tuning, adapters, distillation, embeddings, RAG, context windows, tool calls, agents, and MCP, explained in plain language with why each one matters to an attacker."
 tags: ["security", "ai", "llm"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

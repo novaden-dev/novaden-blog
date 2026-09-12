@@ -22,8 +22,3 @@ entries:
   - id: homelab-08
     post: homelab-v2-0-the-useful-one
 ---
-
-Read it in order for the whole arc, or drop into any part: each one stands on
-its own.
-
-The last entry is the ending: the hard reset, and what the lab became after.

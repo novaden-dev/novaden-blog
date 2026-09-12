@@ -6,7 +6,7 @@ slug: "android-cheatsheet"
 description: "Quick-reference commands for Android pentesting: adb device interaction, apktool, APK signing, and jadx decompilation."
 tags: ["android", "security", "cheatsheet"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

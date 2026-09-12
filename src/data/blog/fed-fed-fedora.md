@@ -5,7 +5,7 @@ title: Fed Fed Fedora
 slug: fed-fed-fedora
 featured: false
 draft: false
-tags: ["linux", "fedora"]
+tags: ["linux"]
 category: journal
 description: A dying laptop, a Lenovo warranty saga, and Windows telling me my license only supports one display language pushed me to Fedora KDE. Notes on what worked, what broke, and a few things I didn't expect.
 ---
@@ -20,7 +20,7 @@ I sent it to Lenovo and reported two issues: an old one, screen flicker under lo
 
 <figure><img src="/images/migrated/fedora-02-ssd-diag.png" alt="" width="188"><figcaption></figcaption></figure>
 
-I'm not sure whether that says more about the technician's competence or Windows' reputation. It took then multiple other trips to the service center before it got sorted out but at the end I got multiple things replaced and the laptop was good again.
+I'm not sure whether that says more about the technician's competence or Windows' reputation. It took them multiple other trips to the service center before it got sorted out but at the end I got multiple things replaced and the laptop was good again.
 
 ## Comparing Distros (a.k.a. The Other Rabbit Hole)
 
@@ -164,6 +164,7 @@ systemctl --user start break-notify.service
 Done. Now every 40 minutes KDE taps me on the shoulder like "get up, grandpa".
 
 That later was turned into a full product with customization, TouchGrass if you want to check it out.
+
 ### The Bad (Nitpicks)
 
 System set to English, yet some errors and Konsole output, showed up in Turkish. Konsole itself claimed English (primary) and Turkish (fallback). It was weird af because English was already at the top of the list system-wide, and Konsole's own settings also said English first. I tried a few things (and argued with ChatGPT for a bit, increasing my odds of being hunted by robots later), but what actually worked was removing all other languages from Konsole's settings and restarting the laptop. After that, it behaved. I filed a bug with Fedora, the process was easy on their ticketing system, but it's low impact, so I'm not expecting fireworks or instant fixes.

@@ -4,7 +4,7 @@ pubDatetime: 2026-08-04T00:00:00Z
 title: "HTTP Request Smuggling"
 slug: http-request-smuggling
 featured: false
-draft: false
+draft: true
 tags: ["security", "web"]
 category: notes
 description: "Why front end and back end disagree about where a request ends, the desync classes (CL.TE, TE.CL, TE.TE, H2.CL, H2.TE, CL.0), how to drive Burp's HTTP Request Smuggler extension, and what to actually check on an API."

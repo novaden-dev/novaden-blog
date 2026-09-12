@@ -4,7 +4,7 @@ pubDatetime: 2026-05-02T00:00:00Z
 title: OS Command Injection
 slug: os-command-injection
 featured: false
-draft: false
+draft: true
 tags: ["security", "web"]
 category: notes
 description: An overview of OS Command Injection, detection techniques, exploitation methods, and remediation strategies.

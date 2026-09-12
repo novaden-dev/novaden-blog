@@ -14,6 +14,14 @@ import { SITE } from "./src/config";
 // https://astro.build/config
 export default defineConfig({
   site: SITE.website,
+  // /series/ was the old address for what are now collections. Nothing here is
+  // public yet, but the rename is cheap to make safe, so it gets made safe.
+  // Listed explicitly: a static build cannot enumerate a wildcard's paths, and
+  // one entry per collection is honest about what actually existed.
+  redirects: {
+    "/series": "/collections",
+    "/series/homelab": "/collections/homelab",
+  },
   integrations: [
     sitemap({
       filter: page => SITE.showArchives || !page.endsWith("/archives"),

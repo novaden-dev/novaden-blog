@@ -4,7 +4,7 @@ pubDatetime: 2026-05-02T00:00:00Z
 title: Path/Directory Traversal
 slug: path-directory-traversal
 featured: false
-draft: false
+draft: true
 tags: ["security", "web"]
 category: notes
 description: An overview of Path/Directory Traversal vulnerabilities, exploitation techniques, and remediation strategies.

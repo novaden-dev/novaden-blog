@@ -6,7 +6,7 @@ slug: "secure-code-review-by-stack"
 description: "Per-ecosystem reference for a secure code review: which build manifests reveal the toolchain, whether the analyser needs a compile, how to restore dependencies with no internet, and the sink patterns and framework traps for .NET, Java, PHP, Python, Node, Ruby, Go, and the major frontend frameworks."
 tags: ["security", "devsecops", "cheatsheet"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

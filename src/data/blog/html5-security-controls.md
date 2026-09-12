@@ -4,7 +4,7 @@ pubDatetime: 2026-06-14T00:00:00Z
 title: HTML5 Security Controls
 slug: html5-security-controls
 featured: false
-draft: false
+draft: true
 tags: ["security", "web"]
 category: notes
 description: What "implement HTML5 security controls" actually means, covering Web Storage, CORS, postMessage, sandboxed iframes, WebSockets, and CSP, with how to test each.

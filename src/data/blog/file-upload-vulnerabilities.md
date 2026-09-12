@@ -4,7 +4,7 @@ pubDatetime: 2026-05-02T00:00:00Z
 title: File Upload Vulnerabilities
 slug: file-upload-vulnerabilities
 featured: false
-draft: false
+draft: true
 tags: ["security", "web"]
 category: notes
 description: An overview of File Upload vulnerabilities, bypass techniques, and remediation strategies.

@@ -4,9 +4,12 @@ import Layout from "@/layouts/Layout.astro";
 import Shell from "@/layouts/Shell.astro";
 import Datetime from "@/components/Datetime.astro";
 import EditPost from "@/components/EditPost.astro";
-import ShareLinks from "@/components/ShareLinks.astro";
 import TableOfContents from "@/components/TableOfContents.astro";
-import getPostsBySeries from "@/utils/getPostsBySeries";
+import {
+  getCollections,
+  getMemberships,
+  neighbours,
+} from "@/utils/collections";
 import { getPath } from "@/utils/getPath";
 import { CATEGORIES } from "@/utils/categories";
 import { slugifyStr } from "@/utils/slugify";
@@ -66,44 +69,75 @@ const layoutProps = {
   scrollSmooth: true,
 };
 
-/* ========== Prev/Next Posts ========== */
+/* ========== "You are here": position in a collection ========== */
 
-const allPosts = posts.map(({ data: { title }, id, filePath }) => ({
-  id,
-  title,
-  filePath,
-}));
+// A post can sit in any number of collections, so the page cannot ask which
+// one it is "in". It asks which placements point at it.
+//
+// With exactly one reading placement there is a single position and the rail
+// shows the sequence with this one marked. With several, the page stays
+// neutral and lists them instead: a direct visit never gets a reading order
+// invented for it.
+const allCollections = await getCollections();
+const memberships = getMemberships(post.id, allCollections);
+const stepMemberships = memberships.filter(entry => entry.step !== null);
+const active = stepMemberships.length === 1 ? stepMemberships[0] : undefined;
 
-const currentPostIndex = allPosts.findIndex(a => a.id === post.id);
-
-const prevPost = currentPostIndex !== 0 ? allPosts[currentPostIndex - 1] : null;
-const nextPost =
-  currentPostIndex !== allPosts.length ? allPosts[currentPostIndex + 1] : null;
-
-/* ========== "You are here": position in the series ========== */
-
-// A post in a series is read as a step, not as a standalone page, so the rail
-// shows the whole sequence with this one marked. Posts outside a series get
-// the table of contents in that slot instead.
-const seriesName = post.data.series;
-const seriesPosts = seriesName
-  ? getPostsBySeries(posts, slugifyStr(seriesName))
-  : [];
-const seriesIndex = seriesPosts.findIndex(entry => entry.id === post.id);
-
-// "Homelab v1.2 — The Supply Chain" reads better split into a version and a
-// title, which is also how the series is actually navigated.
-const steps = seriesPosts.map((entry, i) => {
-  const match = entry.data.title.match(/^.*?\s(v[\d.]+)\s*[—–-]\s*(.+)$/);
+// "Homelab v1.2 – The Supply Chain" reads better split into a version and a
+// title, which is also how the sequence is actually navigated.
+const steps = (active?.collection.steps ?? []).map(item => {
+  const label = item.placement.label ?? item.post.data.title;
+  const match = label.match(/^.*?\s(v[\d.]+)\s*[—–-]\s*(.+)$/);
   return {
-    href: getPath(entry.id, entry.filePath),
-    n: match?.[1] ?? String(i + 1),
-    title: match?.[2] ?? entry.data.title,
-    here: entry.id === post.id,
+    href: getPath(item.post.id, item.post.filePath),
+    n: match?.[1] ?? String(item.step),
+    title: match?.[2] ?? label,
+    here: item.placement.id === active?.placement.id,
   };
 });
-const here = seriesIndex >= 0 ? steps[seriesIndex] : undefined;
-const nextStep = seriesIndex >= 0 ? steps[seriesIndex + 1] : undefined;
+const here = steps.find(step => step.here);
+// Collections this post appears in that the rail is not already showing.
+// This is what keeps a shared item honest: it says where else it is used
+// without pretending any of them is the reader's current path.
+const alsoIn = memberships.filter(
+  entry => entry.collection.id !== active?.collection.id
+);
+
+const sequence = active
+  ? neighbours(active.collection, active.placement.id)
+  : undefined;
+
+/* ========== Previous / next ========== */
+
+// Inside a collection, "previous" and "next" mean the reading order — the same
+// order the rail and the step numbering already show. A post read on its own
+// falls back to the archive.
+//
+// `posts` arrives newest-first, so the *older* neighbour sits at the higher
+// index. Walking that array as though it ran forwards is what put the older
+// post under "next" and the newer one under "previous".
+const toLink = (entry: CollectionEntry<"blog"> | undefined) =>
+  entry
+    ? { title: entry.data.title, href: getPath(entry.id, entry.filePath) }
+    : undefined;
+
+const currentPostIndex = posts.findIndex(entry => entry.id === post.id);
+
+const prevPost = toLink(
+  sequence
+    ? sequence.prev?.post
+    : currentPostIndex >= 0
+      ? posts[currentPostIndex + 1]
+      : undefined
+);
+
+const nextPost = toLink(
+  sequence
+    ? sequence.next?.post
+    : currentPostIndex > 0
+      ? posts[currentPostIndex - 1]
+      : undefined
+);
 
 const kindLabel = (
   CATEGORIES[post.data.category]?.label ?? post.data.category
@@ -111,11 +145,11 @@ const kindLabel = (
 
 const path = [
   { label: kindLabel, href: `/categories/${post.data.category}/` },
-  ...(seriesName
+  ...(active
     ? [
         {
-          label: slugifyStr(seriesName),
-          href: `/series/${slugifyStr(seriesName)}/`,
+          label: active.collection.id,
+          href: `/collections/${active.collection.id}/`,
         },
       ]
     : []),
@@ -130,9 +164,9 @@ const path = [
         <p class="read-kind">
           <span class="k">{kindLabel}</span>
           {
-            seriesName && here && (
+            active && here && (
               <span>
-                {slugifyStr(seriesName)} · {here.n}
+                {active.collection.id} · {here.n}
               </span>
             )
           }
@@ -148,12 +182,16 @@ const path = [
 
         {description && <p class="read-dek">{description}</p>}
 
+        {
+          /* No byline: one person writes everything here, so naming them on
+            every post is noise. The author still ships in the metadata, where
+            a machine reads it. */
+        }
         <div class="read-by">
-          <span>{author}</span>
           {
-            seriesName && seriesIndex >= 0 && (
+            active && (
               <span>
-                step {seriesIndex + 1} of {steps.length}
+                step {active.step} of {steps.length}
               </span>
             )
           }
@@ -175,31 +213,27 @@ const path = [
             }
           </ul>
 
-          <ShareLinks />
-
           <div class="postnav">
             {
               prevPost && (
-                <a href={getPath(prevPost.id, prevPost.filePath)}>
-                  <IconChevronLeft class="mt-1 inline-block size-3.5 flex-none rtl:rotate-180" />
-                  <div class="min-w-0">
-                    <span>previous</span>
-                    <b>{prevPost.title}</b>
-                  </div>
+                <a
+                  href={prevPost.href}
+                  aria-label={`Previous: ${prevPost.title}`}
+                >
+                  <IconChevronLeft class="inline-block size-3.5 flex-none rtl:rotate-180" />
+                  <b class="min-w-0">{prevPost.title}</b>
                 </a>
               )
             }
             {
               nextPost && (
                 <a
-                  href={getPath(nextPost.id, nextPost.filePath)}
+                  href={nextPost.href}
+                  aria-label={`Next: ${nextPost.title}`}
                   class="justify-end text-end sm:col-start-2"
                 >
-                  <div class="min-w-0">
-                    <span>next</span>
-                    <b>{nextPost.title}</b>
-                  </div>
-                  <IconChevronRight class="mt-1 inline-block size-3.5 flex-none rtl:rotate-180" />
+                  <b class="min-w-0">{nextPost.title}</b>
+                  <IconChevronRight class="inline-block size-3.5 flex-none rtl:rotate-180" />
                 </a>
               )
             }
@@ -209,8 +243,19 @@ const path = [
 
       <aside class="read-rail" data-pagefind-ignore>
         {
+          /* The rail runs from the narrowest scope outwards: this page,
+            then the sequence it sits in, then everywhere else it is used.
+            Contents leads because it is the only live control here — the
+            scrollspy tracks it while you read, and a long collection would
+            otherwise push it past the fold. */
+        }
+        <TableOfContents {headings} />
+
+        {
           steps.length > 1 && (
-            <nav aria-label={`Posts in the ${seriesName} series`}>
+            <nav
+              aria-label={`Contents of ${active?.collection.entry.data.title}`}
+            >
               <p class="rail-label">You are here</p>
               {steps.map(step =>
                 step.here ? (
@@ -230,17 +275,26 @@ const path = [
         }
 
         {
-          nextStep && (
-            <a class="rail-next" href={nextStep.href}>
-              <span>next in series</span>
-              <b>
-                {nextStep.n} — {nextStep.title}
-              </b>
-            </a>
+          alsoIn.length > 0 && (
+            <nav class="rail-also" aria-label="Collections including this post">
+              <p class="rail-label">{active ? "Also in" : "Part of"}</p>
+              {alsoIn.map(entry => (
+                <a
+                  class="rail-step"
+                  href={`/collections/${entry.collection.id}/`}
+                >
+                  <span class="n">{entry.step ?? "+"}</span>
+                  <span>
+                    {entry.collection.entry.data.title}
+                    {entry.placement.note && (
+                      <em class="rail-why">{entry.placement.note}</em>
+                    )}
+                  </span>
+                </a>
+              ))}
+            </nav>
           )
         }
-
-        <TableOfContents {headings} />
       </aside>
     </div>
   </Shell>
@@ -358,6 +412,56 @@ const path = [
     }
   }
   attachCopyButtons();
+
+  /** Network diagrams and screenshots are unreadable at column width, so an
+   *  image opens full-screen on click. */
+  function attachImageZoom() {
+    const images = Array.from(document.querySelectorAll(".read-body img"));
+    if (images.length === 0) return;
+
+    let overlay = document.querySelector(".zoom");
+
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.className = "zoom";
+      overlay.hidden = true;
+      overlay.innerHTML = '<img alt="" />';
+      document.body.appendChild(overlay);
+      overlay.addEventListener("click", close);
+    }
+
+    function close() {
+      overlay.hidden = true;
+      document.documentElement.style.overflow = "";
+    }
+
+    // The body is replaced on a view transition, so the overlay is rebuilt each
+    // time; the document-level key handler is bound once.
+    if (!window.__zoomBound) {
+      window.__zoomBound = true;
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          const current = document.querySelector(".zoom");
+          if (current && !current.hidden) {
+            current.hidden = true;
+            document.documentElement.style.overflow = "";
+          }
+        }
+      });
+    }
+
+    for (const image of images) {
+      image.classList.add("zoomable");
+      image.addEventListener("click", () => {
+        const full = overlay.querySelector("img");
+        full.src = image.currentSrc || image.src;
+        full.alt = image.alt || "";
+        overlay.hidden = false;
+        document.documentElement.style.overflow = "hidden";
+      });
+    }
+  }
+  attachImageZoom();
 
   /* Go to page start after page swap */
   document.addEventListener("astro:after-swap", () =>

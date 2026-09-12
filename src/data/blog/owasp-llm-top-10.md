@@ -6,7 +6,7 @@ slug: "owasp-llm-top-10"
 description: "A working read of the 2026 OWASP GenAI/LLM Top 10, one entry at a time, with the vocabulary explained, one worked scenario per risk, and the controls that actually hold."
 tags: ["security", "ai", "llm"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

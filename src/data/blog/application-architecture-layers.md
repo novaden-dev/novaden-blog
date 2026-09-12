@@ -6,7 +6,7 @@ slug: "application-architecture-layers"
 description: "What a controller, service, repository, DTO, entity, middleware, filter, and dependency injection container actually are, how a request travels through them, what the same roles are called in other stacks, and which bug classes live in each layer."
 tags: ["security", "web"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

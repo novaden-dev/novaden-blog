@@ -150,30 +150,19 @@ const structuredData = {
     <!-- Minimal inline script to prevent FOUC - sets theme immediately -->
     <script is:inline>
       (function () {
-        const initialColorScheme = ""; // "light" | "dark"
-        const currentTheme = localStorage.getItem("theme");
+        // Mirrors src/scripts/theme.ts: an absent key means "follow the
+        // system", so only an explicit light/dark is ever stored.
+        const stored = localStorage.getItem("theme");
+        const choice =
+          stored === "light" || stored === "dark" ? stored : "system";
+        const resolved =
+          choice === "system"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : choice;
 
-        function getPreferTheme() {
-          if (currentTheme) return currentTheme;
-          if (initialColorScheme) return initialColorScheme;
-          return window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
-        }
-
-        const themeValue = getPreferTheme();
-
-        // Set theme immediately to prevent flash
-        document.firstElementChild?.setAttribute("data-theme", themeValue);
-
-        // Export minimal API for external script
-        window.theme = {
-          themeValue: themeValue,
-          getTheme: () => window.theme.themeValue,
-          setTheme: val => {
-            window.theme.themeValue = val;
-          },
-        };
+        document.firstElementChild?.setAttribute("data-theme", resolved);
       })();
     </script>
   </head>

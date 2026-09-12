@@ -4,7 +4,7 @@ pubDatetime: 2026-05-02T00:00:00Z
 title: Web Cache Deception
 slug: web-cache-deception
 featured: false
-draft: false
+draft: true
 tags: ["security", "web"]
 category: notes
 description: An overview of Web Cache Deception attacks, detection techniques, and remediation strategies.

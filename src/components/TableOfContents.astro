@@ -33,40 +33,81 @@ const tocHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
 }
 
 <script is:inline data-astro-rerun>
-  function initToc() {
-    const links = Array.from(document.querySelectorAll("[data-toc-link]"));
-    if (links.length === 0) return;
+  (function () {
+    /* The current section is read off the scroll position, not off an
+       IntersectionObserver. An observer band can never light up the last
+       heading: a short final section stops moving once the document runs out
+       of scroll, so the heading never reaches the band and the rail stays
+       stuck on the previous entry. Scroll position has no such blind spot. */
+    const spy = (window.__tocSpy = window.__tocSpy || {
+      links: [],
+      headings: [],
+      current: null,
+      bound: false,
+    });
 
-    const linkBySlug = new Map(
-      links.map(link => [link.getAttribute("data-toc-link"), link])
-    );
+    // A heading counts as current once it has passed under the sticky bar.
+    function readingLine() {
+      const bar = document.querySelector(".bar");
+      return (bar ? bar.getBoundingClientRect().height : 44) + 24;
+    }
 
-    // A semantic class, styled in shell.css — Tailwind utilities named only
-    // inside a script are not guaranteed to be generated.
-    const setActive = slug => {
-      for (const link of links) {
-        link.classList.toggle(
-          "is-current",
-          link.getAttribute("data-toc-link") === slug
-        );
-      }
-    };
+    function sync() {
+      if (spy.headings.length === 0) return;
 
-    const headings = Array.from(linkBySlug.keys())
-      .map(slug => document.getElementById(slug))
-      .filter(Boolean);
+      const scrollable =
+        document.documentElement.scrollHeight - window.innerHeight;
+      let active;
 
-    const observer = new IntersectionObserver(
-      entries => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) setActive(entry.target.id);
+      if (scrollable > 0 && window.scrollY >= scrollable - 2) {
+        // At the end of the document the last section is the one being read,
+        // whether or not it ever climbed to the reading line.
+        active = spy.headings[spy.headings.length - 1];
+      } else {
+        const line = readingLine();
+        active = spy.headings[0];
+        for (const heading of spy.headings) {
+          if (heading.getBoundingClientRect().top > line) break;
+          active = heading;
         }
-      },
-      { rootMargin: "0px 0px -75% 0px", threshold: 1 }
-    );
+      }
 
-    for (const heading of headings) observer.observe(heading);
-  }
-  initToc();
-  document.addEventListener("astro:after-swap", initToc);
+      if (active === spy.current) return;
+      spy.current = active;
+      // A semantic class, styled in shell.css — Tailwind utilities named only
+      // inside a script are not guaranteed to be generated.
+      for (const link of spy.links) {
+        link.classList.toggle("is-current", link.dataset.tocLink === active.id);
+      }
+    }
+
+    function refresh() {
+      spy.links = Array.from(document.querySelectorAll("[data-toc-link]"));
+      spy.headings = spy.links
+        .map(link => document.getElementById(link.dataset.tocLink))
+        .filter(Boolean);
+      spy.current = null;
+      sync();
+    }
+
+    // The listeners outlive a view transition, so they are bound once; only
+    // the element cache is rebuilt each time the script re-runs.
+    if (!spy.bound) {
+      spy.bound = true;
+      let queued = false;
+      const onScroll = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => {
+          queued = false;
+          sync();
+        });
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll, { passive: true });
+      document.addEventListener("astro:after-swap", refresh);
+    }
+
+    refresh();
+  })();
 </script>

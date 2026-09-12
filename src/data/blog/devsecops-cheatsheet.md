@@ -1,15 +1,13 @@
 ---
 author: Kayra
 pubDatetime: 2026-05-28T00:00:00Z
-title: "DevSecOps — Exam Cheatsheet"
+title: "DevSecOps – Exam Cheatsheet"
 description: "Personal quick-reference for the DevSecOps exam: SCA, SAST, DAST, IaC, CaC, and Vulnerability Management commands and pipeline jobs."
 tags: ["devsecops", "cheatsheet"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
-
-# DevSecOps — Exam Cheatsheet
 
 > Covers: **SCA · SAST · DAST · IaC · CaC · Vulnerability Management**.
 > Always save tool output in machine-readable format (`--json`).
@@ -211,7 +209,7 @@ sast-with-vm:
 
 ---
 
-## 2. SCA — SOFTWARE COMPONENT ANALYSIS
+## 2. SCA: SOFTWARE COMPONENT ANALYSIS
 
 > Target: < 15 min.
 
@@ -530,7 +528,7 @@ license:
 
 ---
 
-## 3. SAST — STATIC APPLICATION SECURITY TESTING
+## 3. SAST: STATIC APPLICATION SECURITY TESTING
 
 ### TruffleHog (secret scanning in git)
 ```bash
@@ -748,7 +746,7 @@ gitleaks:
 
 ---
 
-## 4. DAST — DYNAMIC APPLICATION SECURITY TESTING
+## 4. DAST: DYNAMIC APPLICATION SECURITY TESTING
 
 **CI/CD vars** (Project → Settings → CI/CD → Variables): `PROD_USERNAME=root`, `PROD_HOSTNAME=prod-1bhwjtpi`, `PROD_SSH_PRIVKEY=<prod machine private key>`.
 > Storing SSH keys in GitLab vars = plaintext risk. For prod, use a key-management solution (e.g. HashiCorp Vault) for storage/rotation/access control.
@@ -881,7 +879,7 @@ nuclei:
 
 ---
 
-## 5. IaC — INFRASTRUCTURE AS CODE
+## 5. IaC: INFRASTRUCTURE AS CODE
 
 ### Ansible (config management + hardening)
 ```bash
@@ -1114,7 +1112,7 @@ docker run -t -v $(pwd):/path checkmarx/kics:v1.7.11 scan
 
 ---
 
-## 6. CaC — COMPLIANCE AS CODE
+## 6. CaC: COMPLIANCE AS CODE
 
 ### Lynis (host audit)
 ```bash
@@ -1122,7 +1120,7 @@ apt-get install lynis -y
 lynis audit system
 ```
 
-### CinC Auditor (InSpec) — install & basics
+### CinC Auditor (InSpec): install & basics
 ```bash
 wget https://omnitruck.cinc.sh/install.sh
 bash install.sh -P cinc-auditor -v 6

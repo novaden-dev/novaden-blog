@@ -224,7 +224,7 @@ Numbered for use as a decision aid when you're tagging a post:
 3. **Add a format tag only if it's a Note with a clear shape:** `cheatsheet`, `tool-guide`, or `writeups`. Most atoms get none.
 4. **Format tags never stand alone.** Every post has at least one topic tag.
 5. **`cheatsheet` vs `tool-guide`:** apply the reader-intent test in the section above.
-6. **Series go in `series:` + `seriesOrder:` frontmatter, never as tags.** Series is orthogonal to category — a Journal post (the homelab saga) or a Note can belong to one. No `homelab` tag: the series field groups the saga, and `selfhosting` carries the subject.
+6. **Sequence is never a tag, and never frontmatter on the post.** Membership lives in a collection file under `src/data/collections/`. A post carries no record of which collections include it. No `homelab` tag: the homelab collection groups the saga, and `selfhosting` carries the subject.
 7. **Drafts use Astro's `draft: true` frontmatter, not a tag.** Status is not a topic.
 
 ---
@@ -246,7 +246,7 @@ Numbered for use as a decision aid when you're tagging a post:
 | Finding-a-job journey | `journal` | `[career]` |
 | Windows-to-Fedora migration story | `journal` | `[linux, fedora]` |
 | Tearing it down (homelab retrospective) | `journal` | `[selfhosting]` |
-| Homelab v1.0 (part of series) | `journal` | `[selfhosting]` + `series: homelab, seriesOrder: 1.0` |
+| Homelab v1.0 (in a collection) | `journal` | `[selfhosting]`, with a placement in `collections/homelab.md` |
 | OSCP cert review | `cert-review` | `[oscp, security]` |
 | CDP cert review | `cert-review` | `[cdp, devsecops]` |
 
@@ -261,11 +261,11 @@ These document *what was decided and why*, including rejected alternatives. They
 - **`category` is a first-class field — the *kind* axis.** It replaces the old `notes`/`certification` meta tags, which tried to encode a post's kind inside the tag list. Three values: `notes`, `journal`, `cert-review`. Kind drives navigation (the homepage and `/categories` are built on it); subject (tags) and shape (format tags) are separate axes that no longer have to share slots with it.
 - **Categories named by *shape*, not *subject*.** "Notes vs Journal" = looked-up vs read-once. Rejected alternatives: **"Technical"** (strands the first evergreen-but-non-technical post — a salary-negotiation guide is reference-shaped but not technical) and **"Personal"** (mislabels a technical war story like "How Redis improved my system," which is read-once → Journal, not personal-life). The defining trait is how a post is read, not what it's about; subject lives in tags. This is the same function-vs-subject reasoning that keeps the atom/cheat-sheet split clean.
 - **Meta tags (`notes`, `certification`) retired** into `category`. A `[linux]` explainer (`category: notes`) and a `[linux]` Linux-journey post (`category: journal`) are now distinguished by the field, not by a tag.
-- **`selfhosting` promoted to a real topic tag** (9 homelab + teardown posts, past the 5+ threshold). It replaces the blanket `tech` tag on homelab content. The `series: homelab` field still groups the saga; the tag now carries the actual subject.
+- **`selfhosting` promoted to a real topic tag** (9 homelab + teardown posts, past the 5+ threshold). It replaces the blanket `tech` tag on homelab content. The homelab collection still groups the saga; the tag carries the actual subject.
 - **Open topic vocabulary** (not a closed subject set). Closed 4-subject vocab (`fundamentals`/`security`/`tech`/`personal`) was too coarse: `linux` is more useful than `fundamentals` for filtering. Open vocab is more granular, future-proof, and aligns with how readers actually search.
 - **Cert names ARE topic tags for cert reviews.** An OSCP cert review is `category: cert-review` + `[oscp, security]`. But content that incidentally appeared in the OSCP curriculum is NOT tagged `oscp` — it's tagged by what it teaches. This keeps atoms reusable across certs.
 - **No `cert-prep` tag.** The cert boundary is not a topic. Atoms tag by their actual topic (`linux`, `active-directory`, etc.).
-- **No `homelab` tag.** Homelab content uses `series: homelab` + `seriesOrder:` frontmatter, tagged `selfhosting`. Series grouping replaces the tag need.
+- **No `homelab` tag.** Homelab content is tagged `selfhosting` and grouped by a placement in `collections/homelab.md`. Collection membership replaces the tag need.
 - **No `draft` tag.** Use Astro's `draft: true` frontmatter. Status is not a topic.
 - **No `web-security` sub-tag.** Folded into `security` until web content reaches 5+ posts. Splitting creates thin tags.
 - **No offensive/defensive security split.** Current corpus is 95% offensive; revisit when defensive posts reach 5+.
@@ -287,41 +287,76 @@ category: notes                      # notes | journal | cert-review
 tags: ["linux"]                      # topic (1+) + optional format tag (Notes only)
 description: "One concrete sentence describing what's in this post."
 draft: false                         # true for stubs / work-in-progress
-series: "homelab"                    # optional, only for series posts
-seriesOrder: 1.0                     # optional, only for series posts
 featured: false
 ---
 ```
 
 ---
 
-## Series Support
+## Collections
 
-The taxonomy has no "series" tag by design. Series is a **structural** concept — orthogonal to category. Any kind can be a series: the homelab saga is `category: journal` + `series: homelab`, and a future multi-part Active Directory deep-dive could be `category: notes` + `series: ad-attacks`. For multi-part content like the Novaden homelab sequence (v0.1, v1.1, …), the Astro content schema has two optional fields.
+A collection is a deliberately selected body of content with a stated reader purpose. Series, handbooks, and reading lists are the same machinery with different `kind` values, not three separate systems.
 
-**Schema** (in `src/content.config.ts`):
+**The rule that shapes everything else: membership is a relationship, not a property of the post.** A post never records which collections include it. Collections record which posts they include, in what order, and why. Three things follow:
 
-```ts
-series: z.string().optional(),
-seriesOrder: z.number().optional(),
-```
+- One post can sit in any number of collections, with different neighbours in each, and there is still one body and one address.
+- Reordering a collection edits one file. It never touches an article, never changes an ID, and never moves a URL.
+- Contents, numbering, previous/next, and the "you are here" rail are all derived from the same placement records, so they cannot disagree with each other.
 
-**Usage:**
+### Where it lives
+
+One markdown file per collection in `src/data/collections/`. The frontmatter holds the placements; the body is the collection's introduction, rendered on its page.
 
 ```yaml
-category: journal
-tags: ["selfhosting"]
-series: "homelab"
-seriesOrder: 0.1
+---
+title: Homelab
+description: One sentence on what this collection is for.
+kind: series            # series | handbook | reading-list
+status: ongoing         # ongoing | complete
+draft: false
+entries:
+  - id: homelab-01                    # stable, unique site-wide, never reused
+    post: homelab-v0-1-why-i-bought-a-mini-pc   # the post's id
+  - id: homelab-08
+    post: tearing-it-down
+    role: supplementary               # step (default) | supplementary
+    note: Why this is here, in one line.
+---
 ```
 
-**Current series:**
+### The placement fields
 
-| Series slug | Category | Count | Topic tag |
-|-------------|----------|-------|-----------|
-| `homelab` | `journal` | 7 (more pending migration) | `selfhosting` |
+| Field | What it decides |
+|---|---|
+| `id` | Addresses this one occurrence. Assigned once, never derived from position, so reordering breaks nothing. |
+| `post` | The target post's id, which is also its `/posts/<id>` address. |
+| `role` | `step` is a numbered part of the reading sequence. `supplementary` is listed but never numbered. |
+| `required` | Whether the collection may publish while this target is unavailable. Defaults to true. |
+| `note` | Why this collection includes it. Context for a shared item, never a second version of its instructions. |
+| `label` | A contextual label for this occurrence. Must stay recognisable as the real title. |
+| `section` | Optional grouping heading inside the collection. |
 
-Series pages (e.g. `/series/homelab`) are an Astro dynamic route; the schema extension is the prerequisite. Do not invent a topic tag for a series — the series field replaces that need.
+`role` and `required` answer different questions on purpose. "The reader may skip this" and "the page need not exist yet" are not the same statement, so they do not share a flag.
+
+### What the build enforces
+
+`src/utils/collections.ts` resolves and validates every placement. These fail the build with a message naming the file and the fix:
+
+- a placement pointing at a post that does not exist
+- a placement id used twice anywhere on the site
+- a published collection whose `required` member is unavailable
+
+An unavailable member marked `required: false` is dropped whole: its title and description never reach the built page. Including the same post twice in one collection with no `note` on either placement warns, since a deliberate repeat should say why it is deliberate.
+
+### On the reading page
+
+A post with exactly one reading placement shows the sequence rail and its position in it. A post in several collections shows all of them and claims no position: a direct visit never gets a reading order invented for it. Explicit, shareable "reading it as part of X" state is not built yet.
+
+### Current collections
+
+| Collection | Kind | Steps | Alongside |
+|---|---|---|---|
+| `homelab` | series | 7 | 2 |
 
 ---
 
@@ -381,7 +416,7 @@ For now: **flat** under `src/data/blog/`, matching the existing convention. Nami
 - Atoms: `<topic>-<concept>.md` (e.g. `linux-foundations.md`, `linux-permissions.md`, `kubernetes-rbac.md`)
 - Cheat sheets: `<topic>-cheatsheet.md` (e.g. `linux-cheatsheet.md`, `kubernetes-cheatsheet.md`)
 - Cert reviews: `<cert>-review.md` (e.g. `cdp-review.md`, `oscp-review.md`)
-- Series posts: `<series-slug>-<order>-<short-title>.md` (existing pattern, e.g. `homelab-v1-0-from-server-to-data-center.md`)
+- Posts in an ordered collection: `<collection>-<order>-<short-title>.md` (existing pattern, e.g. `homelab-v1-0-from-server-to-data-center.md`). The filename is a convenience for the author; the reading order comes from the placement, not the name.
 
 Subfolders (`notes/`, `certifications/`) are a future option when post count justifies it. Same principle as cheat sheet granularity: do not pre-organize.
 
@@ -468,7 +503,7 @@ For every new post:
 - [ ] At least one topic tag, picked at the most specific useful level
 - [ ] Format tag (`cheatsheet`/`tool-guide`/`writeups`) added only if it's a Note whose shape matches
 - [ ] No format tag standing alone (every post has at least one topic tag); no retired `notes`/`certification` meta tags
-- [ ] Series posts use `series:` + `seriesOrder:` frontmatter, not a series tag
+- [ ] Collection membership is a placement in `src/data/collections/`, never frontmatter on the post and never a tag
 - [ ] Atom links to its cheat sheet; cheat sheet links back to its atom(s)
 - [ ] Frontmatter is complete and `description` is one concrete sentence
 - [ ] Follows [CONTENT_FORMATTING.md](./CONTENT_FORMATTING.md) for prose, voice, tables, code, and blockquotes

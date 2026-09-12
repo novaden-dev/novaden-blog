@@ -1,12 +1,12 @@
 ---
 import { getCollection } from "astro:content";
 import getSortedPosts from "@/utils/getSortedPosts";
+import postFilter from "@/utils/postFilter";
 import getPostsByCategory from "@/utils/getPostsByCategory";
-import getUniqueSeries from "@/utils/getUniqueSeries";
+import { getCollections } from "@/utils/collections";
 import { getPath } from "@/utils/getPath";
 import { slugifyStr } from "@/utils/slugify";
 import { CATEGORIES, CATEGORY_ORDER } from "@/utils/categories";
-import { OSCP, GITBOOK } from "@/constants";
 import { SITE } from "@/config";
 
 // The shell is the same on every page, so it works out the places itself
@@ -23,7 +23,7 @@ type Props = {
 
 const { path = [], place } = Astro.props;
 
-const posts = await getCollection("blog", ({ data }) => !data.draft);
+const posts = await getCollection("blog", postFilter);
 const sorted = getSortedPosts(posts);
 
 const projects = (
@@ -38,7 +38,7 @@ const places = CATEGORY_ORDER.map(key => ({
   kind: key,
 })).filter(entry => entry.count > 0);
 
-const seriesList = getUniqueSeries(posts);
+const collections = await getCollections();
 
 const pinnedCount = posts.filter(post => post.data.featured).length;
 
@@ -108,7 +108,7 @@ const index = [
 
   <div class="bar-right">
     <button class="bar-btn" type="button" data-jump-open>
-      jump <kbd>⌘K</kbd>
+      jump <kbd>/</kbd>
     </button>
     <a class="bar-btn bar-icon" href="/search" aria-label="Full-text search">
       <svg
@@ -131,43 +131,87 @@ const index = [
           stroke-linecap="round"></path>
       </svg>
     </a>
-    <button
-      class="bar-btn bar-icon"
-      type="button"
-      id="theme-btn"
-      aria-label="Toggle theme"
-    >
-      <svg
-        class="icon-moon"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
+    <div class="themeset" role="radiogroup" aria-label="Colour theme">
+      <button
+        class="themeset-opt"
+        type="button"
+        role="radio"
+        aria-checked="false"
+        data-theme-choice="light"
+        title="Light"
+        aria-label="Light"
       >
-        <path
-          d="M20 15A8.5 8.5 0 0 1 9 4a8.5 8.5 0 1 0 11 11Z"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linejoin="round"></path>
-      </svg>
-      <svg
-        class="icon-sun"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"
+          ></circle>
+          <path
+            d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"></path>
+        </svg>
+      </button>
+      <button
+        class="themeset-opt"
+        type="button"
+        role="radio"
+        aria-checked="false"
+        data-theme-choice="dark"
+        title="Dark"
+        aria-label="Dark"
       >
-        <circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"
-        ></circle>
-        <path
-          d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"></path>
-      </svg>
-    </button>
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M20 15A8.5 8.5 0 0 1 9 4a8.5 8.5 0 1 0 11 11Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <button
+        class="themeset-opt"
+        type="button"
+        role="radio"
+        aria-checked="false"
+        data-theme-choice="system"
+        title="Match system"
+        aria-label="Match system"
+      >
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <rect
+            x="2.5"
+            y="4"
+            width="19"
+            height="13"
+            rx="1.5"
+            stroke="currentColor"
+            stroke-width="2"></rect>
+          <path
+            d="M9 20.5h6"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"></path>
+        </svg>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -192,9 +236,14 @@ const index = [
             href="/starred"
             aria-current={place === "starred" ? "page" : undefined}
           >
-            <span class="side-star" aria-hidden="true">
-              ★
-            </span>
+            <svg
+              class="side-star"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M12 2.6l2.85 6.04 6.55.92-4.74 4.55 1.14 6.52L12 17.56l-5.8 3.07 1.14-6.52-4.74-4.55 6.55-.92z" />
+            </svg>
             <span class="side-name">starred</span>
             <span class="side-count">{pinnedCount}</span>
           </a>
@@ -224,33 +273,24 @@ const index = [
         <span class="side-name">apps</span>
         <span class="side-count">{projects.length}</span>
       </a>
-      <a
-        class="side-link"
-        href={OSCP.url}
-        target="_blank"
-        rel="noopener"
-        data-kind="external"
-      >
-        <span class="side-dot" aria-hidden="true"></span>
-        <span class="side-name">oscp vault</span>
-        <span class="side-count">↗</span>
-      </a>
     </div>
 
     {
-      seriesList.length > 0 && (
+      collections.length > 0 && (
         <div class="side-group">
-          <p class="side-label">Series</p>
-          {seriesList.map(entry => (
+          <p class="side-label">Collections</p>
+          {collections.map(collection => (
             <a
               class="side-link"
-              href={`/series/${entry.series}/`}
+              href={`/collections/${collection.id}/`}
               data-kind="series"
-              aria-current={place === entry.series ? "page" : undefined}
+              aria-current={place === collection.id ? "page" : undefined}
             >
               <span class="side-dot" aria-hidden="true" />
-              <span class="side-name">{entry.seriesName.toLowerCase()}</span>
-              <span class="side-count">{entry.count}</span>
+              <span class="side-name">
+                {collection.entry.data.title.toLowerCase()}
+              </span>
+              <span class="side-count">{collection.items.length}</span>
             </a>
           ))}
         </div>
@@ -288,9 +328,8 @@ const index = [
 <footer class="statusbar">
   <span><b>{sorted.length}</b> posts</span>
   <span>updated <b>{updated}</b></span>
-  <span class="max-sm:hidden">self-hosted · no trackers</span>
+  <span class="max-sm:hidden">no trackers</span>
   <span class="statusbar-right">
-    <a href={GITBOOK} target="_blank" rel="noopener">gitbook ↗</a>
     <a href="/rss.xml">rss</a>
     <a href="/about">about</a>
   </span>

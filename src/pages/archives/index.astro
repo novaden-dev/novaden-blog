@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import postFilter from "@/utils/postFilter";
 import Pane from "@/layouts/Pane.astro";
 import FileList from "@/components/FileList.astro";
 import getPostsByGroupCondition from "@/utils/getPostsByGroupCondition";
@@ -11,7 +12,7 @@ if (!SITE.showArchives) {
   return Astro.redirect("/404");
 }
 
-const posts = await getCollection("blog", ({ data }) => !data.draft);
+const posts = await getCollection("blog", postFilter);
 
 const years = Object.entries(
   getPostsByGroupCondition(posts, post => post.data.pubDatetime.getFullYear())

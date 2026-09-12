@@ -4,7 +4,7 @@ pubDatetime: 2026-08-01T00:00:00Z
 title: "Web Application Security Testing: A Working Checklist"
 slug: web-application-security-testing
 featured: false
-draft: false
+draft: true
 tags: ["security", "web", "pentest", "methodology"]
 category: notes
 description: A working web application testing checklist covering recon, authentication, authorization, sessions, every injection class, TLS and configuration, with the pass and fail condition for each check.

@@ -67,7 +67,7 @@
 .bar-brand i {
   width: 8px;
   height: 8px;
-  background: var(--accent);
+  background: var(--chrome-accent);
   border-radius: 1px;
   flex: none;
 }
@@ -135,6 +135,46 @@
   width: 1.75rem;
   padding: 0;
   justify-content: center;
+}
+
+/* --- theme control -------------------------------------------------------- */
+
+/* Three states, shown at once. A single toggling button cannot say which of
+   light, dark and system is in force, and there is no honest icon for "system"
+   when the icon has to double as the control. */
+.themeset {
+  display: inline-flex;
+  align-items: stretch;
+  /* Same height as .bar-btn, or the three controls in the bar do not line up. */
+  height: 1.75rem;
+  border: 1px solid var(--chrome-rule);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.themeset-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--chrome-dim);
+  cursor: pointer;
+}
+
+.themeset-opt + .themeset-opt {
+  border-inline-start: 1px solid var(--chrome-rule);
+}
+
+.themeset-opt:hover {
+  background: var(--chrome-hover);
+  color: var(--chrome-ink);
+}
+
+.themeset-opt[aria-checked="true"] {
+  background: var(--chrome-hover);
+  color: var(--chrome-accent);
 }
 
 /* --- sidebar -------------------------------------------------------------- */
@@ -229,12 +269,12 @@
   inset-block: 0;
   inset-inline-start: 0;
   width: 2px;
-  background: var(--accent);
+  background: var(--chrome-accent);
 }
 
 .side-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   flex: none;
   border-radius: 1px;
   background: var(--kind, var(--chrome-dim));
@@ -756,6 +796,12 @@
   gap: 1.5rem;
   min-width: 0;
   font-family: var(--font-app);
+  /* Titles here are not prose: they carry filenames, versions and other
+     unbreakable tokens. Without this, one such token sets the rail's
+     min-content width, the whole rail lays out wider than its track, and the
+     rail's height then depends on which post happens to be open. Breaking
+     anywhere keeps every rail the same width, and so the same shape. */
+  overflow-wrap: anywhere;
 }
 
 @media (min-width: 1280px) {
@@ -763,10 +809,34 @@
     position: sticky;
     top: calc(var(--bar-h) + 1.5rem);
     max-height: calc(100dvh - var(--bar-h) - var(--status-h) - 3rem);
+    /* A long rail scrolls; it never scrolls sideways. */
+    overflow-x: clip;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--rule) transparent;
   }
+}
+
+.pane-head-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex: none;
+}
+
+.pane-pill {
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.pane-pill[data-status="ongoing"] {
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--rule));
+  color: var(--accent);
 }
 
 .rail-label {
@@ -821,35 +891,6 @@ a.rail-step:hover {
   background: var(--accent);
 }
 
-.rail-next {
-  display: block;
-  padding: 0.6rem 0.7rem;
-  background: var(--sheet);
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-}
-
-.rail-next:hover {
-  border-color: var(--foreground);
-}
-
-.rail-next span {
-  display: block;
-  font-size: 0.6rem;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-.rail-next b {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 700;
-  line-height: 1.3;
-  margin-top: 0.15rem;
-}
-
 /* --- contents ------------------------------------------------------------- */
 
 .toc-list {
@@ -898,6 +939,7 @@ a.rail-step:hover {
 
 .postnav a {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   padding: 0.7rem 0.85rem;
   background: var(--sheet);
@@ -906,24 +948,52 @@ a.rail-step:hover {
   font-family: var(--font-app);
 }
 
+/* With only one neighbour there is no second column to balance against, so the
+   card takes the row and lines up with the article instead of floating in it. */
+.postnav a:only-child {
+  grid-column: 1 / -1;
+}
+
 .postnav a:hover {
   border-color: var(--foreground);
 }
 
-.postnav span {
-  font-size: 0.6rem;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
 .postnav b {
-  display: block;
   font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 700;
-  line-height: 1.3;
-  margin-top: 0.15rem;
+  line-height: 1.35;
+}
+
+/* --- image zoom ----------------------------------------------------------- */
+
+/* A diagram at column width is a thumbnail of itself. Clicking one opens it
+   against the chrome, at whatever size the viewport allows. */
+.zoomable {
+  cursor: zoom-in;
+}
+
+.zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: color-mix(in oklab, var(--chrome) 93%, transparent);
+  cursor: zoom-out;
+}
+
+.zoom[hidden] {
+  display: none;
+}
+
+.zoom img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border: 1px solid var(--chrome-rule);
+  background: var(--background);
 }
 
 /* --- tag pills ------------------------------------------------------------ */
@@ -1024,19 +1094,27 @@ a.rail-step:hover {
 /* A dense grid for tag indexes, where the description would be noise. */
 .dir-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  /* Wide enough for a real tag name. At 11rem the count column ate most of
+     the cell and every name over eight characters was cut. */
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
   border-bottom: 1px solid var(--rule);
 }
 
 .dir-grid .dir {
+  /* The count takes what a count needs; the name gets the rest. */
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 0.75rem;
   align-items: center;
   border-bottom: 0;
   border-inline-end: 1px solid var(--rule);
   padding-inline: 0.85rem;
 }
 
-/* Names in the grid stay on one line so every cell is the same height. */
+/* Names in the grid stay on one line so every cell is the same height.
+   `display: block` is load-bearing: text-overflow has no effect on a flex
+   container, so as a flex box this clipped mid-word with no ellipsis. */
 .dir-grid .dir-name {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1238,38 +1316,6 @@ a.rail-step:hover {
   font-variant-numeric: tabular-nums;
 }
 
-/* --- share row ------------------------------------------------------------ */
-
-.share {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: var(--font-app);
-}
-
-.share-label {
-  font-size: 0.6rem;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-.share a {
-  display: grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  color: var(--soft);
-}
-
-.share a:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 /* --- groups --------------------------------------------------------------- */
 
 /* A file manager floats pinned items above the rest under their own heading.
@@ -1310,21 +1356,60 @@ a.rail-step:hover {
 
 /* Ember marks the one thing to look at: the place you are in, and the handful
    of posts pinned above everything else. Nothing else in the pane uses it. */
+/* Same treatment as the sidebar's star: drawn larger than the square it stands
+   in for, then inset to that square's footprint so titles still start on one
+   line. A text glyph read as a sticker next to the solid kind squares. */
 .group-star,
 .file-star {
-  color: var(--accent);
-}
-
-.file-star {
+  width: 9px;
+  height: 9px;
+  margin-inline: -1px;
   flex: none;
-  font-size: 0.72rem;
+  color: var(--accent);
   translate: 0 -1px;
 }
 
+/* Drawn at 10px but inset to an 8px footprint: a star needs more area than a
+   square to carry the same weight, and the names still start on one line. */
 .side-star {
-  width: 7px;
+  width: 10px;
+  height: 10px;
+  margin-inline: -1px;
   flex: none;
-  color: var(--accent);
-  font-size: 0.7rem;
-  line-height: 1;
+  color: var(--chrome-accent);
+}
+
+/* A shared item says where else it is used. The reason line is the placement's
+   note: why this collection includes it, not what the post says. */
+.rail-also {
+  margin-top: 1.25rem;
+}
+
+.rail-why {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  font-style: normal;
+  line-height: 1.4;
+  opacity: 0.65;
+}
+
+/* A collection's own introduction. It sits between the pane header and the
+   listing, so it takes the pane's gutter and closes with the same rule: a
+   second band of the header, not a loose block of article prose. */
+.pane-intro {
+  padding: 0.85rem clamp(0.85rem, 2.5vw, 1.75rem) 1rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-read);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--soft);
+}
+
+.pane-intro > * {
+  max-width: 66ch;
+}
+
+.pane-intro p + p {
+  margin-top: 0.6rem;
 }

@@ -4,7 +4,7 @@ pubDatetime: 2026-05-27T00:00:00Z
 title: DevSecOps Foundations
 slug: devsecops-foundations
 featured: false
-draft: false
+draft: true
 tags: ["devsecops", "security"]
 category: notes
 description: What DevOps and DevSecOps actually are, why CI/CD matters, the tool categories you stitch together, and how SCA, SAST, DAST, IaC, CaC, and vulnerability management fit into a pipeline.

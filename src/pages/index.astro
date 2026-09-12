@@ -1,15 +1,15 @@
 ---
 import { getCollection } from "astro:content";
+import postFilter from "@/utils/postFilter";
 import Pane from "@/layouts/Pane.astro";
 import FileList from "@/components/FileList.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
-import { SITE } from "@/config";
 
 // The front door is the index. You land inside the workspace looking at
 // everything in it — but pinned items float to the top, so someone arriving
 // cold has three places to start instead of fifty-three.
 
-const posts = await getCollection("blog", ({ data }) => !data.draft);
+const posts = await getCollection("blog", postFilter);
 const sorted = getSortedPosts(posts);
 
 const pinned = sorted.filter(post => post.data.featured);
@@ -24,7 +24,7 @@ const description =
   desc={description}
   stat={`${sorted.length} items`}
   place="all"
-  head={`${SITE.title} — notes, apps, and a homelab`}
+  head="notes, apps, and a homelab"
 >
   <FileList
     filter

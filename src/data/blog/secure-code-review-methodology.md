@@ -6,7 +6,7 @@ slug: "secure-code-review-methodology"
 description: "Running a secure code review end to end: scoping and intake before the environment is provisioned, getting an analyser working on a network with no internet, which code to read when you cannot read all of it, and the coverage statement that makes a time-boxed review defensible."
 tags: ["security", "devsecops", "methodology", "owasp"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

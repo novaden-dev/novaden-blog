@@ -4,7 +4,7 @@ pubDatetime: 2026-05-27T00:00:00Z
 title: Linux Cheat Sheet
 slug: linux-cheatsheet
 featured: false
-draft: false
+draft: true
 tags: ["linux", "cheatsheet"]
 category: notes
 description: A growing quick-reference of the Linux commands I actually reach for day to day, from navigation and search to processes, services, and packages.

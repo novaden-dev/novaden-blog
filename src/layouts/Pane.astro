@@ -13,13 +13,15 @@ type Props = {
   desc?: string;
   /* Right-aligned count, e.g. "43 items". */
   stat?: string;
+  /* Short state beside the count, e.g. "ongoing". */
+  pill?: string;
   path?: Crumb[];
   place?: string;
   /* Page <title>; defaults to the pane name. */
   head?: string;
 };
 
-const { title, desc, stat, path = [], place, head } = Astro.props;
+const { title, desc, stat, pill, path = [], place, head } = Astro.props;
 ---
 
 <Layout title={`${head ?? title} | ${SITE.title}`} description={desc}>
@@ -27,7 +29,18 @@ const { title, desc, stat, path = [], place, head } = Astro.props;
     <header class="pane-head">
       <div class="pane-head-row">
         <h1 class="pane-title">{title}</h1>
-        {stat && <p class="pane-stat">{stat}</p>}
+        {
+          (stat || pill) && (
+            <div class="pane-head-meta">
+              {stat && <p class="pane-stat">{stat}</p>}
+              {pill && (
+                <span class="pane-pill" data-status={pill}>
+                  {pill}
+                </span>
+              )}
+            </div>
+          )
+        }
       </div>
       {desc && <p class="pane-desc">{desc}</p>}
     </header>

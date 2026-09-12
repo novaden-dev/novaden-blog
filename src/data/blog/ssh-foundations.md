@@ -4,7 +4,7 @@ pubDatetime: 2026-05-27T00:00:00Z
 title: SSH Foundations
 slug: ssh-foundations
 featured: false
-draft: false
+draft: true
 tags: ["linux", "networking", "security"]
 category: notes
 description: The mental model behind SSH. How the handshake works, host keys, public-key authentication, the agent, port forwarding, and why permissions matter.

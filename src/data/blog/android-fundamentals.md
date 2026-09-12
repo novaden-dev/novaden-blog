@@ -6,7 +6,7 @@ slug: "android-fundamentals"
 description: "How Android apps are built (activities, services, broadcast receivers, content providers), how they store data (SharedPreferences, the AndroidKeyStore, external storage), where the attack surface is, and the methodology for reversing an APK."
 tags: ["android", "security"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

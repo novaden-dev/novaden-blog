@@ -6,7 +6,7 @@ slug: "mobile-app-security-testing"
 description: "A per-control security-testing checklist for Android apps against OWASP MASVS: how to unpack the app, and for each control the static checks (from a decompiled APK) and the dynamic confirmation (on a running device), with PASS and FAIL conditions and the evidence to capture."
 tags: ["android", "security"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

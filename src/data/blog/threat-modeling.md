@@ -1,12 +1,12 @@
 ---
 author: Kayra
 pubDatetime: 2026-08-17T00:00:00Z
-title: "Threat Modeling — Process, Methodologies, and Running the Session"
+title: "Threat Modeling – Process, Methodologies, and Running the Session"
 slug: "threat-modeling"
 description: "What threat modeling is, the four questions it answers, how to decompose a system into a DFD with trust boundaries, the methodologies (STRIDE, LINDDUN, PASTA, attack trees, and the rest) and when each one is the right tool, how to rank and respond to what you find, and how to actually facilitate the session."
 tags: ["security", "threat-modeling", "methodology"]
 category: notes
-draft: false
+draft: true
 featured: true
 ---
 
@@ -49,10 +49,10 @@ Every one of them is required. Teams that skip question 1 argue past each other 
 
 The Threat Modeling Manifesto (2020) adds the values that keep this from turning into paperwork. The ones worth remembering: *a culture of finding and fixing design issues over checkbox compliance*, *people and collaboration over processes, methodologies, and tools*, and *doing threat modeling over talking about it*. Its named anti-patterns are all real and all common:
 
-- **Hero threat modeler** — believing it takes a special person, so one specialist does them all and nobody else learns.
-- **Admiration for the problem** — analyzing deeper and deeper instead of acting on what you already found.
-- **Tendency to overfocus** — burning the session on one component, or one threat class, while the rest of the system goes unexamined.
-- **Perfect representation** — refusing to move until the diagram is exactly right. Several imperfect models beat one perfect one you never finished.
+- **Hero threat modeler**: believing it takes a special person, so one specialist does them all and nobody else learns.
+- **Admiration for the problem**: analyzing deeper and deeper instead of acting on what you already found.
+- **Tendency to overfocus**: burning the session on one component, or one threat class, while the rest of the system goes unexamined.
+- **Perfect representation**: refusing to move until the diagram is exactly right. Several imperfect models beat one perfect one you never finished.
 
 ## When to do it
 
@@ -70,7 +70,7 @@ The cost argument is the one that convinces management: a design flaw caught on 
 
 ---
 
-# Question 1 — What are we working on?
+# Question 1: What are we working on?
 
 You cannot enumerate threats against a system nobody has described. This phase produces a model that everyone in the room agrees is accurate, and the shared understanding is at least half the value of the whole exercise.
 
@@ -113,7 +113,7 @@ The diagram alone leaves gaps. Alongside it, capture:
 
 ---
 
-# Question 2 — What can go wrong?
+# Question 2: What can go wrong?
 
 This is where the methodologies live. They exist because unstructured brainstorming finds the threats the loudest person in the room already knows about, and misses whole categories systematically. A methodology's real job is to force coverage.
 
@@ -157,7 +157,7 @@ The mechanical version of the session: for each element or interaction, read the
 
 That statement contains its own test case, its own fix, and its own impact score. The one-word version contains none of them.
 
-## LINDDUN — the privacy counterpart
+## LINDDUN: the privacy counterpart
 
 STRIDE finds security threats and is close to blind to privacy ones. A system can be perfectly authenticated, encrypted, and authorized while still over-collecting, over-retaining, and enabling users to be tracked across contexts. If your system handles personal data, or you have GDPR-type obligations, run LINDDUN over the same DFD.
 
@@ -173,7 +173,7 @@ STRIDE finds security threats and is close to blind to privacy ones. A system ca
 
 Note that non-repudiation flips sign between the two frameworks. In STRIDE you want it; in LINDDUN, for some systems, it is the harm. **LINDDUN GO** is a card-deck variant that works well as a workshop format if you want a lighter-weight run.
 
-## PASTA — risk-centric, seven stages
+## PASTA: risk-centric, seven stages
 
 PASTA (Process for Attack Simulation and Threat Analysis) is the heavyweight. Where STRIDE starts from the design, PASTA starts from the business and ends with a costed mitigation strategy. It is a program, not a 90-minute meeting.
 
@@ -222,13 +222,13 @@ Related reference sets worth knowing by name: **CAPEC** for attack patterns, **C
 
 You need to be able to name these and say when they apply. You will rarely run them.
 
-- **Trike** — an open-source, risk-and-requirements-driven method. You build an actor–asset–action matrix (who may create, read, update, delete what, and under which rules), and threats fall out of it automatically as the cells that shouldn't be allowed. It recognizes only two threat types, elevation of privilege and denial of service. Strong on authorization completeness, weak elsewhere.
+- **Trike**: an open-source, risk-and-requirements-driven method. You build an actor–asset–action matrix (who may create, read, update, delete what, and under which rules), and threats fall out of it automatically as the cells that shouldn't be allowed. It recognizes only two threat types, elevation of privilege and denial of service. Strong on authorization completeness, weak elsewhere.
 - **VAST** (Visual, Agile, and Simple Threat modeling) — the methodology behind the commercial ThreatModeler tool, designed for enterprise scale. Splits into *application* threat models built from process-flow diagrams for developers, and *operational* threat models built from DFDs from the attacker's view for infrastructure. Its selling point is that it scales to hundreds of models without a security expert in every room.
 - **OCTAVE** (Operationally Critical Threat, Asset, and Vulnerability Evaluation, from CERT/SEI) — organizational risk assessment, not software design. Asset-driven, run by the business rather than by engineers. **OCTAVE Allegro** is the streamlined, information-asset-focused version. Use it for enterprise risk programs; it will not tell you your API has an IDOR.
 - **hTMM** (hybrid Threat Modeling Method, SEI) — deliberately combines Security Cards for breadth of imagination, Persona non Grata for attacker realism, and STRIDE for systematic coverage, aiming for no false positives and no missed threats.
-- **Security Cards** — a 42-card deck across four dimensions (human impact, adversary's motivations, adversary's resources, adversary's methods). Excellent at surfacing unusual threats that a checklist structurally cannot produce. Good as a 20-minute divergence exercise inside a longer session.
-- **Persona non Grata** — write your attackers as personas with motivation, skill, resources, and goals, then reason about what *that specific person* would do. Catches "who would even bother" reasoning errors in both directions.
-- **Abuse cases / evil user stories** — the same use-case format inverted: *"As an attacker, I want to submit a negative quantity so that I receive a refund."* The cheapest way to get threat thinking into a team that already writes user stories, and the format product owners understand without training.
+- **Security Cards**: a 42-card deck across four dimensions (human impact, adversary's motivations, adversary's resources, adversary's methods). Excellent at surfacing unusual threats that a checklist structurally cannot produce. Good as a 20-minute divergence exercise inside a longer session.
+- **Persona non Grata**: write your attackers as personas with motivation, skill, resources, and goals, then reason about what *that specific person* would do. Catches "who would even bother" reasoning errors in both directions.
+- **Abuse cases / evil user stories**: the same use-case format inverted: *"As an attacker, I want to submit a negative quantity so that I receive a refund."* The cheapest way to get threat thinking into a team that already writes user stories, and the format product owners understand without training.
 
 ## Choosing one
 
@@ -247,7 +247,7 @@ Pick one primary, and treat the others as supplements. Running two full methodol
 
 ---
 
-# Question 3 — What are we going to do about it?
+# Question 3: What are we going to do about it?
 
 Every threat gets exactly one of four responses, and every response gets a named owner. A threat with no response is not a threat model output, it is a note.
 
@@ -295,7 +295,7 @@ Whatever you pick, apply it consistently and record the reasoning, not just the 
 
 ---
 
-# Question 4 — Did we do a good enough job?
+# Question 4: Did we do a good enough job?
 
 The step everyone skips. It has four distinct checks:
 
@@ -433,8 +433,8 @@ A 90-minute session per quarter does not match a two-week release cadence. What 
 The tooling that supports the last point:
 
 - **pytm** (OWASP) — describe the system in Python, get a DFD and a threat report generated from a threat library.
-- **threagile** — describe the architecture in YAML, get generated diagrams plus a risk report; runs in CI as a container.
-- **Threatspec** — annotations in ordinary source comments (`@threat`, `@mitigation`) that build a model out of the code itself.
+- **threagile**: describe the architecture in YAML, get generated diagrams plus a risk report; runs in CI as a container.
+- **Threatspec**: annotations in ordinary source comments (`@threat`, `@mitigation`) that build a model out of the code itself.
 
 The trade-off is real: as-code models version, diff, and run in CI, but they lose the collaborative conversation that is the main reason to do the activity. The strong pattern is a whiteboard session for discovery, then commit the result as code so it stays honest.
 

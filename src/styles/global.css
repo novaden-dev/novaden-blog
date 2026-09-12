@@ -21,22 +21,27 @@
 
 :root,
 html[data-theme="light"] {
-  --chrome: #22252a;
-  --chrome-ink: #d8d6d0;
-  --chrome-dim: #83878f;
-  --chrome-rule: #34383f;
-  --chrome-hover: #2c3037;
+  --chrome: #11110f;
+  --chrome-ink: #ece8dd;
+  --chrome-dim: #98978f;
+  --chrome-rule: #292a26;
+  --chrome-hover: #1c1c19;
 
-  --background: #f6f4ef; /* the pane */
-  --foreground: #191b1f;
-  --soft: #565b63;
-  --faint: #8d9199;
-  --rule: #ddd9d0;
-  --sheet: #ece9e2;
-  --card: #fffefb;
+  --background: #ece8dd; /* the pane — paper */
+  --foreground: #14140f;
+  --soft: #5f5e55;
+  --faint: #8a897f;
+  --rule: #d7d2c4;
+  --sheet: #e3dfd2;
+  --card: #f5f2ea;
 
-  --accent: #e0521c;
-  --on-accent: #fffefb;
+  /* Lime is a dark-ground colour: at #d8ff62 it scores 1.07:1 on paper and is
+     unreadable. Light gets the same hue taken down to where it carries text,
+     and the chrome keeps a bright one because the frame stays dark in both
+     themes. */
+  --accent: #4f6b0a;
+  --chrome-accent: #a8cc33;
+  --on-accent: #f4f1e7;
 
   --k-notes: #2a7fa0;
   --k-journal: #b3781a;
@@ -47,22 +52,23 @@ html[data-theme="light"] {
 }
 
 html[data-theme="dark"] {
-  --chrome: #0f1114;
-  --chrome-ink: #cbc9c3;
-  --chrome-dim: #71767f;
-  --chrome-rule: #23262b;
-  --chrome-hover: #1a1d21;
+  --chrome: #0b0b0a;
+  --chrome-ink: #f1efe8;
+  --chrome-dim: #98978f;
+  --chrome-rule: #292a26;
+  --chrome-hover: #171714;
 
-  --background: #191c20;
-  --foreground: #e6e4de;
-  --soft: #9ca1a9;
-  --faint: #6b7079;
-  --rule: #2a2e34;
-  --sheet: #212429;
-  --card: #1f2227;
+  --background: #11110f; /* the pane */
+  --foreground: #f1efe8;
+  --soft: #98978f;
+  --faint: #555650;
+  --rule: #292a26;
+  --sheet: #171714;
+  --card: #141412;
 
-  --accent: #ff6b2e;
-  --on-accent: #1a0c04;
+  --accent: #d8ff62;
+  --chrome-accent: #d8ff62;
+  --on-accent: #0b0b0a;
 
   --k-notes: #5fb3d4;
   --k-journal: #e0a33c;
@@ -133,7 +139,9 @@ html[data-theme="dark"] {
 }
 
 /* Source: https://piccalil.li/blog/a-more-modern-css-reset/ */
-/* Anything that has been anchored to should have extra scroll margin */
+/* Anything that has been anchored to should have extra scroll margin, enough
+   to clear the sticky path bar rather than land underneath it. */
 :target {
-  scroll-margin-block: 1rem;
+  scroll-margin-block-start: calc(var(--bar-h, 2.75rem) + 1rem);
+  scroll-margin-block-end: 1rem;
 }

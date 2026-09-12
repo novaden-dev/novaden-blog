@@ -4,7 +4,7 @@ pubDatetime: 2026-08-04T00:00:00Z
 title: "HTTP Security Headers: Web, APIs, and Mobile"
 slug: http-security-headers
 featured: false
-draft: false
+draft: true
 tags: ["security", "web", "api", "mobile"]
 category: notes
 description: "Which HTTP security headers matter for browser pages, JSON APIs, and native mobile apps, including why CSP is usually not needed on a JSON-only response."

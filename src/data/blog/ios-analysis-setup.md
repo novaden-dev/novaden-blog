@@ -6,7 +6,7 @@ slug: "ios-analysis-setup"
 description: "Coming to iOS static analysis from Android: the mental model, why you need a jailbreak, how to functionally verify jailbreak state from Linux, and jailbreaking an iPhone X with palera1n on Fedora (including the failures along the way)."
 tags: ["ios", "security"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

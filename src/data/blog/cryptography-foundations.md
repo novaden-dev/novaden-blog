@@ -6,7 +6,7 @@ slug: "cryptography-foundations"
 description: "The cryptography a security tester needs to read code and judge it: encoding vs hashing vs encryption, symmetric and asymmetric, cipher modes and why ECB leaks, padding and the padding oracle, authenticated encryption, secure randomness, and key management."
 tags: ["security", "cryptography"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

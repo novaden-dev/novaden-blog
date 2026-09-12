@@ -5,7 +5,7 @@ modDatetime: 2025-04-02T18:10:28Z
 title: "Web Information Gathering"
 slug: web-information-gathering
 featured: false
-draft: false
+draft: true
 tags: ["security", "web"]
 category: notes
 description: "The techniques for reconnaissance against a web target: WHOIS, DNS and subdomains, zone transfers, virtual hosts, certificate transparency, fingerprinting, crawling, and the files servers leak about themselves."

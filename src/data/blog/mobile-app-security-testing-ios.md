@@ -6,7 +6,7 @@ slug: "mobile-app-security-testing-ios"
 description: "A per-control security-testing checklist for iOS apps against OWASP MASVS: how to unpack the app, and for each control the static checks (from a decrypted IPA) and the dynamic confirmation (on a jailbroken device), with PASS and FAIL conditions and the evidence to capture."
 tags: ["ios", "security"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

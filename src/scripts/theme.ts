@@ -1,114 +1,99 @@
-// Constants
+// Three states, not two. "System" is the absence of a choice, so it is stored
+// as the absence of a key: nothing here ever writes the resolved value back,
+// which is what used to pin a reader to light or dark the first time their OS
+// switched over.
+
 const THEME = "theme";
-const LIGHT = "light";
-const DARK = "dark";
 
-// Initial color scheme
-// Can be "light", "dark", or empty string for system's prefers-color-scheme
-const initialColorScheme = "";
+type Choice = "light" | "dark" | "system";
+type Resolved = "light" | "dark";
 
-function getPreferTheme(): string {
-  // get theme data from local storage (user's explicit choice)
-  const currentTheme = localStorage.getItem(THEME);
-  if (currentTheme) return currentTheme;
+const media = window.matchMedia("(prefers-color-scheme: dark)");
 
-  // return initial color scheme if it is set (site default)
-  if (initialColorScheme) return initialColorScheme;
-
-  // return user device's prefer color scheme (system fallback)
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? DARK
-    : LIGHT;
+function storedChoice(): Choice {
+  const raw = localStorage.getItem(THEME);
+  return raw === "light" || raw === "dark" ? raw : "system";
 }
 
-// Use existing theme value from inline script if available, otherwise detect
-let themeValue = window.theme?.themeValue ?? getPreferTheme();
-
-function setPreference(): void {
-  localStorage.setItem(THEME, themeValue);
-  reflectPreference();
+function resolve(choice: Choice): Resolved {
+  if (choice !== "system") return choice;
+  return media.matches ? "dark" : "light";
 }
 
-function reflectPreference(): void {
-  document.firstElementChild?.setAttribute("data-theme", themeValue);
+function reflect(choice: Choice = storedChoice()): void {
+  document.firstElementChild?.setAttribute("data-theme", resolve(choice));
 
-  document.querySelector("#theme-btn")?.setAttribute("aria-label", themeValue);
+  for (const option of document.querySelectorAll<HTMLElement>(
+    "[data-theme-choice]"
+  )) {
+    option.setAttribute(
+      "aria-checked",
+      String(option.dataset.themeChoice === choice)
+    );
+  }
 
-  // Get a reference to the body element
-  const body = document.body;
-
-  // Check if the body element exists before using getComputedStyle
-  if (body) {
-    // Get the computed styles for the body element
-    const computedStyles = window.getComputedStyle(body);
-
-    // Get the background color property
-    const bgColor = computedStyles.backgroundColor;
-
-    // Set the background color in <meta theme-color ... />
+  // Android colours its navigation bar from this, so it tracks the pane.
+  if (document.body) {
     document
       .querySelector("meta[name='theme-color']")
-      ?.setAttribute("content", bgColor);
+      ?.setAttribute(
+        "content",
+        getComputedStyle(document.body).backgroundColor
+      );
   }
 }
 
-// Update the global theme API
-if (window.theme) {
-  window.theme.setPreference = setPreference;
-  window.theme.reflectPreference = reflectPreference;
-} else {
-  window.theme = {
-    themeValue,
-    setPreference,
-    reflectPreference,
-    getTheme: () => themeValue,
-    setTheme: (val: string) => {
-      themeValue = val;
-    },
-  };
+function choose(choice: Choice): void {
+  if (choice === "system") localStorage.removeItem(THEME);
+  else localStorage.setItem(THEME, choice);
+  reflect(choice);
 }
 
-// Ensure theme is reflected (in case body wasn't ready when inline script ran)
-reflectPreference();
+window.theme = {
+  get choice() {
+    return storedChoice();
+  },
+  resolved: () => resolve(storedChoice()),
+  choose,
+  reflect,
+};
 
-function setThemeFeature(): void {
-  // set on load so screen readers can get the latest value on the button
-  reflectPreference();
+function bindControls(): void {
+  reflect();
 
-  // now this script can find and listen for clicks on the control
-  document.querySelector("#theme-btn")?.addEventListener("click", () => {
-    themeValue = themeValue === LIGHT ? DARK : LIGHT;
-    window.theme?.setTheme(themeValue);
-    setPreference();
-  });
+  for (const option of document.querySelectorAll<HTMLElement>(
+    "[data-theme-choice]"
+  )) {
+    option.addEventListener("click", () => {
+      const choice = option.dataset.themeChoice;
+      if (choice === "light" || choice === "dark" || choice === "system") {
+        choose(choice);
+      }
+    });
+  }
 }
 
-// Set up theme features after page load
-setThemeFeature();
+bindControls();
 
-// Runs on view transitions navigation
-document.addEventListener("astro:after-swap", setThemeFeature);
+// Re-bind after a view transition: the buttons are new elements, the listeners
+// on them are not.
+document.addEventListener("astro:after-swap", bindControls);
 
-// Set theme-color value before page transition
-// to avoid navigation bar color flickering in Android dark mode
+// Carry the resolved colour across a transition so Android's navigation bar
+// does not flash.
 document.addEventListener("astro:before-swap", event => {
-  const astroEvent = event;
-  const bgColor = document
+  const colour = document
     .querySelector("meta[name='theme-color']")
     ?.getAttribute("content");
-
-  if (bgColor) {
-    astroEvent.newDocument
+  if (colour) {
+    (event as unknown as { newDocument: Document }).newDocument
       .querySelector("meta[name='theme-color']")
-      ?.setAttribute("content", bgColor);
+      ?.setAttribute("content", colour);
   }
 });
 
-// sync with system changes
-window
-  .matchMedia("(prefers-color-scheme: dark)")
-  .addEventListener("change", ({ matches: isDark }) => {
-    themeValue = isDark ? DARK : LIGHT;
-    window.theme?.setTheme(themeValue);
-    setPreference();
-  });
+// Follow the system only while the reader has not chosen. This listener must
+// never write to storage.
+media.addEventListener("change", () => {
+  if (storedChoice() === "system") reflect("system");
+});

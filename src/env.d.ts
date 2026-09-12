@@ -1,9 +1,12 @@
+type ThemeChoice = "light" | "dark" | "system";
+
 interface Window {
   theme?: {
-    themeValue: string;
-    setPreference: () => void;
-    reflectPreference: () => void;
-    getTheme: () => string;
-    setTheme: (val: string) => void;
+    /** What the reader picked. "system" means they have not picked. */
+    readonly choice: ThemeChoice;
+    /** What that resolves to right now. */
+    resolved: () => "light" | "dark";
+    choose: (choice: ThemeChoice) => void;
+    reflect: (choice?: ThemeChoice) => void;
   };
 }

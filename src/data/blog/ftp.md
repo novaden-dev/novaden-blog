@@ -5,10 +5,9 @@ modDatetime: 2026-06-03T00:00:00Z
 title: "FTP"
 slug: ftp
 featured: false
-draft: false
+draft: true
 tags:
   - security
-  - notes
 description: "What FTP is, how to enumerate it (vsFTPd config, anonymous access, server interrogation), and the attacks: brute-forcing, known-version exploits, the FTP bounce SSRF, web-app command injection, and credential sniffing."
 ---
 

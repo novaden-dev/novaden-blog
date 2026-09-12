@@ -4,7 +4,7 @@ pubDatetime: 2026-06-13T00:00:00Z
 title: Cross-Site Request Forgery (CSRF)
 slug: cross-site-request-forgery
 featured: false
-draft: false
+draft: true
 tags: ["security", "web"]
 category: notes
 description: How CSRF works, why anti-CSRF tokens and the SameSite attribute stop it, how tokens actually reach the frontend, and how to test for it.
@@ -71,8 +71,8 @@ In both cases the **backend originates** the token; the SPA simply reads what th
 
 ### Synchronizer token vs. double-submit cookie
 
-- **Synchronizer token** — the server stores the expected token in the session and compares the submitted value against it. Stateful.
-- **Double-submit cookie** — the server sets the token in a cookie; client-side JS copies it into a request header; the server checks that the cookie value and the header value match. No server-side storage is needed. It is safe because an attacker's cross-site script cannot read the victim's cookie to copy it into the header.
+- **Synchronizer token**: the server stores the expected token in the session and compares the submitted value against it. Stateful.
+- **Double-submit cookie**: the server sets the token in a cookie; client-side JS copies it into a request header; the server checks that the cookie value and the header value match. No server-side storage is needed. It is safe because an attacker's cross-site script cannot read the victim's cookie to copy it into the header.
 
 ## The SameSite Cookie Attribute
 

@@ -6,7 +6,7 @@ slug: "frida-on-device"
 description: "Getting frida-server onto a rooted Android or jailbroken iOS device: the client/server model, per-platform install, the Gadget path for stock devices, and the version-match gotcha that breaks everyone's first attempt."
 tags: ["frida", "mobile", "security", "cheatsheet"]
 category: notes
-draft: false
+draft: true
 featured: false
 ---
 

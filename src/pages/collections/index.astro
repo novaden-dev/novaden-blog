@@ -1,0 +1,53 @@
+---
+import Pane from "@/layouts/Pane.astro";
+import { getCollections } from "@/utils/collections";
+
+// The index lists collections, not their members. A collection is a resource
+// in its own right: what it is for, how it is read, how far it has got.
+
+const collections = await getCollections();
+
+const KIND_NOTE: Record<string, string> = {
+  series: "in order",
+  handbook: "structured",
+  "reading-list": "curated",
+};
+---
+
+<Pane
+  title="collections"
+  desc="Deliberate reading paths. A series runs in order, a handbook is entered anywhere, a reading list is a selection."
+  stat={`${collections.length} ${collections.length === 1 ? "collection" : "collections"}`}
+  path={[{ label: "collections" }]}
+  place="collections"
+>
+  {
+    collections.length === 0 ? (
+      <p class="empty">no collections yet.</p>
+    ) : (
+      <>
+        <div class="cols" aria-hidden="true">
+          <span>name</span>
+          <span class="r">parts</span>
+        </div>
+        {collections.map(collection => (
+          <a
+            class="dir"
+            href={`/collections/${collection.id}/`}
+            data-kind="series"
+          >
+            <span class="dir-name">
+              <span class="file-dot" aria-hidden="true" />
+              {collection.entry.data.title.toLowerCase()}
+              <span class="group-note">
+                {KIND_NOTE[collection.entry.data.kind]}
+                {collection.entry.data.status === "ongoing" && ", ongoing"}
+              </span>
+            </span>
+            <span class="dir-count">{collection.steps.length}</span>
+          </a>
+        ))}
+      </>
+    )
+  }
+</Pane>
