@@ -1,7 +1,7 @@
 ---
 author: Kayra
 pubDatetime: 2024-12-31T00:00:00Z
-title: "Homelab v1.0 – From Server to Data Center"
+title: "Homelab v1.0 – From Server to Data Center (Homelab_v4.1_UltraOptimized(3).md)"
 slug: homelab-v1-0-from-server-to-data-center
 featured: false
 draft: false
