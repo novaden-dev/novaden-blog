@@ -4,10 +4,10 @@ pubDatetime: 2026-05-27T00:00:00Z
 title: SSH Foundations
 slug: ssh-foundations
 featured: false
-draft: true
-tags: ["linux", "networking", "security"]
+draft: false
+tags: ["ssh"]
 category: notes
-description: The mental model behind SSH. How the handshake works, host keys, public-key authentication, the agent, port forwarding, and why permissions matter.
+description: How the handshake works, host keys, public-key authentication, the agent, port forwarding, and why permissions matter.
 ---
 
 ## Introduction
@@ -49,7 +49,7 @@ The server's host key answers the question "am I actually talking to the machine
 - **First connection**: the key isn't in `known_hosts` yet. SSH prints the fingerprint and asks you to confirm. If you say yes, the public key is pinned in `known_hosts`. This pattern is called **Trust On First Use (TOFU)**.
 - **Subsequent connections**: SSH compares the offered key against the stored one. If they match, you connect silently. If they don't, SSH refuses to connect and prints a loud warning about a possible man-in-the-middle.
 
-> **Gotcha:** the warning also fires if the server's host key was legitimately rotated (reinstall, new VM with the same IP, etc.). The fix is to remove the stale entry with `ssh-keygen -R host`, not to blindly say "yes" to a new key. Out-of-band verification of the new fingerprint is the only thing that actually keeps you safe here.
+> **Watch out:** the warning also fires if the server's host key was legitimately rotated (reinstall, new VM with the same IP, etc.). The fix is to remove the stale entry with `ssh-keygen -R host`, not to blindly say "yes" to a new key. Out-of-band verification of the new fingerprint is the only thing that actually keeps you safe here.
 
 ## Authentication Methods
 
@@ -161,4 +161,4 @@ SSH is paranoid about file permissions, and it will silently refuse to use files
 
 If you ever see "Permissions are too open" or silent public-key failures, check these first. The same rules apply on the server: a world-writable `~/.ssh` or `authorized_keys` will be ignored even though the keys inside it look fine.
 
-> **Quick reference:** the actual commands for generating keys, copying them to servers, tunneling, transferring files, and hardening `sshd` live in the [SSH Cheat Sheet](/posts/ssh-cheatsheet).
+> The commands are in the [SSH Cheat Sheet](/posts/ssh-cheatsheet).

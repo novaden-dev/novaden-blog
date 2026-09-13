@@ -30,6 +30,7 @@ export const TAGS: Record<string, TagDefinition> = {
   linux: { domain: "technical" },
   networking: { domain: "technical" },
   selfhosting: { domain: "technical" },
+  ssh: { domain: "technical" },
 };
 
 const names = new Set(Object.keys(TAGS));

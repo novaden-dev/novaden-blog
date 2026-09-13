@@ -4,13 +4,14 @@ pubDatetime: 2026-05-27T00:00:00Z
 title: SSH Cheat Sheet
 slug: ssh-cheatsheet
 featured: false
-draft: true
-tags: ["linux", "networking", "security", "cheatsheet"]
+draft: false
+tags: ["ssh", "cheatsheet"]
 category: notes
-description: A quick-reference of the SSH commands I actually use, from key generation and copying through port forwarding, file transfer, jump hosts, and sshd hardening.
+format: cheatsheet
+description: "The SSH commands I keep looking up: key generation and copying, port forwarding, file transfer, jump hosts, and sshd hardening."
 ---
 
-A living quick-reference for the SSH commands I actually use. For the model behind any of this, see [SSH Foundations](/posts/ssh-foundations).
+If you want the why instead of the what, that's [SSH Foundations](/posts/ssh-foundations).
 
 ## Connecting
 
