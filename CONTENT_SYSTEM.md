@@ -186,30 +186,30 @@ So a Linux explainer that you happened to write while studying CDP is still `cat
 
 The **category** (above) is its own frontmatter field, not a tag — it carries the *kind* axis. Tags carry the two remaining axes.
 
-### Axis 1: Topic tags (1 or more, open vocabulary)
+### Axis 1: Topic tags (1 or more, registry-governed)
 What the post is *about*. The primary filter readers use, and **shared across categories** — a `redis` Note and a `redis` Journal post carry the same tag; only `category` differs.
 
-Examples in use today: `security`, `web`, `linux`, `networking`, `devsecops`, `containers`, `android`, `fedora`, `selfhosting`, `git`. Journal-leaning topics that will grow as you write: `career`, `life`. `fundamentals` stays available for tool-agnostic explainers that don't fit a more specific topic (e.g. HDD vs SSD).
+The source of truth is the registry in `src/utils/tags.ts`: a tag exists when it is registered there, with aliases catching other spellings and `domain`/`parent` grouping subjects. Registered today: `docker`, `git`, `gitops`, `kubernetes` (aliases `k3s`, `k8s`), `linux`, `networking`, `selfhosting`, `ssh`. Draft posts may carry unregistered tags; they get normalized to registry tags when reviewed, because the schema only enforces published posts.
 
 **Rules:**
 
 - Every post has at least one topic tag.
-- Pick the most specific tag that's useful. `linux` beats `tech` for a Linux-specific post. `kubernetes` beats `containers` when it's specifically k8s.
+- Pick the most specific tag that's useful. `linux` beats a broader tag for a Linux-specific post; `kubernetes` beats nothing else when it's specifically k8s, and the registry's `parent` field keeps broad/child tags from ever landing on the same post.
 - Cert names ARE topic tags on cert reviews. An OSCP review is tagged `oscp`. Content that incidentally appeared in the OSCP curriculum is **not** — it's tagged by what it teaches (`linux`, `active-directory`, etc.).
-- Open vocabulary, but resist thin tags. Fold a tag used on fewer than ~5 posts into a broader one; promote it to standalone once it earns 5+. (`selfhosting` earned promotion at 9 homelab/teardown posts; `injection`, `cache`, `file-system`, `reconnaissance` were folded into `security`/`web`.)
+- A tag is never rejected for being used on "too few" posts. A correct tag on one post is still correct; add it to the registry when the subject is durable.
 
-### Axis 2: Format tags (0 or 1) — Notes only
-The *shape* of a Note. Optional.
+### Axis 2: Format (`format:` frontmatter field, 0 or 1)
+The *shape* of a post. A separate frontmatter field, never a tag: tags name subjects, `format` names structure. Values come from `src/utils/formats.ts`:
 
-| Tag | When to add | Example |
-|-----|-------------|---------|
-| `cheatsheet` | Terse reference, mostly command dumps and syntax tables, assumes you know the tool | Linux cheat sheet |
-| `tool-guide` | Tutorial that teaches a specific tool end-to-end (intro prose + commands + flag explanations) | A from-scratch hydra or nmap walkthrough |
-| `writeups` | Step-by-step compromise of a specific machine or lab, with console output | HTB Nibbles compromise |
+| Format | When to set |
+|---|---|
+| `cheatsheet` | Compressed reference, optimized for fast lookup |
+| `guide` | Procedural, step-by-step how-to where following it is the point |
+| `writeup` | Record of building, testing, investigating, or solving something |
+| `methodology` | A repeatable process for a type of work |
+| `checklist` | An actionable list used to verify or perform work |
 
-**`cheatsheet` vs `tool-guide`:** both cover tools, but reader intent differs. Cheat sheets are for reference while working ("what flag do I need?"). Tool guides are for learning ("how do I use this tool?"). If a file opens with "X is a Y used for Z" and walks through usage with context, it's `tool-guide`. If it's mostly commands with minimal prose, it's `cheatsheet`.
-
-Format tags are mutually exclusive in practice. A post is `cheatsheet`, `tool-guide`, OR `writeups` — or none (a plain atom has no format tag).
+At most one per post. A post with no `format` is an explanatory note. Never force a format onto a post it only roughly fits.
 
 > **Retired:** the old `notes` / `certification` **meta** tags are gone. They encoded the post's *kind* via the tag list; that job now belongs to the `category` field. Don't add them — `category: notes` and `category: cert-review` carry the same signal, cleanly separated from topic.
 
@@ -221,9 +221,9 @@ Numbered for use as a decision aid when you're tagging a post:
 
 1. **Set the category first.** `notes`, `journal`, or `cert-review`. Decide by *shape* — is this looked-up (Notes) or read-once (Journal / Cert Review)? — not by subject.
 2. **Pick the topic tag(s).** Always at least one. Pick the most specific useful one. Add more if multiple topics genuinely apply (e.g. `[linux, fedora]` for a Fedora-specific post).
-3. **Add a format tag only if it's a Note with a clear shape:** `cheatsheet`, `tool-guide`, or `writeups`. Most atoms get none.
-4. **Format tags never stand alone.** Every post has at least one topic tag.
-5. **`cheatsheet` vs `tool-guide`:** apply the reader-intent test in the section above.
+3. **Set `format:` only if the post's shape clearly matches one** (`cheatsheet`, `guide`, `writeup`, `methodology`, `checklist`). Most atoms get none.
+4. **Tags are subjects only.** No format words inside `tags`; the build rejects them and points at `format:`.
+5. **Published posts' tags must be registered in `src/utils/tags.ts`.** Drafts are exempt until reviewed; adding a tag means registering it there.
 6. **Sequence is never a tag, and never frontmatter on the post.** Membership lives in a collection file under `src/data/collections/`. A post carries no record of which collections include it. No `homelab` tag: the homelab collection groups the saga, and `selfhosting` carries the subject.
 7. **Drafts use Astro's `draft: true` frontmatter, not a tag.** Status is not a topic.
 
@@ -234,12 +234,12 @@ Numbered for use as a decision aid when you're tagging a post:
 | Content | `category` | `tags` |
 |---|---|---|
 | Linux foundations atom | `notes` | `[linux]` |
-| Linux cheat sheet | `notes` | `[linux, cheatsheet]` |
-| Nmap tool walkthrough | `notes` | `[security, networking, tool-guide]` |
+| Linux cheat sheet | `notes` | `[linux]` + `format: cheatsheet` |
+| Nmap tool walkthrough | `notes` | `[security, networking]` + `format: guide` |
 | Web cache deception explainer | `notes` | `[security, web]` |
-| Git rebase reference | `notes` | `[git, cheatsheet]` |
-| OSCP info-gathering command dump | `notes` | `[security, oscp, cheatsheet]` |
-| HTB Nibbles writeup | `notes` | `[security, htb, writeups]` |
+| Git rebase reference | `notes` | `[git]` + `format: cheatsheet` |
+| OSCP info-gathering command dump | `notes` | `[security, oscp]` + `format: cheatsheet` |
+| HTB Nibbles writeup | `notes` | `[security, htb]` + `format: writeup` |
 | HDD vs SSD explainer | `notes` | `[fundamentals]` |
 | "How Redis improved a system I built" | `journal` | `[redis]` |
 | Why I hate LinkedIn | `journal` | `[career]` |
@@ -250,7 +250,7 @@ Numbered for use as a decision aid when you're tagging a post:
 | OSCP cert review | `cert-review` | `[oscp, security]` |
 | CDP cert review | `cert-review` | `[cdp, devsecops]` |
 
-Note the Redis pair: a Redis cheat sheet is `notes` + `[redis, cheatsheet]`, the war story is `journal` + `[redis]`. Same topic, different category. And `fundamentals` stays useful for tool-agnostic explainers that don't fit a more specific topic — but when a specific topic exists (`linux`, `kubernetes`, `networking`), use it.
+Note the Redis pair: a Redis cheat sheet is `notes` + `[redis]` + `format: cheatsheet`, the war story is `journal` + `[redis]`. Same topic, different category. And `fundamentals` stays useful for tool-agnostic explainers that don't fit a more specific topic — but when a specific topic exists (`linux`, `kubernetes`, `networking`), use it.
 
 ---
 
@@ -271,7 +271,7 @@ These document *what was decided and why*, including rejected alternatives. They
 - **No offensive/defensive security split.** Current corpus is 95% offensive; revisit when defensive posts reach 5+.
 - **No `infrastructure` or `product` tag.** Too thin on their own; folded into broader topic tags.
 - **`tech` retired.** It groups nothing: everything on a dev blog is tech. Git content now tags `[git]`; anything `tech` covered is already covered by a more specific topic tag.
-- **Format tags never stand alone.** Every post has at least one topic tag.
+- **`format` is a separate frontmatter field, not a tag.** Tags name subjects; the shape lives in `format:` (values from `src/utils/formats.ts`), at most one per post. The build rejects a format word inside `tags` on any published post.
 
 ---
 
@@ -285,7 +285,8 @@ modDatetime: 2026-05-27T00:00:00Z   # optional; set when significantly revised
 title: "..."
 slug: "..."                          # must match filename minus .md
 category: notes                      # notes | journal | cert-review
-tags: ["linux"]                      # topic (1+) + optional format tag (Notes only)
+tags: ["linux"]                      # subjects only, from the registry in src/utils/tags.ts
+format: cheatsheet                   # optional shape (cheatsheet/guide/writeup/methodology/checklist)
 description: "One concrete sentence describing what's in this post."
 draft: false                         # true for stubs / work-in-progress
 featured: false
@@ -452,7 +453,7 @@ Subfolders (`notes/`, `certifications/`) are a future option when post count jus
 - **Don't include commands you'd never type in real life.** Cheat sheets are not exhaustive flag references; that's what `man` is for.
 - **Don't write first-person in atoms** beyond the occasional opinion. Atoms are reference; first-person dates them.
 - **Don't tag atoms with cert names.** Atoms tag by topic. Only cert reviews get cert tags.
-- **Don't invent thin tags.** If a tag would apply to one post, fold it into a broader one. Promote later if it earns 5+ posts.
+- **Don't put a format word in `tags`.** Shapes are the `format:` field; the build rejects format words as tags.
 - **Don't add `## Remediation`** to atoms or cheat sheets. That section is for security/vuln posts only.
 
 ---
@@ -502,8 +503,7 @@ For every new post:
 - [ ] If cert review: zero teaching; only review + links to atoms
 - [ ] Voice matches the kind (third-person for Notes, first-person for Journal and Cert Reviews)
 - [ ] At least one topic tag, picked at the most specific useful level
-- [ ] Format tag (`cheatsheet`/`tool-guide`/`writeups`) added only if it's a Note whose shape matches
-- [ ] No format tag standing alone (every post has at least one topic tag); no retired `notes`/`certification` meta tags
+- [ ] `format:` set only if the post's shape clearly matches one (`cheatsheet`/`guide`/`writeup`/`methodology`/`checklist`); no format word inside `tags`; no retired `notes`/`certification` meta tags
 - [ ] Collection membership is a placement in `src/data/collections/`, never frontmatter on the post and never a tag
 - [ ] Atom links to its cheat sheet; cheat sheet links back to its atom(s)
 - [ ] Frontmatter is complete and `description` is one concrete sentence
