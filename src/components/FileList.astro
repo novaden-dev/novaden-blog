@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { getPath } from "@/utils/getPath";
+import { postHref } from "@/utils/handbook";
 import { CATEGORIES } from "@/utils/categories";
 import { getReadingTime } from "@/utils/readingTime";
 import { SITE } from "@/config";
@@ -68,7 +68,7 @@ const toFile = (
   ).toLowerCase();
   const minutes = getReadingTime(post);
   return {
-    href: getPath(post.id, post.filePath),
+    href: postHref(post),
     title: number ? (match?.[2] ?? post.data.title) : post.data.title,
     n: number ? (match?.[1] ?? String(i + 1)) : null,
     desc: post.data.description,

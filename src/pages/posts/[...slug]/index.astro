@@ -10,7 +10,11 @@ type Props = {
 };
 
 export async function getStaticPaths() {
-  const posts = await getCollection("blog", postFilter);
+  // Handbook chapters render in their own documentation shell, never in the
+  // blog post layout, so they are excluded from this route.
+  const posts = (await getCollection("blog", postFilter)).filter(
+    post => !post.data.handbook
+  );
   const postResult = posts.map(post => ({
     params: { slug: getPath(post.id, post.filePath, false) },
     props: { post },

@@ -5,6 +5,7 @@ status: prototype
 stack: ["Python", "GTK", "GNOME"]
 repo: https://github.com/KayraNafi/GlucoBar
 order: 2
+draft: true
 ---
 
 Checking my glucose meant unlocking my phone every time. Now it is a number in

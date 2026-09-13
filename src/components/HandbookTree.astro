@@ -1,0 +1,17 @@
+---
+import HandbookTreeNode from "@/components/HandbookTreeNode.astro";
+import type { TreeNode } from "@/utils/handbook";
+
+// The handbook navigation tree. Generic: it is handed a list of nodes and
+// renders them; it does not know which handbook they belong to.
+
+type Props = {
+  nodes: TreeNode[];
+};
+
+const { nodes } = Astro.props;
+---
+
+<ul class="tree" role="tree">
+  {nodes.map(node => <HandbookTreeNode node={node} depth={0} />)}
+</ul>

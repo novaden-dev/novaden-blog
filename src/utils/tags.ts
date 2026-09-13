@@ -23,6 +23,7 @@ type TagDefinition = {
 };
 
 export const TAGS: Record<string, TagDefinition> = {
+  // Infrastructure and homelab.
   docker: { domain: "technical" },
   git: { domain: "technical" },
   gitops: { domain: "technical" },
@@ -31,6 +32,76 @@ export const TAGS: Record<string, TagDefinition> = {
   networking: { domain: "technical" },
   selfhosting: { domain: "technical" },
   ssh: { domain: "technical" },
+
+  // Offensive security. Added for the OSCP migration: subjects only, never the
+  // certification (that is the OSCP handbook collection) and never an
+  // offensive/defensive lens (that is expressed by which collection a note
+  // sits in). `parent: "web"` lets a future web-security page aggregate its
+  // descendants; a post still carries only the narrowest tag, never both.
+  "active-directory": { domain: "technical", aliases: ["ad"] },
+  kerberos: { domain: "technical" },
+  windows: { domain: "technical" },
+  "privilege-escalation": { domain: "technical", aliases: ["privesc"] },
+  enumeration: {
+    domain: "technical",
+    aliases: ["recon", "reconnaissance", "information-gathering"],
+  },
+  "lateral-movement": { domain: "technical" },
+  persistence: { domain: "technical" },
+  credentials: {
+    domain: "technical",
+    aliases: ["credential-access", "credential-hunting"],
+  },
+  "password-attacks": {
+    domain: "technical",
+    aliases: [
+      "password-cracking",
+      "password-spraying",
+      "brute-forcing",
+      "brute-force",
+    ],
+  },
+  pivoting: { domain: "technical", aliases: ["tunneling", "port-forwarding"] },
+  shells: { domain: "technical", aliases: ["reverse-shells", "reverse-shell"] },
+  "file-transfers": { domain: "technical", aliases: ["file-transfer"] },
+  "exploit-development": {
+    domain: "technical",
+    aliases: ["exploit-dev", "public-exploits"],
+  },
+  encoding: { domain: "technical", aliases: ["encodings", "base64"] },
+  databases: { domain: "technical", aliases: ["database"] },
+
+  // Services and protocols worth browsing on their own.
+  smb: { domain: "technical" },
+  ftp: { domain: "technical" },
+  smtp: { domain: "technical" },
+  snmp: { domain: "technical" },
+  dns: { domain: "technical" },
+  rpc: { domain: "technical" },
+
+  // Web application security.
+  web: {
+    domain: "technical",
+    aliases: ["web-security", "webapp", "web-application"],
+  },
+  "sql-injection": { domain: "technical", aliases: ["sqli"], parent: "web" },
+  "command-injection": {
+    domain: "technical",
+    aliases: ["os-command-injection"],
+  },
+  "file-upload": { domain: "technical", parent: "web" },
+  "file-inclusion": {
+    domain: "technical",
+    aliases: ["lfi", "rfi"],
+    parent: "web",
+  },
+  "template-injection": {
+    domain: "technical",
+    aliases: ["ssti"],
+    parent: "web",
+  },
+  "mass-assignment": { domain: "technical", parent: "web" },
+  webdav: { domain: "technical", parent: "web" },
 };
 
 const names = new Set(Object.keys(TAGS));

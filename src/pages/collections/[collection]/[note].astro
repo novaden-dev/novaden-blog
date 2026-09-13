@@ -1,0 +1,49 @@
+---
+import type { GetStaticPaths } from "astro";
+import { render, type CollectionEntry } from "astro:content";
+import HandbookLayout from "@/layouts/HandbookLayout.astro";
+import { getHandbook, handbookConfigs } from "@/utils/handbook";
+
+// Every handbook chapter renders inside the shell at its own route. Only
+// registered handbooks produce note routes; ordinary collections do not.
+export const getStaticPaths = (async () => {
+  const paths = [];
+  for (const config of handbookConfigs()) {
+    const handbook = await getHandbook(config.id);
+    if (!handbook) continue;
+    for (const item of handbook.collection.items) {
+      paths.push({
+        params: { collection: config.id, note: item.post.id },
+        props: { post: item.post, section: item.placement.section ?? "" },
+      });
+    }
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+const { collection } = Astro.params;
+const { post, section } = Astro.props as {
+  post: CollectionEntry<"blog">;
+  section: string;
+};
+
+const handbook = await getHandbook(collection!);
+const { Content, headings } = await render(post);
+const parts = section.split("/").map(s => s.trim()).filter(Boolean);
+const crumbs = parts.map(label => ({ label }));
+---
+
+<HandbookLayout
+  handbook={handbook!.config}
+  title={post.data.title}
+  description={post.data.description}
+  tree={handbook!.tree}
+  {crumbs}
+  {headings}
+>
+  {parts.length > 0 && <p class="handbook-crumb">{parts.join(" / ")}</p>}
+  <h1 class="handbook-title">{post.data.title}</h1>
+  <div class="app-prose">
+    <Content />
+  </div>
+</HandbookLayout>

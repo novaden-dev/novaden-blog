@@ -6,6 +6,7 @@ stack: ["Tauri", "Rust", "Svelte"]
 repo: https://github.com/KayraNafi/TouchGrass
 releases: https://github.com/KayraNafi/TouchGrass/releases
 order: 1
+draft: true
 ---
 
 I do not stand up on my own. TouchGrass sits in the tray, watches whether I am

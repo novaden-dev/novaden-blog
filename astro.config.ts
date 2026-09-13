@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { defineConfig, envField, fontProviders } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
@@ -10,6 +12,20 @@ import {
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
 import { SITE } from "./src/config";
+
+// /projects skips itself when no app is public, but the sitemap lists every
+// static route whether or not a file was written, so it has to be told.
+// Mirrors projectFilter for production; the path is PROJECTS_PATH, which can't
+// be imported here because content.config.ts pulls in astro:content.
+const PROJECTS_DIR = "src/data/projects";
+const hasPublicProjects = readdirSync(PROJECTS_DIR, { recursive: true })
+  .map(String)
+  .filter(file => file.endsWith(".md") && !basename(file).startsWith("_"))
+  .some(file => {
+    const frontmatter =
+      readFileSync(join(PROJECTS_DIR, file), "utf8").split(/^---$/m)[1] ?? "";
+    return !/^draft:\s*true\s*$/m.test(frontmatter);
+  });
 
 // https://astro.build/config
 export default defineConfig({
@@ -24,7 +40,9 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      filter: page => SITE.showArchives || !page.endsWith("/archives"),
+      filter: page =>
+        (SITE.showArchives || !page.endsWith("/archives")) &&
+        (hasPublicProjects || !/\/projects\/?$/.test(page)),
     }),
   ],
   markdown: {

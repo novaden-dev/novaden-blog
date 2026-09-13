@@ -2,9 +2,10 @@
 import { getCollection } from "astro:content";
 import getSortedPosts from "@/utils/getSortedPosts";
 import postFilter from "@/utils/postFilter";
+import projectFilter from "@/utils/projectFilter";
 import getPostsByCategory from "@/utils/getPostsByCategory";
 import { getCollections } from "@/utils/collections";
-import { getPath } from "@/utils/getPath";
+import { postHref } from "@/utils/handbook";
 import { slugifyStr } from "@/utils/slugify";
 import { CATEGORIES, CATEGORY_ORDER } from "@/utils/categories";
 import { SITE } from "@/config";
@@ -26,9 +27,9 @@ const { path = [], place } = Astro.props;
 const posts = await getCollection("blog", postFilter);
 const sorted = getSortedPosts(posts);
 
-const projects = (
-  await getCollection("projects", ({ data }) => !data.draft)
-).sort((a, b) => a.data.order - b.data.order);
+const projects = (await getCollection("projects", projectFilter)).sort(
+  (a, b) => a.data.order - b.data.order
+);
 
 const places = CATEGORY_ORDER.map(key => ({
   key,
@@ -71,7 +72,7 @@ const updated = newest
 const index = [
   ...sorted.map(post => ({
     t: post.data.title,
-    h: getPath(post.id, post.filePath),
+    h: postHref(post),
     k: post.data.category,
   })),
   ...projects.map(project => ({
@@ -263,16 +264,20 @@ const index = [
           </a>
         ))
       }
-      <a
-        class="side-link"
-        href="/projects"
-        data-kind="apps"
-        aria-current={place === "apps" ? "page" : undefined}
-      >
-        <span class="side-dot" aria-hidden="true"></span>
-        <span class="side-name">apps</span>
-        <span class="side-count">{projects.length}</span>
-      </a>
+      {
+        projects.length > 0 && (
+          <a
+            class="side-link"
+            href="/projects"
+            data-kind="apps"
+            aria-current={place === "apps" ? "page" : undefined}
+          >
+            <span class="side-dot" aria-hidden="true" />
+            <span class="side-name">apps</span>
+            <span class="side-count">{projects.length}</span>
+          </a>
+        )
+      }
     </div>
 
     {

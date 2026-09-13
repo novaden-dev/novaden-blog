@@ -1,0 +1,59 @@
+---
+import type { TreeNode } from "@/utils/handbook";
+
+// One node of the handbook navigation tree, rendered recursively via
+// Astro.self. Folders are open by default in the markup; the shell's script
+// applies saved collapse state and force-opens the current note's ancestors.
+// Current-note highlighting is done in script, since the tree is persisted
+// across navigations and the server cannot know the live URL.
+
+type Props = {
+  node: TreeNode;
+  depth: number;
+};
+
+const { node, depth } = Astro.props;
+---
+
+{
+  node.type === "folder" ? (
+    <li class="tree-item" role="none">
+      <button
+        type="button"
+        class="tree-row tree-folder"
+        data-handbook-folder={node.path}
+        aria-expanded="true"
+        style={`--depth:${depth}`}
+      >
+        <svg class="tree-caret" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M9 6l6 6-6 6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span class="tree-name">{node.name}</span>
+      </button>
+      <ul class="tree-children" role="group">
+        {node.children.map(child => (
+          <Astro.self node={child} depth={depth + 1} />
+        ))}
+      </ul>
+    </li>
+  ) : (
+    <li class="tree-item" role="none">
+      <a
+        class="tree-row tree-note"
+        href={node.href}
+        data-handbook-note={node.slug}
+        style={`--depth:${depth}`}
+      >
+        <span class="tree-dot" aria-hidden="true" />
+        <span class="tree-name">{node.title}</span>
+      </a>
+    </li>
+  )
+}

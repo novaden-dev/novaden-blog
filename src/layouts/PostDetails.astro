@@ -11,6 +11,7 @@ import {
   neighbours,
 } from "@/utils/collections";
 import { getPath } from "@/utils/getPath";
+import { postHref } from "@/utils/handbook";
 import { CATEGORIES } from "@/utils/categories";
 import { slugifyStr } from "@/utils/slugify";
 import { getReadingTime } from "@/utils/readingTime";
@@ -90,7 +91,7 @@ const steps = (active?.collection.steps ?? []).map(item => {
   const label = item.placement.label ?? item.post.data.title;
   const match = label.match(/^.*?\s(v[\d.]+)\s*[—–-]\s*(.+)$/);
   return {
-    href: getPath(item.post.id, item.post.filePath),
+    href: postHref(item.post),
     n: match?.[1] ?? String(item.step),
     title: match?.[2] ?? label,
     here: item.placement.id === active?.placement.id,
@@ -118,9 +119,7 @@ const sequence = active
 // index. Walking that array as though it ran forwards is what put the older
 // post under "next" and the newer one under "previous".
 const toLink = (entry: CollectionEntry<"blog"> | undefined) =>
-  entry
-    ? { title: entry.data.title, href: getPath(entry.id, entry.filePath) }
-    : undefined;
+  entry ? { title: entry.data.title, href: postHref(entry) } : undefined;
 
 const currentPostIndex = posts.findIndex(entry => entry.id === post.id);
 

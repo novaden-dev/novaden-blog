@@ -23,6 +23,11 @@ const blog = defineCollection({
         tags: z.array(z.string()).default([]),
         category: z.enum(["notes", "journal", "cert-review"]).default("notes"),
         format: z.enum(FORMATS).optional(),
+        // Marks a post as a chapter of a documentation handbook (its own app
+        // shell and routes), not an ordinary blog post. Value is the handbook
+        // collection id, e.g. "oscp". Its reading order and folder hierarchy
+        // live in the collection file's placements, never here.
+        handbook: z.string().optional(),
         ogImage: image().or(z.string()).optional(),
         description: z.string(),
         canonicalURL: z.string().optional(),

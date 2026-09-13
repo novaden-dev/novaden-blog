@@ -1,0 +1,86 @@
+---
+import { render } from "astro:content";
+import Pane from "@/layouts/Pane.astro";
+import FileList from "@/components/FileList.astro";
+import HandbookLayout from "@/layouts/HandbookLayout.astro";
+import { getCollections } from "@/utils/collections";
+import { getHandbook, isHandbookId } from "@/utils/handbook";
+import { formatDuration, totalReadingTime } from "@/utils/readingTime";
+
+export async function getStaticPaths() {
+  const collections = await getCollections();
+  return collections.map(collection => ({
+    params: { collection: collection.id },
+    props: { collection },
+  }));
+}
+
+const { collection } = Astro.props;
+const { title, description, kind, status } = collection.entry.data;
+const { Content } = await render(collection.entry);
+
+// A registered handbook renders in the documentation shell; every other
+// collection (series, reading-list) renders in the ordinary pane.
+const handbook = isHandbookId(collection.id)
+  ? await getHandbook(collection.id)
+  : undefined;
+
+// --- pane (non-handbook) presentation ---
+const ordered = kind === "series";
+const counted = ordered ? collection.steps : collection.items;
+const time = formatDuration(totalReadingTime(counted.map(item => item.post)));
+const stat = ordered
+  ? `${counted.length} parts · ${time}`
+  : `${counted.length} entries · ${time}`;
+const hasIntro = (collection.entry.body ?? "").trim().length > 0;
+const groups = [
+  {
+    label: ordered ? "the sequence" : "contents",
+    posts: collection.steps.map(item => item.post),
+    numbered: ordered,
+  },
+  ...(collection.extras.length > 0
+    ? [
+        {
+          label: "alongside",
+          note: "reference, not part of the sequence",
+          posts: collection.extras.map(item => item.post),
+          numbered: false,
+        },
+      ]
+    : []),
+];
+---
+
+{
+  handbook ? (
+    <HandbookLayout
+      handbook={handbook.config}
+      {title}
+      {description}
+      tree={handbook.tree}
+    >
+      <p class="handbook-crumb">Field Manual</p>
+      <h1 class="handbook-title">{title}</h1>
+      <div class="app-prose handbook-intro">
+        <Content />
+      </div>
+    </HandbookLayout>
+  ) : (
+    <Pane
+      {title}
+      desc={description}
+      {stat}
+      pill={status}
+      path={[{ label: "collections", href: "/collections/" }, { label: collection.id }]}
+      place={collection.id}
+    >
+      {hasIntro && (
+        <div class="pane-intro">
+          <Content />
+        </div>
+      )}
+      <FileList {groups} />
+    </Pane>
+  )
+}
