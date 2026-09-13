@@ -5,7 +5,7 @@ title: Docker Foundations
 slug: docker-foundations
 featured: false
 draft: false
-tags: ["containers"]
+tags: ["docker"]
 category: notes
 description: What a container is and isn't, why images are layered, and how the Dockerfile, networking, volumes, and registries fit together.
 ---

@@ -37,7 +37,7 @@ Knowledge lives in **atoms**. Commands you'd type live in **cheat sheets**. **Ce
 Teach one concept. Evergreen, reusable across multiple certifications and contexts.
 
 ### When something earns an atom
-Only when there is a **model to explain**: a why, a mental framework, gotchas, or behavior that surprises people. Concept-shaped things include:
+Only when there is a **concept to teach**: a why, a mechanism, common traps, or behavior that surprises people. Concept-shaped things include:
 
 - Permissions (owner/group/other, rwx, numeric, special bits)
 - File descriptors and redirection
@@ -63,7 +63,7 @@ Third-person, instructional. Write so the reader landing cold understands withou
 - `## Introduction` opens with one short paragraph framing what the concept is and why it matters
 - `## <Section>` for each sub-topic
 - `### <Subsection>` for breakdowns inside a section
-- End with a `> **Quick reference:**` blockquote linking to the relevant cheat sheet
+- End with a one-line blockquote linking to the relevant cheat sheet: `> The commands are in the [Linux Cheat Sheet](/posts/linux-cheatsheet).`
 
 ### Use commands as illustration, not as content
 When you mention a command inside an atom, show the canonical form once as an example of the concept. Do not list every flag, every variation, or every related command. Those belong in the cheat sheet.
@@ -142,9 +142,9 @@ Use a blockquote immediately after the code block:
 ```
 
 ### Intro line
-Every cheat sheet starts with a one-line intro that points to the relevant atom(s):
+The intro line points to the related atom(s) and says nothing else. The `description` frontmatter already renders as the dek on the post page, so the body must not repeat it:
 
-> A living quick-reference for the Linux commands I actually use. For the model behind any of this, see [Linux Foundations](/posts/linux-foundations).
+> If you want the why instead of the what, that's [Linux Foundations](/posts/linux-foundations).
 
 ---
 
@@ -189,7 +189,7 @@ The **category** (above) is its own frontmatter field, not a tag — it carries 
 ### Axis 1: Topic tags (1 or more, open vocabulary)
 What the post is *about*. The primary filter readers use, and **shared across categories** — a `redis` Note and a `redis` Journal post carry the same tag; only `category` differs.
 
-Examples in use today: `security`, `web`, `linux`, `networking`, `devsecops`, `containers`, `android`, `fedora`, `selfhosting`, `tech`, `git`. Journal-leaning topics that will grow as you write: `career`, `life`. `fundamentals` stays available for tool-agnostic explainers that don't fit a more specific topic (e.g. HDD vs SSD).
+Examples in use today: `security`, `web`, `linux`, `networking`, `devsecops`, `containers`, `android`, `fedora`, `selfhosting`, `git`. Journal-leaning topics that will grow as you write: `career`, `life`. `fundamentals` stays available for tool-agnostic explainers that don't fit a more specific topic (e.g. HDD vs SSD).
 
 **Rules:**
 
@@ -237,7 +237,7 @@ Numbered for use as a decision aid when you're tagging a post:
 | Linux cheat sheet | `notes` | `[linux, cheatsheet]` |
 | Nmap tool walkthrough | `notes` | `[security, networking, tool-guide]` |
 | Web cache deception explainer | `notes` | `[security, web]` |
-| Git rebase reference | `notes` | `[tech, cheatsheet]` |
+| Git rebase reference | `notes` | `[git, cheatsheet]` |
 | OSCP info-gathering command dump | `notes` | `[security, oscp, cheatsheet]` |
 | HTB Nibbles writeup | `notes` | `[security, htb, writeups]` |
 | HDD vs SSD explainer | `notes` | `[fundamentals]` |
@@ -269,7 +269,8 @@ These document *what was decided and why*, including rejected alternatives. They
 - **No `draft` tag.** Use Astro's `draft: true` frontmatter. Status is not a topic.
 - **No `web-security` sub-tag.** Folded into `security` until web content reaches 5+ posts. Splitting creates thin tags.
 - **No offensive/defensive security split.** Current corpus is 95% offensive; revisit when defensive posts reach 5+.
-- **No `infrastructure` or `product` tag.** Too thin on their own; folded into `tech`.
+- **No `infrastructure` or `product` tag.** Too thin on their own; folded into broader topic tags.
+- **`tech` retired.** It groups nothing: everything on a dev blog is tech. Git content now tags `[git]`; anything `tech` covered is already covered by a more specific topic tag.
 - **Format tags never stand alone.** Every post has at least one topic tag.
 
 ---
@@ -400,7 +401,7 @@ Rules:
 
 ## Cross-linking
 
-- **Atom to cheat sheet:** every atom ends with `> **Quick reference:** [Linux Cheat Sheet](/posts/linux-cheatsheet)` pointing to the relevant cheat sheet.
+- **Atom to cheat sheet:** every atom ends with `> The commands are in the [Linux Cheat Sheet](/posts/linux-cheatsheet).` pointing to the relevant cheat sheet.
 - **Cheat sheet to atom:** every cheat sheet's intro line points to the related atom(s).
 - **Cert review to atoms:** every concept covered in the cert gets a link to its atom.
 - **URL pattern:** `/posts/<slug>` (set by `slug:` in frontmatter, decoupled from filename).

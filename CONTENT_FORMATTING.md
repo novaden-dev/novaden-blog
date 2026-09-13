@@ -19,7 +19,18 @@ Do not use em dashes (`—`) in post content. Replace with commas, periods, pare
 Write words people actually say out loud. Avoid words that signal "AI prose" or "marketing copy":
 
 - Avoid: `overwhelmingly`, `composable`, `leverage`, `seamlessly`, `delve`, `robust`, `cutting-edge`
+- Avoid: `mental model`, `gotcha`, `living/growing quick-reference`
 - Prefer: simpler, more direct alternatives (`mostly`, `you can stitch them together`, `use`, `smoothly`, `dig into`, `solid`, `new`)
+
+### Say the thing, not the frame
+Do not announce the abstraction; state the idea. "No one says" test: would a person actually write this sentence to a colleague? Meta-openings that describe the post instead of the content are the usual offender:
+
+- Wrong: `The mental model behind Docker.`
+- Right: `What a container is and isn't, why images are layered, and how the Dockerfile, networking, volumes, and registries fit together.`
+- Wrong: `A growing quick-reference of the commands I actually reach for.`
+- Right: `The Docker commands I keep looking up: running containers, building images, networks, volumes, Compose, and cleanup.`
+
+The same applies to section headings: `### Scenario` tells the reader nothing. Name the example itself (`### A namespace takeover`).
 
 ### No false causation
 Do not invent causal chains that sound nice but are not strictly true. If you're claiming X causes Y, you should be able to defend it. When in doubt, present facts side by side without claiming causation.
@@ -153,12 +164,12 @@ Every post file must end with a single trailing newline.
 - [ ] No em dashes anywhere in the body
 - [ ] Voice matches the post archetype (atoms/cheat sheets: third-person; cert reviews/journeys: first-person)
 - [ ] Consistent "you" or "we" (no mixing within a post)
-- [ ] Plain language, no AI-prose words (`overwhelmingly`, `composable`, `leverage`, etc.)
+- [ ] Plain language, no AI-prose words (`overwhelmingly`, `composable`, `leverage`, `mental model`, `gotcha`, etc.); sections and openings say the thing, not the frame
 - [ ] No invented causation in explanations
 - [ ] Code blocks are fenced (` ``` `) with a language specifier
 - [ ] Remediation uses a dash (`-`) bullet list with an intro sentence (vulnerability-class posts only; not methodology or tooling posts)
 - [ ] Tables are used for comparison data where appropriate
-- [ ] Blockquotes use bold labels (`**Note:**`, `**Tip:**`, `**Danger:**`, `**Gotcha:**`)
+- [ ] Blockquotes use bold labels (`**Note:**`, `**Tip:**`, `**Danger:**`, `**Watch out:**`)
 - [ ] Inline code is backtick-wrapped
 - [ ] Headings are `##` and `###` only
 - [ ] Bullet sub-labels use a colon, not an em dash

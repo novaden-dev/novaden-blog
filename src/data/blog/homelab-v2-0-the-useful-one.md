@@ -7,6 +7,7 @@ featured: false
 draft: false
 tags: ["selfhosting"]
 category: journal
+format: writeup
 description: After the governed cluster came the hard reset, and Gitea, K3s, and pfSense went away rm -rf style. What rose from the empty Proxmox is the version I actually use, plus the verdict on the whole hobby.
 ---
 

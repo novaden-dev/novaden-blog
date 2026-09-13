@@ -5,8 +5,9 @@ title: "Homelab v1.5 – Real Governance: OIDC, Sealed Secrets, and the App-of-A
 slug: homelab-v1-5-real-governance
 featured: false
 draft: false
-tags: ["selfhosting"]
+tags: ["selfhosting", "kubernetes", "gitops"]
 category: journal
+format: writeup
 description: Single Sign-On with Gitea, Sealed Secrets for real, a Kyverno policy that broke the cluster I was trying to protect, and an App-of-Apps refactor that ended with me deleting the Cloudflare tunnel to force a sync (don't ask).
 ---
 

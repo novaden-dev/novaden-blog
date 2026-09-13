@@ -5,8 +5,9 @@ title: "Homelab v1.1 – The Great Wall of Fire: pfSense & Network Isolation"
 slug: homelab-v1-1-the-great-wall-of-fire
 featured: false
 draft: false
-tags: ["selfhosting"]
+tags: ["selfhosting", "networking"]
 category: journal
+format: writeup
 description: Isolating the lab network from the home network with pfSense. Default-deny rules, aliases, and the anti-lockout trap that stumped me until I remembered DNS lives on the gateway.
 ---
 

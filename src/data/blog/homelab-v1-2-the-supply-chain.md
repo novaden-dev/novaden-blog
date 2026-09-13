@@ -7,6 +7,7 @@ featured: false
 draft: false
 tags: ["selfhosting"]
 category: journal
+format: writeup
 description: Solving the bootstrap paradox with Cloud-Init templates, a self-hosted Gitea server outside the cluster, and why SQLite wasn't going to cut it when I'm hoarding 32GB of RAM.
 ---
 

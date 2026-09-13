@@ -5,8 +5,9 @@ title: "Homelab v1.0 – From Server to Data Center (Homelab_v4.1_UltraOptimized
 slug: homelab-v1-0-from-server-to-data-center
 featured: false
 draft: false
-tags: ["selfhosting"]
+tags: ["selfhosting", "kubernetes"]
 category: journal
+format: writeup
 description: Throwing away the "simple Ubuntu server" plan and committing to a full K3s cluster with Proxmox, Longhorn, 3-2-1 backups, and four production-grade namespaces. Also known as "over-engineering for the vibes."
 ---
 

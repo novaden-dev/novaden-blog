@@ -5,12 +5,13 @@ title: Git Cheat Sheet
 slug: git-cheatsheet
 featured: false
 draft: true
-tags: ["tech", "cheatsheet"]
+tags: ["git"]
 category: notes
-description: A growing quick-reference of the Git commands I actually reach for. Staging, branching, rebasing, undoing things, and recovering from a bad day.
+format: cheatsheet
+description: The Git commands I keep looking up. Staging, branching, rebasing, undoing things, and recovering from a bad day.
 ---
 
-A living quick-reference for the Git commands I actually use. Each section pairs commands with the moment you'd reach for them. For the model behind any of this, see [Git Foundations](/posts/git-foundations).
+If you want the why instead of the what, that's [Git Foundations](/posts/git-foundations).
 
 ## Setup
 

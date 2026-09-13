@@ -5,8 +5,9 @@ title: "Homelab v1.3 – The Silent Killers: DNS, Firewalls, and the Unbound Cra
 slug: homelab-v1-3-the-silent-killers
 featured: false
 draft: false
-tags: ["selfhosting"]
+tags: ["selfhosting", "kubernetes", "networking"]
 category: journal
+format: writeup
 description: Four hours of debugging silent failures. A crashed DNS resolver, a CNI power struggle between Flannel and Cilium, an IPAM overlap that hijacked my LAN, and a hairpin loop I "fixed" by building a BGP highway before I realized I was fixing the wrong thing.
 ---
 

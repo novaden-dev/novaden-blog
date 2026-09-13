@@ -5,8 +5,9 @@ title: "Homelab v1.4 – The Governance Wall: eBPF, Tunnels, and the Base64 Trap
 slug: homelab-v1-4-the-governance-wall
 featured: false
 draft: false
-tags: ["selfhosting"]
+tags: ["selfhosting", "kubernetes"]
 category: journal
+format: writeup
 description: Namespaces, resource quotas, Sealed Secrets, and finally exposing the cluster to the internet through a Cloudflare Tunnel, along with a 502 that was actually a win because it meant the packets got all the way through.
 ---
 

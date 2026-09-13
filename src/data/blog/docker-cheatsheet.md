@@ -5,8 +5,9 @@ title: Docker Cheat Sheet
 slug: docker-cheatsheet
 featured: false
 draft: false
-tags: ["containers", "cheatsheet"]
+tags: ["docker"]
 category: notes
+format: cheatsheet
 description: "The Docker commands I keep looking up: running containers, building images, networks, volumes, Compose, and cleanup."
 ---
 

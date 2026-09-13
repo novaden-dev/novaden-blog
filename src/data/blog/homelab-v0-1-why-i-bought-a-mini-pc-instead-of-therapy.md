@@ -7,6 +7,7 @@ featured: false
 draft: false
 tags: ["selfhosting"]
 category: journal
+format: writeup
 description: The hardware-shopping-and-hallucinating-an-architecture origin story of this homelab series. Also known as "how I replaced therapy with a GMKtec K8 Plus."
 ---
 
