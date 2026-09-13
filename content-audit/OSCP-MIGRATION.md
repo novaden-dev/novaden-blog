@@ -70,14 +70,14 @@ Section order:
 
 1. `Concepts`
 2. `Methodology`
-3. `Techniques: Service Enumeration`
-4. `Techniques: Web`
-5. `Techniques: Shells and Access`
-6. `Techniques: Privilege Escalation (Linux)`
-7. `Techniques: Privilege Escalation (Windows)`
-8. `Techniques: Credentials`
-9. `Techniques: Active Directory`
-10. `Techniques: Pivoting`
+3. `Techniques/Service Enumeration`
+4. `Techniques/Web`
+5. `Techniques/Shells and Access`
+6. `Techniques/Privilege Escalation (Linux)`
+7. `Techniques/Privilege Escalation (Windows)`
+8. `Techniques/Credentials`
+9. `Techniques/Active Directory`
+10. `Techniques/Pivoting`
 11. `Tools`
 
 ## Tag vocabulary (registered)
@@ -183,7 +183,7 @@ shown. Source folder is given per subtable.
 | oscp-044 | Windows Service Exploits.md | windows-service-exploits | privilege-escalation, windows | |
 | oscp-045 | Windows Autoruns and Scheduled Tasks.md | windows-autoruns-and-scheduled-tasks | privilege-escalation, windows | |
 | oscp-046 | Windows Token Privileges.md | windows-token-privileges | privilege-escalation, windows | |
-| oscp-047 | Weak File Permissions.md | weak-file-permissions | privilege-escalation, windows | OS? (confirm Windows vs generic) |
+| oscp-047 | Weak File Permissions.md | weak-file-permissions | privilege-escalation, linux | |
 | oscp-048 | Windows Remote Access.md | windows-remote-access | windows | |
 
 ### 8. Techniques: Credentials (source: `Techniques/`)
@@ -332,3 +332,23 @@ registered tag and flag; do not add without human sign-off.
    until its members are reviewed.
 4. Collect all flags into a review list for the human; do not resolve
    OVERLAP/PUBLISH cases autonomously.
+
+---
+
+## Migration log (batch complete)
+
+The remaining 88 notes migrated; the corpus now holds all 100. This section records the concrete decisions made during execution, for the review pass.
+
+- **State:** every migrated note is `draft: true`. Un-drafting per note during human review is what publishes it; nothing flips without that review.
+- **Placement ids:** the 12 notes migrated by hand keep their `oscp-s01`–`s12` ids at their table positions. All new notes use the table's `oscp-NNN` ids. Entries were rebuilt in table order (001 → 100); the existing 12 were regrouped from the coarse sections (`Concepts`, `Techniques`) into the canonical section list above.
+- **Unpublished members:** the handbook collection itself is already published, so every new placement carries `required: false`: a drafted member is dropped whole from the tree instead of failing the build, and appears as soon as it is un-drafted.
+- **Wikilinks:** public-to-public links converted to `/collections/oscp/<slug>`, heading anchors included; every emitted anchor was verified against the target note's headings in github-slugger form, and two underscore-heading anchors were fixed (`cron-jobs.md`: `ld_library_path`, `why-not-ld_preload-here`). No `BROKEN-WIKILINK` case occurred: every `[[...]]` resolved to a public note or a Labs note.
+- **Labs links:** dropped to plain prose with the box name kept (`Walla`, `InfoSecPrep`, `Loly`, `GOAD-Light`, …) per spec rule 4. The "only evidence for a claim" judgment is not automatable: during review, scan notes where a box name follows a claim ("is the example here") to confirm the prose still stands without the link.
+- **No embeds, no callouts:** zero `![[...]]` image embeds and zero Obsidian callouts in the 100 public notes. (A handful of raw-HTML hits were Apache/MSL syntax inside code fences; left as-is.)
+- **OS? resolutions (from body, against the table):** `service-exploits` → Linux confirmed; `kernel-exploits` → Linux confirmed; `weak-file-permissions` → **resolved against the table**: the note is `/etc/shadow`, `/etc/passwd`, john and mkpasswd throughout, zero Windows content, so tags are `[privilege-escalation, linux]`; `libreoffice-macros` → no OS tag added (macro abuse is cross-platform).
+- **TAG? (tags applied per table, listed for review):** `imagemagick`, `exiftool-djvu-injection`, `text4shell` (CVE-specific notes on `file-upload`/`web` + `exploit-development`), `llmnr-poisoning-and-ntlm-relay` (TAG? still open: `ntlm-relay`), `metasploit` (broad framework), `tmux` (workflow tool). Resolved since: `weak-file-permissions` — table row 047 corrected to `privilege-escalation, linux` per the body; `llmnr-poisoning-and-ntlm-relay` — **PUBLISH closed by human review** (no PG Practice/Challenge-Lab or exam content; un-drafted, placement `required` restored to default).
+- **Overlaps:** no merge was performed. `information-gathering` migrated as its own note (OVERLAP-A human decision pending against the thin pentest drafts); OVERLAP-B pairs (`command-injection`/`os-command-injection`, `file-inclusion`/`path-directory-traversal`, `file-upload`/`file-upload-vulnerabilities`) kept both sides per the default, distinct titles make the offensive/defensive split.
+- **Dates:** `pubDatetime` = vault first-commit date (`--diff-filter=A --follow`), `modDatetime` = vault last-commit date, per the site Date Policy.
+- **Descriptions:** condensed from each note's opening line. Four descriptions carry an inline link because the opening sentence itself links a note (`password-spraying`, `hashcat`, `linux-smart-enumeration`, `netexec` via `netexec`-adjacent notes), matching the established sample style.
+- **Section labels:** the `Techniques: X` colon form nested nothing (the handbook tree splits on `/`), so the 58 placement labels became `Techniques/X`, rendering the eight attack-area groups under one Techniques folder. The canonical section list above was updated to match.
+- **Publication and link fixes (second review pass):** all 100 notes un-drafted (87 remaining after the LLMNR review), all placements `required` default. A corpus-wide link audit (628 handbook links) caught a family of 8 conversion bugs across 5 files: two wrong slugs in `linux-permissions` (`privilege-escalation` → `privilege-escalation-linux`), three same-note `[[#Heading]]` links the converter could not parse (reverse-shells ×2, information-gathering ×1) that had mangled into bogus collection-prefixed hrefs, one same-note link in `sql-injection`, and one PG-box link (`Kevin`) restored to plain prose per the Labs rule. Terminal-escape and diagram `[[ ]]` hits are content, not links.
