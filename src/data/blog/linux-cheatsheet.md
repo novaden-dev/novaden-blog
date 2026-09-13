@@ -4,13 +4,14 @@ pubDatetime: 2026-05-27T00:00:00Z
 title: Linux Cheat Sheet
 slug: linux-cheatsheet
 featured: false
-draft: true
+draft: false
 tags: ["linux", "cheatsheet"]
 category: notes
-description: A growing quick-reference of the Linux commands I actually reach for day to day, from navigation and search to processes, services, and packages.
+format: cheatsheet
+description: "The Linux commands I keep looking up day to day: navigation, search, processes, services, and packages."
 ---
 
-A living quick-reference for the Linux commands I actually use. Each section pairs commands with the moment you'd reach for them. For the model behind any of this, see [Linux Foundations](/posts/linux-foundations).
+If you want the why instead of the what, that's [Linux Foundations](/posts/linux-foundations).
 
 ## Getting Help
 
