@@ -476,7 +476,15 @@
   color: var(--accent);
 }
 
+/* File listings carry a read-time column between kind and date. The directory
+   indexes share `.cols` but list places, not documents, so they keep three. */
+[data-filelist] .cols,
+.file {
+  grid-template-columns: minmax(0, 1fr) 5.5rem 3.75rem 5rem;
+}
+
 .file-kind,
+.file-read,
 .file-date {
   font-size: 0.7rem;
   color: var(--faint);
@@ -505,13 +513,57 @@
   white-space: nowrap;
 }
 
+/* Sortable headings keep the look of the plain labels they replace. Only the
+   active one gains an arrow, on the side away from the column's edge, so the
+   label itself never moves out of line with the values under it. */
+.cols button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5ch;
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.cols button.r {
+  justify-self: end;
+  flex-direction: row-reverse;
+}
+
+.cols button:hover,
+.cols button[aria-pressed="true"] {
+  color: var(--foreground);
+}
+
+.cols button:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cols button[data-dir="asc"] .sort-arrow::before {
+  content: "↑";
+}
+
+.cols button[data-dir="desc"] .sort-arrow::before {
+  content: "↓";
+}
+
 @media (max-width: 720px) {
   .cols,
+  [data-filelist] .cols,
   .file {
     grid-template-columns: minmax(0, 1fr) 4.5rem;
   }
   .cols .k,
-  .file .file-kind {
+  .cols .t,
+  .file .file-kind,
+  .file .file-read {
     display: none;
   }
 }
@@ -1073,11 +1125,27 @@ a.rail-step:hover {
   color: var(--accent);
 }
 
-.dir-count {
+.dir-count,
+.dir-read {
   text-align: end;
   font-size: 0.7rem;
   color: var(--faint);
   font-variant-numeric: tabular-nums;
+}
+
+/* The collections index adds a reading-time column. Its grid matches `.cols`
+   so the headings sit over their values. */
+.dir-timed {
+  grid-template-columns: minmax(0, 1fr) 5.5rem 5rem;
+}
+
+@media (max-width: 720px) {
+  .dir-timed {
+    grid-template-columns: minmax(0, 1fr) 4.5rem;
+  }
+  .dir-read {
+    display: none;
+  }
 }
 
 .dir-desc {

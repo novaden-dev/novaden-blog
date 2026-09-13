@@ -1,9 +1,11 @@
 ---
 import Pane from "@/layouts/Pane.astro";
 import { getCollections } from "@/utils/collections";
+import { formatDuration, totalReadingTime } from "@/utils/readingTime";
 
 // The index lists collections, not their members. A collection is a resource
-// in its own right: what it is for, how it is read, how far it has got.
+// in its own right: what it is for, how it is read, how far it has got, and
+// how long the whole path takes.
 
 const collections = await getCollections();
 
@@ -28,11 +30,12 @@ const KIND_NOTE: Record<string, string> = {
       <>
         <div class="cols" aria-hidden="true">
           <span>name</span>
+          <span class="t r">read</span>
           <span class="r">parts</span>
         </div>
         {collections.map(collection => (
           <a
-            class="dir"
+            class="dir dir-timed"
             href={`/collections/${collection.id}/`}
             data-kind="series"
           >
@@ -43,6 +46,13 @@ const KIND_NOTE: Record<string, string> = {
                 {KIND_NOTE[collection.entry.data.kind]}
                 {collection.entry.data.status === "ongoing" && ", ongoing"}
               </span>
+            </span>
+            {/* The total covers the parts counted beside it, never the
+                material listed alongside the sequence. */}
+            <span class="dir-read">
+              {formatDuration(
+                totalReadingTime(collection.steps.map(item => item.post))
+              )}
             </span>
             <span class="dir-count">{collection.steps.length}</span>
           </a>

@@ -28,6 +28,7 @@ const description =
 >
   <FileList
     filter
+    sort
     groups={[
       ...(pinned.length > 0
         ? [
@@ -39,7 +40,7 @@ const description =
             },
           ]
         : []),
-      { label: "everything", note: "newest first", posts: rest },
+      { label: "everything", posts: rest },
     ]}
   />
 </Pane>

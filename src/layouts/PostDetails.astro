@@ -13,6 +13,7 @@ import {
 import { getPath } from "@/utils/getPath";
 import { CATEGORIES } from "@/utils/categories";
 import { slugifyStr } from "@/utils/slugify";
+import { getReadingTime } from "@/utils/readingTime";
 import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
 import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import { SITE } from "@/config";
@@ -170,6 +171,7 @@ const path = [
               </span>
             )
           }
+          <span>{getReadingTime(post)} min read</span>
           <Datetime {pubDatetime} {modDatetime} {timezone} />
         </p>
 

@@ -2,14 +2,17 @@
 import type { CollectionEntry } from "astro:content";
 import { getPath } from "@/utils/getPath";
 import { CATEGORIES } from "@/utils/categories";
+import { getReadingTime } from "@/utils/readingTime";
 import { SITE } from "@/config";
 
 // One listing, everywhere. A post is a file: a kind square, a name, its kind,
-// its date, and a one-line description underneath for scanning.
+// how long it takes to read, its date, and a one-line description underneath
+// for scanning.
 //
 // Rows can be split into groups the way a file manager floats pinned items
 // above the rest. Filtering hides a group's header once none of its rows
-// survive, so a filter never leaves an empty heading behind.
+// survive, so a filter never leaves an empty heading behind. Sorting works
+// the same way a file manager's does: within each group, never across them.
 
 type Group = {
   label: string;
@@ -27,13 +30,32 @@ type Props = {
   groups?: Group[];
   /* Show the client-side filter box above the listing. */
   filter?: boolean;
+  /* Let the reader re-sort by clicking a column heading. Only for a listing
+     that holds the whole set: sorting one page of many reorders a fragment
+     and passes it off as the whole. */
+  sort?: boolean;
   /* Series listings number their rows instead of colouring them by kind. */
   numbered?: boolean;
 };
 
-const { posts, groups, filter = false, numbered = false } = Astro.props;
+const {
+  posts,
+  groups,
+  filter = false,
+  sort = false,
+  numbered = false,
+} = Astro.props;
 
 const sections: Group[] = groups ?? [{ label: "", posts: posts ?? [] }];
+
+// `first` is the direction a heading sorts in on its first click. Names read
+// a to z and short reads come first, but a date is looked at newest first.
+const columns = [
+  { key: "name", class: undefined, first: "asc" },
+  { key: "kind", class: "k", first: "asc" },
+  { key: "read", class: "t r", first: "asc" },
+  { key: "date", class: "r", first: "desc" },
+];
 
 const toFile = (
   post: CollectionEntry<"blog">,
@@ -41,15 +63,18 @@ const toFile = (
   number = numbered
 ) => {
   const match = post.data.title.match(/^.*?\s(v[\d.]+)\s*[—–-]\s*(.+)$/);
+  const kindLabel = (
+    CATEGORIES[post.data.category]?.label ?? post.data.category
+  ).toLowerCase();
+  const minutes = getReadingTime(post);
   return {
     href: getPath(post.id, post.filePath),
     title: number ? (match?.[2] ?? post.data.title) : post.data.title,
     n: number ? (match?.[1] ?? String(i + 1)) : null,
     desc: post.data.description,
     kind: post.data.category,
-    kindLabel: (
-      CATEGORIES[post.data.category]?.label ?? post.data.category
-    ).toLowerCase(),
+    kindLabel,
+    read: `${minutes} min`,
     date: post.data.pubDatetime.toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
@@ -57,7 +82,17 @@ const toFile = (
     }),
     year: post.data.pubDatetime.getUTCFullYear(),
     search:
-      `${post.data.title} ${post.data.description} ${post.data.category} ${post.data.tags.join(" ")}`.toLowerCase(),
+      `${post.data.title} ${post.data.description} ${post.data.category} ${post.data.format ?? ""} ${post.data.tags.join(" ")}`.toLowerCase(),
+    // The date key is the one listings already arrive ordered by, so the
+    // "newest first" the headings start in is true before anyone clicks.
+    sortKeys: {
+      "data-sort-name": post.data.title.toLowerCase(),
+      "data-sort-kind": kindLabel,
+      "data-sort-read": minutes,
+      "data-sort-date": (
+        post.data.modDatetime ?? post.data.pubDatetime
+      ).getTime(),
+    },
   };
 };
 
@@ -88,13 +123,39 @@ const showCounts = sections.filter(group => group.label).length > 1;
     )
   }
 
-  <div class="cols" aria-hidden="true">
-    <span>name</span><span class="k">kind</span><span class="r">date</span>
-  </div>
+  {
+    sort ? (
+      <div class="cols">
+        {columns.map(col => (
+          <button
+            type="button"
+            class={col.class}
+            data-sort-key={col.key}
+            data-sort-first={col.first}
+            data-dir={col.key === "date" ? "desc" : undefined}
+            aria-pressed={col.key === "date" ? "true" : "false"}
+          >
+            {col.key}
+            <span class="sort-arrow" aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+    ) : (
+      <div class="cols" aria-hidden="true">
+        {columns.map(col => (
+          <span class={col.class}>{col.key}</span>
+        ))}
+      </div>
+    )
+  }
 
   {
     sections.map(group => (
-      <div class="group" data-group>
+      <div
+        class="group"
+        data-group
+        data-sortable={sort && !(group.numbered ?? numbered) ? "" : undefined}
+      >
         {group.label && (
           <p class="group-head" data-group-head>
             {group.star && (
@@ -125,6 +186,7 @@ const showCounts = sections.filter(group => group.label).length > 1;
               href={file.href}
               data-kind={file.kind}
               data-search={file.search}
+              {...(sort ? file.sortKeys : {})}
             >
               <span class="file-name">
                 {file.n ? (
@@ -145,6 +207,7 @@ const showCounts = sections.filter(group => group.label).length > 1;
                 <span class="file-title">{file.title}</span>
               </span>
               <span class="file-kind">{file.kindLabel}</span>
+              <span class="file-read r">{file.read}</span>
               <span class="file-date r">
                 {file.date} {file.year}
               </span>
@@ -166,46 +229,128 @@ const showCounts = sections.filter(group => group.label).length > 1;
 </div>
 
 <script>
-  // Filters the listing already on the page — no fetch, no re-render.
+  // Filters and sorts the listing already on the page: no fetch, no re-render.
+
+  type Dir = "asc" | "desc";
+
+  // What each direction means, spoken as the heading's accessible name.
+  const ORDER: Record<string, Record<Dir, string>> = {
+    name: { asc: "a to z", desc: "z to a" },
+    kind: { asc: "a to z", desc: "z to a" },
+    read: { asc: "shortest first", desc: "longest first" },
+    date: { asc: "oldest first", desc: "newest first" },
+  };
+
+  function wireFilter(list: HTMLElement) {
+    const input = list.querySelector<HTMLInputElement>("[data-filter-input]");
+    if (!input || input.dataset.wired) return;
+    input.dataset.wired = "1";
+
+    const count = list.querySelector("[data-filter-count]");
+    const empty = list.querySelector<HTMLElement>("[data-filter-empty]");
+    const groups = Array.from(
+      list.querySelectorAll<HTMLElement>("[data-group]")
+    ).map(group => ({
+      head: group.querySelector<HTMLElement>("[data-group-head]"),
+      tally: group.querySelector<HTMLElement>("[data-group-count]"),
+      rows: Array.from(group.querySelectorAll<HTMLElement>(".file")),
+    }));
+
+    input.addEventListener("input", () => {
+      const query = input.value.trim().toLowerCase();
+      let shown = 0;
+
+      for (const group of groups) {
+        let visible = 0;
+        for (const row of group.rows) {
+          const hit = !query || (row.dataset.search ?? "").includes(query);
+          row.hidden = !hit;
+          if (hit) visible++;
+        }
+        // A heading with nothing under it is noise, so it goes too, and the
+        // count beside it follows the filter rather than the total.
+        if (group.head) group.head.hidden = visible === 0;
+        if (group.tally) group.tally.textContent = String(visible);
+        shown += visible;
+      }
+
+      if (count) count.textContent = String(shown);
+      if (empty) empty.hidden = shown > 0;
+    });
+  }
+
+  function wireSort(list: HTMLElement) {
+    const buttons = Array.from(
+      list.querySelectorAll<HTMLButtonElement>("[data-sort-key]")
+    );
+    if (buttons.length === 0 || list.dataset.sortWired) return;
+    list.dataset.sortWired = "1";
+
+    // A numbered group is a reading order, so it is never marked sortable.
+    const groups = Array.from(
+      list.querySelectorAll<HTMLElement>("[data-group][data-sortable]")
+    );
+
+    // Ties keep the order the page arrived in, so posts of equal length stay
+    // newest first instead of shuffling on every click.
+    const arrival = new Map<Element, number>();
+    list.querySelectorAll(".file").forEach((row, i) => arrival.set(row, i));
+
+    const describe = (button: HTMLButtonElement) => {
+      const key = button.dataset.sortKey ?? "";
+      const dir = button.dataset.dir as Dir | undefined;
+      button.setAttribute(
+        "aria-label",
+        dir ? `${key}, sorted ${ORDER[key][dir]}` : `sort by ${key}`
+      );
+    };
+    buttons.forEach(describe);
+
+    for (const button of buttons) {
+      button.addEventListener("click", () => {
+        const key = button.dataset.sortKey ?? "";
+        const current = button.dataset.dir as Dir | undefined;
+        const dir: Dir = current
+          ? current === "asc"
+            ? "desc"
+            : "asc"
+          : (button.dataset.sortFirst as Dir);
+
+        for (const other of buttons) {
+          const active = other === button;
+          if (active) other.dataset.dir = dir;
+          else delete other.dataset.dir;
+          other.setAttribute("aria-pressed", String(active));
+          describe(other);
+        }
+
+        const numeric = key === "read" || key === "date";
+        const sign = dir === "asc" ? 1 : -1;
+
+        for (const group of groups) {
+          const rows = Array.from(group.querySelectorAll<HTMLElement>(".file"));
+          rows.sort((a, b) => {
+            const x = a.getAttribute(`data-sort-${key}`) ?? "";
+            const y = b.getAttribute(`data-sort-${key}`) ?? "";
+            const diff = numeric
+              ? Number(x) - Number(y)
+              : x.localeCompare(y, undefined, { numeric: true });
+            return sign * diff || (arrival.get(a) ?? 0) - (arrival.get(b) ?? 0);
+          });
+          // Appending moves each row, so the group ends up in sorted order
+          // with its heading still first.
+          group.append(...rows);
+        }
+      });
+    }
+  }
+
   function initFileList() {
     for (const list of document.querySelectorAll<HTMLElement>(
       "[data-filelist]"
     )) {
-      const input = list.querySelector<HTMLInputElement>("[data-filter-input]");
-      if (!input || input.dataset.wired) continue;
-      input.dataset.wired = "1";
-
-      const count = list.querySelector("[data-filter-count]");
-      const empty = list.querySelector<HTMLElement>("[data-filter-empty]");
-      const groups = Array.from(
-        list.querySelectorAll<HTMLElement>("[data-group]")
-      ).map(group => ({
-        head: group.querySelector<HTMLElement>("[data-group-head]"),
-        tally: group.querySelector<HTMLElement>("[data-group-count]"),
-        rows: Array.from(group.querySelectorAll<HTMLElement>(".file")),
-      }));
-
-      input.addEventListener("input", () => {
-        const query = input.value.trim().toLowerCase();
-        let shown = 0;
-
-        for (const group of groups) {
-          let visible = 0;
-          for (const row of group.rows) {
-            const hit = !query || (row.dataset.search ?? "").includes(query);
-            row.hidden = !hit;
-            if (hit) visible++;
-          }
-          // A heading with nothing under it is noise, so it goes too, and the
-          // count beside it follows the filter rather than the total.
-          if (group.head) group.head.hidden = visible === 0;
-          if (group.tally) group.tally.textContent = String(visible);
-          shown += visible;
-        }
-
-        if (count) count.textContent = String(shown);
-        if (empty) empty.hidden = shown > 0;
-      });
+      wireFilter(list);
+      wireSort(list);
     }
   }
 

@@ -1,6 +1,8 @@
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 import { SITE } from "@/config";
+import { FORMATS } from "@/utils/formats";
+import { tagProblems } from "@/utils/tags";
 
 export const BLOG_PATH = "src/data/blog";
 export const PROJECTS_PATH = "src/data/projects";
@@ -9,21 +11,38 @@ export const COLLECTIONS_PATH = "src/data/collections";
 const blog = defineCollection({
   loader: glob({ pattern: "**/[^_]*.md", base: `./${BLOG_PATH}` }),
   schema: ({ image }) =>
-    z.object({
-      author: z.string().default(SITE.author),
-      pubDatetime: z.date(),
-      modDatetime: z.date().optional().nullable(),
-      title: z.string(),
-      featured: z.boolean().optional(),
-      draft: z.boolean().optional(),
-      tags: z.array(z.string()).default(["others"]),
-      category: z.enum(["notes", "journal", "cert-review"]).default("notes"),
-      ogImage: image().or(z.string()).optional(),
-      description: z.string(),
-      canonicalURL: z.string().optional(),
-      hideEditPost: z.boolean().optional(),
-      timezone: z.string().optional(),
-    }),
+    z
+      .object({
+        author: z.string().default(SITE.author),
+        pubDatetime: z.date(),
+        modDatetime: z.date().optional().nullable(),
+        title: z.string(),
+        featured: z.boolean().optional(),
+        draft: z.boolean().optional(),
+        // Subjects only, each one from the registry in src/utils/tags.ts.
+        tags: z.array(z.string()).default([]),
+        category: z.enum(["notes", "journal", "cert-review"]).default("notes"),
+        format: z.enum(FORMATS).optional(),
+        ogImage: image().or(z.string()).optional(),
+        description: z.string(),
+        canonicalURL: z.string().optional(),
+        hideEditPost: z.boolean().optional(),
+        timezone: z.string().optional(),
+      })
+      // A published post's tags must be canonical. Drafts are exempt: they are
+      // unreviewed, and each one is normalized when it is reviewed, not all at
+      // once. This keys off `draft` rather than postFilter because dev shows
+      // every draft, and the check must not depend on which command is running.
+      .superRefine((data, ctx) => {
+        if (data.draft) return;
+        for (const message of tagProblems(data.tags)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["tags"],
+            message,
+          });
+        }
+      }),
 });
 
 // Projects are not posts: nobody reads a tool, they use it. So they get their

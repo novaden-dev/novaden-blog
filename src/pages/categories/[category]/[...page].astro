@@ -40,6 +40,10 @@ const { page, label, description } = Astro.props;
   ]}
   place={String(category)}
 >
-  <FileList posts={page.data} filter={page.lastPage === 1} />
+  <FileList
+    posts={page.data}
+    filter={page.lastPage === 1}
+    sort={page.lastPage === 1}
+  />
   <Pagination {page} />
 </Pane>
