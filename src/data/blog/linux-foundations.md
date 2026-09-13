@@ -4,10 +4,10 @@ pubDatetime: 2024-01-04T09:00:26Z
 title: Linux Foundations
 slug: linux-foundations
 featured: false
-draft: true
+draft: false
 tags: ["linux"]
 category: notes
-description: The mental model behind Linux. Components, distributions, filesystem hierarchy, the shell, paths, redirection, and the permissions system.
+description: Components, distributions, the filesystem hierarchy, the shell, paths, redirection, and the permissions system.
 ---
 
 ## Introduction
@@ -57,7 +57,7 @@ Linux organizes everything (files, devices, even processes) into a single tree r
 
 ## The Shell
 
-The shell is a text-based interface that lets you communicate directly with the operating system. The most common one is the **Bourne-Again Shell (BASH)**.
+The shell is a text-based interface that lets you communicate directly with the operating system. The most common one is `bash`, the Bourne-Again Shell.
 
 When you open a terminal, you'll see a prompt that looks something like this:
 
@@ -87,7 +87,7 @@ There are two ways to reference a file or directory:
 - **Absolute path**: the full path starting from `/`. It works from anywhere on the system.
 - **Relative path**: the path from your current working directory.
 
-For example, `cd /opt/` will always land you in `/opt` regardless of where you are, because it's an absolute path. By contrast, `cd opt` only works if you're already sitting in `/`, since it's interpreted relative to wherever you are.
+For example, `cd /opt/` will always land you in `/opt` regardless of where you are, because it's an absolute path. By contrast, `cd opt` works only if a directory named `opt` exists right where you are, because it's relative.
 
 Two special symbols come up constantly in relative paths:
 
@@ -96,7 +96,7 @@ Two special symbols come up constantly in relative paths:
 
 ## File Descriptors and Redirection
 
-A **file descriptor (FD)** is a reference, maintained by the kernel, that lets the system manage input/output operations. Every process starts with three file descriptors by default:
+A **file descriptor (FD)** is a number the kernel hands a process to track an open input/output stream. Every process starts with three by default:
 
 | FD | Name | Purpose |
 | --- | --- | --- |
@@ -129,7 +129,7 @@ That one-liner finds every `.conf` file under `/etc/`, silently discards permiss
 
 ## Exit Codes
 
-When a command finishes, it returns a numeric **exit code** (also called exit status). `0` means success, and anything else means something went wrong. The convention is universal: shells, scripts, CI runners, and other programs all branch on it.
+When a command finishes, it returns a numeric **exit code** (also called exit status). `0` means success, and anything else means something went wrong. Shells, scripts, CI runners, and other programs all branch on it the same way.
 
 You can inspect the most recent command's exit code with the special variable `$?`:
 
@@ -202,7 +202,7 @@ The `r`, `w`, `x` bits mean different things for files and directories, which is
 | **Write (w)** | Modify the file's contents | Create, delete, or rename entries inside the directory |
 | **Execute (x)** | Run the file as a program | Traverse the directory (e.g. `cd` into it, run `ls -l` inside it) |
 
-> **Gotcha:** Read on a directory lets you list names, but without execute you can't actually access anything inside it.
+> **Watch out:** Read on a directory lets you list names, but without execute you can't actually access anything inside it.
 
 ### Special Permissions
 
@@ -212,4 +212,4 @@ Beyond the standard `rwx` bits, three special permission bits show up regularly,
 - **SGID (Set Group ID)**: when set on an executable, the file runs with the privileges of its *owning group*. When set on a directory, new files created inside it inherit the directory's group ownership, which is useful for shared collaboration directories.
 - **Sticky Bit**: applied to directories. Restricts file deletion so that even users with write access to the directory can only delete files *they* own. `/tmp` is the classic example.
 
-> **Quick reference:** the actual commands for changing ownership, permissions, redirection, and everyday shell tasks live in the [Linux Cheat Sheet](/posts/linux-cheatsheet).
+> The commands are in the [Linux Cheat Sheet](/posts/linux-cheatsheet).
