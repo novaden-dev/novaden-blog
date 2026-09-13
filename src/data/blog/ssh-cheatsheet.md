@@ -5,7 +5,7 @@ title: SSH Cheat Sheet
 slug: ssh-cheatsheet
 featured: false
 draft: false
-tags: ["ssh", "cheatsheet"]
+tags: ["ssh"]
 category: notes
 format: cheatsheet
 description: "The SSH commands I keep looking up: key generation and copying, port forwarding, file transfer, jump hosts, and sshd hardening."

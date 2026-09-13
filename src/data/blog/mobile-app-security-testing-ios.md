@@ -39,7 +39,7 @@ otool -l "$BIN" | grep -A4 LC_ENCRYPTION_INFO
 
 If `cryptid` is 1, you decrypt by running the app on a jailbroken device and dumping it from memory, with a tool like `frida-ios-dump` or `bagbak`. A build the client hands you directly (a development or enterprise IPA) is usually not FairPlay-encrypted and is ready as-is.
 
-> **Gotcha:** This step has no Android equivalent. A `cryptid` of 1 that you miss means every later search and disassembly runs against ciphertext, and you will wrongly conclude the app has no hardcoded strings or endpoints when you are really reading encrypted bytes.
+> **Watch out:** This step has no Android equivalent. A `cryptid` of 1 that you miss means every later search and disassembly runs against ciphertext, and you will wrongly conclude the app has no hardcoded strings or endpoints when you are really reading encrypted bytes.
 
 ### plutil and codesign: the declaration and entitlements
 

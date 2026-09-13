@@ -532,4 +532,4 @@ grep -A1000 "^GEM" Gemfile.lock
 cat go.sum | awk '{print $1, $2}' | sort -u
 ```
 
-> **Quick reference:** the process this plugs into, including intake, recon, the manual review techniques, and the coverage statement, is in [Secure Code Review: Process and Methodology](/posts/secure-code-review-methodology).
+> The process this plugs into is in [Secure Code Review: Process and Methodology](/posts/secure-code-review-methodology).

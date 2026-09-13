@@ -30,7 +30,7 @@ pip install frida-tools     # installs frida, frida-ps, frida-trace, frida-ls-de
 frida --version             # note this version; the device agent must match it exactly
 ```
 
-> **Gotcha:** The client and the device agent must be the **same version**. Almost every "it won't connect" problem is a version mismatch between `frida-tools` here and `frida-server` on the device. Read `frida --version` now and match the server to it.
+> **Watch out:** The client and the device agent must be the **same version**. Almost every "it won't connect" problem is a version mismatch between `frida-tools` here and `frida-server` on the device. Read `frida --version` now and match the server to it.
 
 ## Android (Rooted)
 

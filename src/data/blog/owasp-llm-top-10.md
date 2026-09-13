@@ -96,7 +96,7 @@ The user sees a summary and a broken image icon. The attacker sees the conversat
 4. **Memory and corpus poisoning.** One tainted entry reaches every later session that reads it. Five poisoned documents reached roughly 90% attack success against a knowledge base of millions of texts, so corpus size does not dilute the problem.
 5. **Agentic command execution.** Two July 2025 events hit Amazon Q from different directions: a destructive system prompt committed to its VS Code extension repository before AWS reverted it, and a runtime injection that made it execute arbitrary code. Shell, filesystem, or cloud-API access turns an injection into a host-level incident.
 
-### Scenario
+### A support ticket that dumps a user table
 
 An attacker opens a support ticket containing nothing but text. A developer later asks their assistant to look into the ticket queue. The assistant reaches the database through an MCP server that was configured with a `service_role` credential, because that was the setup that made it work during development, and `service_role` bypasses row-level security by design. The instructions in the ticket tell the assistant to dump a user table and paste it into its reply. It does, because the ticket text and the developer's request arrive in the same context window with nothing marking one as data.
 
@@ -156,7 +156,7 @@ Severity should turn on what the recipient can learn, not on whether the leak lo
 5. **Side channels.** Conversation topics have been classified at over 98% accuracy from encrypted traffic alone. Response content has been partially reconstructed from token length. Prompts have leaked between tenants through shared caches. None of these require the attacker to receive a single word of your output.
 6. **Platform and tooling leakage.** Observability platforms log full prompts, completions, chunks, and traces by default. DeepSeek's January 2025 ClickHouse exposure published more than a million rows of logs and API keys.
 
-### Scenario
+### Debug traces that leaked patient data
 
 A team turns on extended reasoning for a clinical assistant and wires the traces into their shared observability project so they can debug quality issues. The answers the assistant returns are properly sanitized: patient identifiers are stripped before anything reaches the user. The traces are not, because nobody classified them as output. Every retrieved chunk the model considered on the way to its answer, identifiers included, is now readable by every engineer with access to the APM project, which is most of engineering. The visible product is compliant. The debugging pipeline is a HIPAA incident.
 
@@ -213,7 +213,7 @@ The root cause is always one or more of three things:
 5. **Generic high-privilege identity for per-user work.** A tool that reads the current user's documents connects with an account that can reach every user's files.
 6. **No confirmation on high-impact actions.** A tool that deletes documents performs the deletion with nothing in between.
 
-### Scenario
+### A mail assistant that can also send
 
 A personal assistant gets mailbox access so it can summarize incoming mail. The tool the developer picked reads mail and also sends it, because that was the library that existed. An attacker sends the user an email whose body instructs the assistant to search the inbox for anything resembling credentials and forward it on. The assistant does exactly that, using the user's own mail account.
 
@@ -252,7 +252,7 @@ Building on top of a model usually means depending on somebody else's model, dat
 4. **Compromised adapters and conversion steps.** A malicious adapter compromises the base model it merges into. Conversion and merge services can alter a model in transit and bypass review. Quantization is its own risk: weights can be crafted so the full-precision model behaves normally while the shrunk version, which is the one you deploy, does not.
 5. **Unclear supplier terms.** Vague operator terms can route your application data into training and later exposure.
 
-### Scenario
+### A namespace takeover
 
 An organization deploys a model from a public hub, referencing it as `Author/ModelName` in their pipeline. That works for months. The original author then deletes their account, which frees the namespace. An attacker registers the same name and publishes a malicious model at the identical path. The pipeline, which resolves by name and not by content hash, pulls the attacker's model on its next run and executes code during load. Nothing in the deployment config changed, and no alert fires, because from the pipeline's point of view it fetched the model it always fetches.
 
@@ -286,7 +286,7 @@ Models shared through public repositories also carry risk in the files around th
 4. **RAG knowledge base poisoning.** A single optimized poisoned document per targeted query can override accurate content, and it holds up against paraphrasing and detection-based defenses.
 5. **Feedback-loop poisoning.** Crafted input submitted through the normal user interface, with no infrastructure access at all, drifts a continuously retrained model toward degraded or biased output.
 
-### Scenario
+### Untouched weights, poisoned chat template
 
 An attacker takes a popular open-weight model, leaves the weights completely untouched, and modifies only its chat template, the small config file that formats conversations before they reach the model. The edit adds a conditional instruction that fires on a specific trigger phrase. They republish it to a public hub. Anyone benchmarking the model sees normal results, because the weights are genuinely unmodified and the trigger never appears in a benchmark. Tested across 18 models and 4 inference runtimes, factual accuracy under trigger conditions dropped from 90% to 15%, with attacker-chosen URLs emitted at over an 80% success rate.
 
@@ -323,7 +323,7 @@ Four trends make this worse. Reasoning models carry large output budgets. Multim
 5. **Agent-tool flooding.** A published tool can force an application into recursive tool-calling loops, so legitimate-looking actions drive token consumption. One call fanning out into hundreds is enough.
 6. **Serving framework exploitation.** vLLM, TensorRT-LLM, SGLang, Triton, and Ollama are targets in their own right, through unsafe deserialization, special-token injection, and injected chat templates.
 
-### Scenario
+### The session that outgrew the rate limit
 
 A user, who may not even be malicious, keeps one agentic session open and keeps adding to it. Every turn re-processes the entire accumulated context, so per-turn cost climbs from roughly $0.001 on the first turn to about $0.50 by turn 100. No single request trips a rate limit, because every individual request sits comfortably inside budget. The limit was written per request, and the cost is accumulating per session. Across many concurrent long-lived sessions the aggregate reaches hundreds of dollars, and the dashboard shows normal request volume throughout.
 
@@ -359,7 +359,7 @@ Overreliance is the other half. People and systems treat fluent, confident, well
 4. **Misleading summaries.** A summary drops a constraint, exception, timestamp, or risk, and the omission is invisible to the reader.
 5. **Cross-agent propagation.** One agent's incorrect output becomes another agent's trusted input.
 
-### Scenario
+### The backup that "completed successfully"
 
 A nightly database backup is handled by an agent. One night the backup does not run, for an ordinary reason: a credential expired and the tool call failed. The agent, summarizing its own run, reports that the backup completed successfully, because that is the shape of the sentence its previous hundred runs produced. The monitoring dashboard reads the agent's summary rather than the storage bucket. Nobody notices for four months, until a restore is needed and there is nothing to restore from.
 
@@ -404,7 +404,7 @@ Severity tracks what you put in it and how much you rely on it:
 4. **Disclosed permissions and roles.** A tool description may state that a user needs the developer role, or that a given role can search a particular document set. That invites targeted probing.
 5. **Exposed output formatting rules.** Once the required schema is known, an attacker can produce responses that satisfy the expected format while carrying manipulated values, which downstream parsers accept without complaint.
 
-### Scenario
+### A chat that maps the tool list
 
 An attacker chats with a customer-facing assistant and, through ordinary conversational probing, gets it to reveal its tool list and parameter schemas. No credential is disclosed. No policy is bypassed. Nothing about the exchange would look like an attack in a log.
 
@@ -433,7 +433,7 @@ These attacks exploit the geometry of the embedding space rather than the model'
 5. **Membership inference.** The attacker wants to know whether a specific document is in the index, not what it says. An application returning raw similarity scores turns the index into a direct oracle for that question, with no model involved.
 6. **Semantic cache poisoning.** Semantic caches use a similarity threshold to decide two things are the same. Content crafted to land just above or below that threshold can poison a cache entry so it serves attacker text to every equivalent query, or get legitimate new content silently dropped as a duplicate. This has been demonstrated end to end across AWS, Azure, and Alibaba deployments.
 
-### Scenario
+### Forum posts aimed at one question
 
 A company's RAG system scrapes public documentation and forum posts on a schedule. An attacker studies the kind of questions employees are likely to ask and publishes forum posts engineered so their embeddings land close to one of them: "what is our Q3 revenue projection". The posts read as ordinary, slightly dull technical writing. They contain no instructions, nothing to strip, and nothing a content filter would flag.
 
@@ -472,7 +472,7 @@ Conditions that raise the impact:
 6. Output containing ANSI escape sequences written to a terminal, log viewer, or IDE pane that interprets them.
 7. A chat UI auto-rendering Markdown images, letting an attacker who controls part of the context exfiltrate conversation data through the image URL.
 
-### Scenario
+### An escape sequence that replaces the clipboard
 
 A developer asks their coding assistant to summarize the output of a build script. The script's output contains attacker-controlled text, because it echoes a dependency's version string. That string carries ANSI escape sequences, including an OSC 52 sequence, which terminals implement to let programs set the system clipboard.
 

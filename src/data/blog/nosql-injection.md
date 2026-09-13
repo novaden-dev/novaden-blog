@@ -129,7 +129,7 @@ The PHP MongoDB documentation explicitly warns developers:
 
 > *Please make sure that for all special query operators (starting with `$`) you use single quotes so that PHP doesn't try to replace `$exists` with the value of the variable `$exists`.*
 
-### Exploitation Scenario
+### Exploitation
 
 Consider a query that contains no user input at all:
 

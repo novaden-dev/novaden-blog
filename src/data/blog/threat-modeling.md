@@ -45,7 +45,7 @@ Adam Shostack's framing is the spine of every methodology below, and it is what 
 3. **What are we going to do about it?** Decide a response for each threat.
 4. **Did we do a good enough job?** Validate the model, the coverage, and the follow-through.
 
-Every one of them is required. Teams that skip question 1 argue past each other because they each hold a different mental model of the system. Teams that skip question 3 produce a list of scary things and change nothing. Teams that skip question 4 never find out that half the threats were never ticketed.
+Every one of them is required. Teams that skip question 1 argue past each other because they each picture the system differently. Teams that skip question 3 produce a list of scary things and change nothing. Teams that skip question 4 never find out that half the threats were never ticketed.
 
 The Threat Modeling Manifesto (2020) adds the values that keep this from turning into paperwork. The ones worth remembering: *a culture of finding and fixing design issues over checkbox compliance*, *people and collaboration over processes, methodologies, and tools*, and *doing threat modeling over talking about it*. Its named anti-patterns are all real and all common:
 

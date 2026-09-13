@@ -210,7 +210,7 @@ Automation gets you a lead. This gets you a finding.
 - **Force the protocol from the Inspector** (with ALPN override enabled) so you can run the same test as HTTP/1.1 and as HTTP/2 and compare.
 - **Watch for connection closes.** A front end that drops the connection on a malformed request is behaving correctly and is telling you the chain is probably safe.
 
-> **Gotcha:** desync tests are stateful and the state lives in a TCP connection. If Burp opens a new connection between your two requests, a real vulnerability shows up as nothing at all. Any negative result from a test that did not use a single connection is meaningless, not a pass.
+> **Watch out:** desync tests are stateful and the state lives in a TCP connection. If Burp opens a new connection between your two requests, a real vulnerability shows up as nothing at all. Any negative result from a test that did not use a single connection is meaningless, not a pass.
 
 ## What to Check on an API
 

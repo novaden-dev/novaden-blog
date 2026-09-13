@@ -56,7 +56,7 @@ DevOps is not one tool; it's a set of categories you wire together.
 | **Containers** | Package the app and its runtime so it runs the same everywhere. | Docker |
 | **Monitoring** | Watch the system in production: performance, resource usage, logs. | ELK stack (Elasticsearch, Logstash, Kibana), Prometheus, Grafana |
 
-The mental model for images, containers, registries, networking, and volumes lives in [Docker Foundations](/posts/docker-foundations).
+Images, containers, registries, networking, and volumes are covered in [Docker Foundations](/posts/docker-foundations).
 
 ## The DevSecOps Maturity Model (DSOMM)
 
@@ -282,7 +282,7 @@ Key pieces:
 - **State**: a JSON record mapping declarations to real resource IDs. Stored locally by default, but for any team you push it to a remote backend (S3 + DynamoDB lock, Terraform Cloud, GitLab-managed state) so two engineers don't apply at the same time.
 - **`plan` and `apply`**: `plan` shows the diff between code and reality; `apply` executes it. Always review the plan output; never apply unreviewed.
 
-> **Gotcha:** Terraform plans look harmless until you read them. A line that says `- aws_db_instance.main` (note the minus sign) means a database is about to be **destroyed**. Add `prevent_destroy = true` to stateful resources, and keep state and credentials behind tight access controls.
+> **Watch out:** Terraform plans look harmless until you read them. A line that says `- aws_db_instance.main` (note the minus sign) means a database is about to be **destroyed**. Add `prevent_destroy = true` to stateful resources, and keep state and credentials behind tight access controls.
 
 ### Ansible
 
@@ -374,4 +374,4 @@ The pattern in a pipeline is the same regardless of which tool you pick:
 3. The manager deduplicates against existing findings and surfaces only what's new.
 4. Tickets get created (or not) based on severity rules.
 
-> **Quick reference:** the pipeline YAML, Docker-based scanner snippets, and DefectDojo upload patterns live in the [DevSecOps Cheat Sheet](/posts/devsecops-cheatsheet).
+> The commands are in the [DevSecOps Cheat Sheet](/posts/devsecops-cheatsheet).

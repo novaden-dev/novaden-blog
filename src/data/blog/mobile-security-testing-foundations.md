@@ -115,4 +115,4 @@ Automated tools have no sense of context, so they over-report. Take CSRF: a real
 
 The lesson generalizes. Always trace a finding to an actual exploit path before you rate it, and treat tool output as something to confirm, never a conclusion. The exploit scenario is what turns a flagged pattern into a risk, and a flagged pattern with no path is noise.
 
-> **Quick reference:** For the per-control checks (how to test each MASVS control statically from a decompiled APK and dynamically on a running device, with PASS and FAIL conditions), see [Android App Security Testing](/posts/mobile-app-security-testing).
+> The per-control checks, with PASS and FAIL conditions, are in [Android App Security Testing](/posts/mobile-app-security-testing).

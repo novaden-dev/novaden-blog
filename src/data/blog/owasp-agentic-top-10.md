@@ -52,7 +52,7 @@ Agents are unusually exposed to this because they take untyped natural-language 
 3. **Financial action override.** A crafted instruction manipulates an agent with payment capability into transferring money to an attacker's account.
 4. **Induced fraudulent output.** Injection makes the agent produce false information that feeds a business decision, with no data theft involved at all.
 
-### Scenario
+### The quiet-mode invite
 
 An operations team runs a scheduling agent with access to a shared calendar and authority to approve routine requests below a threshold. An attacker sends the team a calendar invite. Nobody needs to accept it: the agent reads the calendar every morning as part of its normal context gathering.
 

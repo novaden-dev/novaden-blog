@@ -3,7 +3,7 @@ author: Kayra
 pubDatetime: 2026-06-22T00:00:00Z
 title: "iOS Analysis Setup: Jailbreaking with palera1n"
 slug: "ios-analysis-setup"
-description: "Coming to iOS static analysis from Android: the mental model, why you need a jailbreak, how to functionally verify jailbreak state from Linux, and jailbreaking an iPhone X with palera1n on Fedora (including the failures along the way)."
+description: "iOS static analysis from an Android developer's perspective: why a jailbreak is required, verifying jailbreak state from Linux, and palera1n on an iPhone X via Fedora."
 tags: ["ios", "security"]
 category: notes
 draft: true
@@ -57,7 +57,7 @@ The honest check is to do something only an active jailbreak permits. Any one of
 
 The `afc2` test is the cleanest because it does not depend on any network service. Using `pymobiledevice3`, opening `com.apple.afc2` raises `InvalidService` on a device that is not actively jailbroken, and lists `/` with `bin`, `etc`, `private`, and `var` when it is.
 
-> **Gotcha:** All three tests can come back negative on a device that was jailbroken yesterday. If it has rebooted since, a semi-tethered jailbreak is dormant, not gone. Re-run the jailbreak before concluding anything.
+> **Watch out:** All three tests can come back negative on a device that was jailbroken yesterday. If it has rebooted since, a semi-tethered jailbreak is dormant, not gone. Re-run the jailbreak before concluding anything.
 
 ## Jailbreaking an iPhone X with palera1n
 
@@ -157,4 +157,4 @@ With an active rootless jailbreak, the path to decrypted binaries opens:
 - Recover Objective-C class headers with `class-dump`, inspect the Mach-O with `otool` and `nm`, and load the binary into Ghidra or Hopper for the actual reversing.
 - Run the IPA through MobSF for a fast automated first pass.
 
-> **Quick reference:** Swift is harder to reverse than Objective-C because it lacks the same runtime metadata. Expect mangled symbols, and keep `swift-demangle` handy.
+> **Note:** Swift is harder to reverse than Objective-C because it lacks the same runtime metadata. Expect mangled symbols, and keep `swift-demangle` handy.

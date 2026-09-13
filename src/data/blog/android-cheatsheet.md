@@ -12,7 +12,7 @@ featured: false
 
 > **Note:** These are working notes and still in progress.
 
-A living quick-reference for the commands used when pentesting Android apps. For the model behind any of this (app components, data storage, attack surface, RE methodology), see [Android App Fundamentals](/posts/android-fundamentals).
+If you want the why (app components, data storage, attack surface, RE methodology), that's [Android App Fundamentals](/posts/android-fundamentals).
 
 ## Device Setup
 

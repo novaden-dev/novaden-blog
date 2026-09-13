@@ -5,7 +5,7 @@ title: Linux Cheat Sheet
 slug: linux-cheatsheet
 featured: false
 draft: false
-tags: ["linux", "cheatsheet"]
+tags: ["linux"]
 category: notes
 format: cheatsheet
 description: "The Linux commands I keep looking up day to day: navigation, search, processes, services, and packages."

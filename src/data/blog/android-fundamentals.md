@@ -156,4 +156,4 @@ The tools you reach for during Android pentesting, and what each is for:
 - **jadx**: decompiles an APK back to readable Java. Use it to read the code and search for secrets. It cannot handle native (JNI) code.
 - **Ghidra**: for the native libraries `jadx` cannot read.
 
-> **Quick reference:** for the actual commands, see the [Android Cheat Sheet](/posts/android-cheatsheet).
+> The commands are in the [Android Cheat Sheet](/posts/android-cheatsheet).

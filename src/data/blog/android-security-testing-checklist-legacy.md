@@ -109,7 +109,7 @@ done
 nm -D apktool_out/lib/arm64-v8a/libsigner.so   # dynamic symbols (imports/exports): always present, not a finding
 ```
 
-> **Gotcha:** `nm -D` always lists the dynamic symbol table, because the linker needs it. Entries like `U __android_log_print` are required imports, not leftover debug symbols. Do not read them as "not stripped." Use `file` and plain `nm` for the verdict.
+> **Watch out:** `nm -D` always lists the dynamic symbol table, because the linker needs it. Entries like `U __android_log_print` are required imports, not leftover debug symbols. Do not read them as "not stripped." Use `file` and plain `nm` for the verdict.
 
 Verdict: `PASS` if every `.so` across all ABIs is stripped with no `.debug` sections. `FAIL` if any library is not stripped.
 
@@ -198,7 +198,7 @@ if (config.isSslPinningEnabled()) {
 
 So tracing the flag to its declared default (and any code that sets it) is what tells you which path ships.
 
-> **Gotcha:** Run code findings against the production build, not a tester build. If you are given a second APK with pinning removed so you can intercept traffic, its disabled pinning is an intended test modification, not a vulnerability. Confirm the relevant flag (for example a pinning-enabled boolean) in the production APK before rating anything. Reading the wrong build can turn an intended test change into a false critical finding.
+> **Watch out:** Run code findings against the production build, not a tester build. If you are given a second APK with pinning removed so you can intercept traffic, its disabled pinning is an intended test modification, not a vulnerability. Confirm the relevant flag (for example a pinning-enabled boolean) in the production APK before rating anything. Reading the wrong build can turn an intended test change into a false critical finding.
 
 Verdict: `PASS` if the production build uses TLS consistently and validates certificates (system trust, ideally with pinning), with no effective cleartext or user-CA trust. `FAIL` if validation is disabled on the production path, cleartext is permitted and used, or user CAs are trusted.
 
@@ -306,7 +306,7 @@ What to look for:
 - **File and content handlers.** `setAllowFileAccess(true)`, `setAllowFileAccessFromFileURLs(true)`, `setAllowUniversalAccessFromFileURLs(true)`, and `setAllowContentAccess(true)` widen the attack surface to `file://` and `content://`. On API 30 and above `setAllowFileAccess` defaults to `false`, so the absence of these calls means the secure default applies. Setting them to `true` is the finding.
 - **Mixed content.** `setMixedContentMode(MIXED_CONTENT_COMPATIBILITY_MODE)` (integer `2`) permits some HTTP subresources on an HTTPS page. `MIXED_CONTENT_NEVER_ALLOW` (integer `0`) is the hardened choice. Remember the constants decompile as integers.
 
-> **Gotcha:** A WebView is not the only way an app fetches web content. A screen may instead download a file with its own HTTP client and render it with a native component (for example a PDF renderer). That path has nothing to do with WebView settings, so review it separately, both for transport security (see the network section) and for the parser attack surface of whatever renders the bytes.
+> **Watch out:** A WebView is not the only way an app fetches web content. A screen may instead download a file with its own HTTP client and render it with a native component (for example a PDF renderer). That path has nothing to do with WebView settings, so review it separately, both for transport security (see the network section) and for the parser attack surface of whatever renders the bytes.
 
 Verdict: `PASS` if JavaScript is only enabled where required, loaded URLs are trusted, and no dangerous file or content handlers are enabled (secure defaults are fine). `FAIL` if dangerous handlers are enabled, or JavaScript is enabled alongside a bridge or attacker-controlled content.
 
@@ -318,7 +318,7 @@ When the app is backgrounded, Android captures the screen for the recents thumbn
 grep -rn 'FLAG_SECURE\|setFlags(8192\|addFlags(8192' jadx_out/sources/com/<app-package>/
 ```
 
-> **Gotcha:** Decompiled code shows framework constants as their integer value, not the name. `FLAG_SECURE` is `8192`, so `setFlags(8192, 8192)` is exactly `FLAG_SECURE`. Grepping only for the string `FLAG_SECURE` will miss it and produce a false "no protection" finding. Always grep the integer too.
+> **Watch out:** Decompiled code shows framework constants as their integer value, not the name. `FLAG_SECURE` is `8192`, so `setFlags(8192, 8192)` is exactly `FLAG_SECURE`. Grepping only for the string `FLAG_SECURE` will miss it and produce a false "no protection" finding. Always grep the integer too.
 
 What to look for:
 
@@ -369,7 +369,7 @@ grep -rhoE 'Cipher\.getInstance\("[^"]*"\)|MessageDigest\.getInstance\("[^"]*"\)
 grep -rnE '"DES"|"DESede"|"RC4"|"MD5"|"SHA-?1"|/ECB/' jadx_out/sources/com/<app-package>/
 ```
 
-> **Gotcha:** Scope the grep to the app's own package. A repo-wide search lights up with `MD5`, `DES`, `ECB`, and `SHA-1` from bundled libraries (crypto providers, networking, analytics) that are not the app's code. Those are not first-party findings, filter them out before judging.
+> **Watch out:** Scope the grep to the app's own package. A repo-wide search lights up with `MD5`, `DES`, `ECB`, and `SHA-1` from bundled libraries (crypto providers, networking, analytics) that are not the app's code. Those are not first-party findings, filter them out before judging.
 
 What to look for:
 
@@ -428,7 +428,7 @@ What to look for:
 - **Response:** find the call site and confirm it does something (terminate, block), not just compute a boolean. A one-time check at app start is weaker than continuous checks at sensitive actions.
 - **Obfuscation of the defenses:** member renaming alone is not enough. Watch for these weakeners:
 
-> **Gotcha:** Minification can run yet leave the defenses readable. Kotlin `@Metadata` annotations retain original names, and any class annotated `@Keep` is deliberately excluded from obfuscation. Security detector classes are often `@Keep`-annotated "to be safe," which ironically leaves them fully readable. Renamed members (a method like `a()`, a field like `b3`) do not mean the defense is protected.
+> **Watch out:** Minification can run yet leave the defenses readable. Kotlin `@Metadata` annotations retain original names, and any class annotated `@Keep` is deliberately excluded from obfuscation. Security detector classes are often `@Keep`-annotated "to be safe," which ironically leaves them fully readable. Renamed members (a method like `a()`, a field like `b3`) do not mean the defense is protected.
 
 - **Packing:** if the DEX decompiles to readable logic, it is not packed, regardless of renamed identifiers. Packing or code encryption is what stops trivial static analysis, member renaming is not.
 
@@ -461,7 +461,7 @@ What to look for:
 - **Insecure configuration inside a dependency.** The library version is only half the story. Read how it is used. An SSH or SFTP client that sets `StrictHostKeyChecking` to `no` accepts any server key, which is the SSH equivalent of an empty trust manager. That is a finding regardless of the library version.
 - **Pre-release dependencies in production.** Alpha or beta versions of security-sensitive libraries (for example a crypto or biometric library) in a release build are a maturity concern worth noting even when no CVE applies.
 
-> **Gotcha:** When the vulnerable library is inside a closed third-party SDK, the app team often cannot fix it themselves. The library and any insecure configuration are compiled into the SDK, and it may not be on a public repository to override. In that case the realistic remediation is a vendor request for a patched SDK, plus compensating controls such as disabling the feature that reaches the vulnerable path. Say this in the report rather than recommending a simple version bump that is not possible.
+> **Watch out:** When the vulnerable library is inside a closed third-party SDK, the app team often cannot fix it themselves. The library and any insecure configuration are compiled into the SDK, and it may not be on a public repository to override. In that case the realistic remediation is a vendor request for a patched SDK, plus compensating controls such as disabling the feature that reaches the vulnerable path. Say this in the report rather than recommending a simple version bump that is not possible.
 
 > **Reporting note:** Identification and CVE-checking are scored as separate checklist rows but usually share one root cause and one remediation, so a single finding can cover both. Keep the rating proportionate to reachability: a vulnerable component on a path that is hard to reach, or that fails for an unrelated reason, is lower risk than one on a primary flow.
 
@@ -530,7 +530,7 @@ What to look for:
 - **Necessity.** The checklist allows sharing that is a necessary part of the architecture. Marketing analytics is a business choice, not core architecture, so the bar is whether the specific fields are needed for that purpose, not whether analytics in general is allowed.
 - **Direct PII versus pseudonymous identifiers.** Confirm whether names, phone numbers, emails, government ids, account numbers, or credentials are sent. Their presence raises severity sharply.
 
-> **Gotcha:** Pseudonymous is not the same as non-personal. A stable device or customer id tied to in-app events is still personal data under regimes like GDPR and the Saudi PDPL, because it can be linked back to an individual and joined to an advertising id the SDK collects on its own. So the absence of names and emails lowers the severity, it does not automatically make the sharing a non-issue, especially for a regulated app such as a bank.
+> **Watch out:** Pseudonymous is not the same as non-personal. A stable device or customer id tied to in-app events is still personal data under regimes like GDPR and the Saudi PDPL, because it can be linked back to an individual and joined to an advertising id the SDK collects on its own. So the absence of names and emails lowers the severity, it does not automatically make the sharing a non-issue, especially for a regulated app such as a bank.
 
 > **Reporting note:** Rate this by what is actually sent. Direct PII or credentials to a third party is a real finding. Pseudonymous identifiers and amounts to a standard analytics SDK are usually an Informational data-minimization observation: worth recording, with a recommendation to minimize fields and confirm consent and a data-processing agreement, but not a security vulnerability on its own.
 
@@ -558,7 +558,7 @@ What to look for:
 - **IPC and custom URLs.** For exported components and deep links, the key question is not just whether the value is parsed, but whether a decision is made by trusting it. A deep link that only triggers a flow whose result is decided by a server call is safe; one whose parameters are trusted directly is not. See the exported-components and deep-links section.
 - **Injection sinks.** Raw SQL built by string concatenation, ORM queries built from concatenated strings, file paths built from input (path traversal), and WebView bridges or dynamic HTML are the sinks that turn missing validation into a vulnerability. Their absence is most of the verdict.
 
-> **Gotcha:** A long list of `validate...` methods is reassuring but is not the whole check. The decisive question for severity is whether any unsafe sink exists. An app with light UI validation but no injection sink is far safer than one with thorough UI validation that still concatenates a value into a raw SQL query. Look for the sink first.
+> **Watch out:** A long list of `validate...` methods is reassuring but is not the whole check. The decisive question for severity is whether any unsafe sink exists. An app with light UI validation but no injection sink is far safer than one with thorough UI validation that still concatenates a value into a raw SQL query. Look for the sink first.
 
 Verdict: `PASS` if inputs are validated at the UI, untrusted IPC and deep-link values are not trusted for security decisions, and there are no injection sinks (raw SQL, unsafe ORM queries, path traversal, WebView bridges or dynamic HTML). `FAIL` if any unsafe sink consumes unvalidated external input.
 
@@ -582,7 +582,7 @@ What to look for:
 - **IV and nonce handling.** For GCM the nonce must be unique per encryption under a key. A fixed or all-zero IV (`new IvParameterSpec(new byte[16])`, or a constant byte array) is a severe misuse: it leaks plaintext relationships and can expose the GCM authentication subkey. GCM also expects a 12-byte nonce via `GCMParameterSpec`, not a 16-byte `IvParameterSpec`. For CBC, a fixed IV is also wrong, though less catastrophic than for GCM.
 - **Plaintext stores.** Preferences DataStore and plain `SharedPreferences` are not encrypted. Tokens, PII, and credentials placed there sit in cleartext inside the sandbox. Inside the sandbox is better than external storage, but it is still not credential storage.
 
-> **Gotcha:** An app can do the right thing in one place and the wrong thing in another. It is common to find biometric credentials correctly stored in `EncryptedSharedPreferences` with an Android Keystore master key, while the main token and PII storage is a custom layer with a hardcoded keystore password and a static IV. Review every storage path, not just the one that looks well built.
+> **Watch out:** An app can do the right thing in one place and the wrong thing in another. It is common to find biometric credentials correctly stored in `EncryptedSharedPreferences` with an Android Keystore master key, while the main token and PII storage is a custom layer with a hardcoded keystore password and a static IV. Review every storage path, not just the one that looks well built.
 
 > **Reporting note:** Rate by reachability. Backups disabled and a sandbox boundary mean an attacker usually needs root, a forensic image, or escalation to reach these files, which keeps even a broken scheme at Medium rather than High in most cases. The cryptographic defects (hardcoded key material, nonce reuse) are still worth calling out precisely, because they remove the protection the design was supposed to provide.
 
@@ -605,7 +605,7 @@ What to look for:
 - **Keystore passwords and key material.** A hardcoded keystore password or a `SecretKeySpec` built from a literal value undermines whatever it protects. These belong with the data-at-rest finding.
 - **Third-party SDK tokens.** Some SDK tokens (for example a marketing-attribution app token) are designed to live in the client and are low sensitivity. Note them, but rate them accordingly.
 
-> **Gotcha:** Some keys are supposed to be in the app. A Maps SDK key cannot be hidden, it ships in the APK by design. So the finding for that kind of key is not that it is present, it is whether it is restricted. The fix is a restriction, not removal.
+> **Watch out:** Some keys are supposed to be in the app. A Maps SDK key cannot be hidden, it ships in the APK by design. So the finding for that kind of key is not that it is present, it is whether it is restricted. The fix is a restriction, not removal.
 
 For client API keys that must ship (such as Maps), the real check is restriction:
 
@@ -632,7 +632,7 @@ What to look for:
 - **Static or zero IV.** A fixed IV makes encryption deterministic: the same plaintext always produces the same ciphertext, leaking equality. For CBC this removes semantic security; for GCM it is catastrophic (nonce reuse). Generate a fresh random IV/nonce per operation and store it with the ciphertext.
 - **One key for many purposes.** Distinct uses (storing data at rest, encrypting a transmitted value, signing) should use distinct keys. A single key spread across unrelated purposes widens the blast radius if it leaks. Note that reusing one key across instances of the same purpose is far less of a concern than reusing it across different purposes.
 
-> **Gotcha:** Separate the failures onto the rows they belong to. A standard JCA cipher (AES via the platform provider) is a proven implementation, so the proven-primitives row can still pass even when the same code hardcodes the key and uses a zero IV. Those are key-management and parameter failures, scored on their own rows, not implementation failures. Naming each precisely is more useful in a report than calling the whole thing broken crypto.
+> **Watch out:** Separate the failures onto the rows they belong to. A standard JCA cipher (AES via the platform provider) is a proven implementation, so the proven-primitives row can still pass even when the same code hardcodes the key and uses a zero IV. Those are key-management and parameter failures, scored on their own rows, not implementation failures. Naming each precisely is more useful in a report than calling the whole thing broken crypto.
 
 Verdict: `PASS` if keys are generated and stored properly, IVs and nonces are random and unique, and keys are scoped per purpose. `FAIL` if a key is hardcoded, an IV or nonce is static, or a single key is reused across unrelated purposes.
 
@@ -650,7 +650,7 @@ What to look for:
 - **Where third-party hits come from.** Filter to first-party code. Biometric libraries and some SDKs reference these APIs internally; their presence in a bundled library does not mean the app enforces a policy. Confirm the call is in the application's own code and that it gates something.
 - **The response.** If a check exists, see what it does: warn the user, require a lock before sensitive flows, or degrade. A check that computes a boolean and ignores it is not a control.
 
-> **Gotcha:** These two checklist rows live in different categories (one under access policy, one under resilience), but in practice they share a single root cause and a single fix: the app does not look at `isDeviceSecure()`. Report them together rather than as two separate findings.
+> **Watch out:** These two checklist rows live in different categories (one under access policy, one under resilience), but in practice they share a single root cause and a single fix: the app does not look at `isDeviceSecure()`. Report them together rather than as two separate findings.
 
 Confirm dynamically: remove the screen lock from a test device, launch the app, and see whether anything warns or blocks. If it runs normally with no lock, the control is absent.
 
@@ -673,7 +673,7 @@ What to look for:
 - **The allowed authenticators.** A Keystore key with `setUserAuthenticationRequired(true)` can only be unlocked by strong biometrics (Class 3). If the prompt allows weak biometrics or device credential as well, that already rules out binding to such a key. Decode the integer flags, not just the named constants.
 - **Whether the credential store itself is user-bound.** Even a correctly stored secret (for example in `EncryptedSharedPreferences`) is not gated on biometry unless the master key is built with user-authentication binding. A master key without it can be used any time the app runs, so the prompt protects nothing the app could not already read.
 
-> **Gotcha:** The presence of `EncryptedSharedPreferences` or a Keystore-backed master key is not by itself proof of binding. Storing the credential at rest with a hardware-backed key is a different control from requiring the biometric to release it. Check both: the prompt must carry a `CryptoObject`, and the key that protects the secret must require user authentication.
+> **Watch out:** The presence of `EncryptedSharedPreferences` or a Keystore-backed master key is not by itself proof of binding. Storing the credential at rest with a hardware-backed key is a different control from requiring the biometric to release it. Check both: the prompt must carry a `CryptoObject`, and the key that protects the secret must require user authentication.
 
 Confirm dynamically on a rooted or instrumented device: hook the success callback and invoke it without presenting a biometric. If the session is established, the auth was event-bound. With a keystore-bound design the forced callback yields no usable key and the operation fails.
 
@@ -697,7 +697,7 @@ What to look for:
 - **First-party log calls with user context.** Search for direct log calls that interpolate user or flow data: deep-link URIs, payment return URLs, status payloads, entered form fields. These are usually unconditional, so they run in release regardless of any interceptor flag.
 - **What is gated off versus on.** Be precise. Some verbose logging may be behind a flag that really is false in release (for example a separate test or staging toggle). Report only what is actually active, and note the gated-off ones as not exploitable, so the finding stays defensible.
 
-> **Gotcha:** Other apps cannot read your logs on modern Android by default, which tempts a Low rating. But the log is still reachable over the debug bridge, in bug reports, by privileged logging components, and on rooted or forensic devices, and an on-device traffic inspector persists the data outright. Credentials and tokens in those places are a real leak, not a theoretical one.
+> **Watch out:** Other apps cannot read your logs on modern Android by default, which tempts a Low rating. But the log is still reachable over the debug bridge, in bug reports, by privileged logging components, and on rooted or forensic devices, and an on-device traffic inspector persists the data outright. Credentials and tokens in those places are a real leak, not a theoretical one.
 
 Confirm dynamically: run the app through login and a sensitive action, then read the device log and any inspector UI and look for credentials, tokens, and PII in cleartext. If they appear, the control fails.
 

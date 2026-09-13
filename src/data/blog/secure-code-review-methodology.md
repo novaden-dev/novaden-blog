@@ -201,7 +201,7 @@ Confirm each of these before declaring the environment ready:
 - The analyser host is reachable from the review machine.
 - The project **builds** and dependencies **restore**, confirmed on their own, before the analyser is involved at all.
 
-> **Gotcha:** get one complete scan cycle to succeed on the smallest component in scope before pointing the analyser at the real codebase. A failure at the collection step after a twenty-minute build tells you very little about which of the twenty things you changed was wrong.
+> **Watch out:** get one complete scan cycle to succeed on the smallest component in scope before pointing the analyser at the real codebase. A failure at the collection step after a twenty-minute build tells you very little about which of the twenty things you changed was wrong.
 
 Two failure modes worth naming because they produce a scan that looks fine and is not. **Incremental builds** skip projects, skipped projects never invoke the analyzer, and coverage silently drops. Force a full rebuild for an analysis run. **Unresolved dependencies** in typed languages degrade type resolution, so type-aware rules quietly produce less. A suspiciously clean result on a large codebase is usually one of these two, not good code.
 
@@ -398,4 +398,4 @@ Before provisioning, in order:
 
 The pattern underneath all of it: **every question you answer before provisioning saves a day, and every question you discover afterwards costs one.**
 
-> **Quick reference:** per-ecosystem build manifests, offline restore commands, and sink patterns are in [Secure Code Review by Stack](/posts/secure-code-review-by-stack).
+> The per-ecosystem manifests and sink patterns are in [Secure Code Review by Stack](/posts/secure-code-review-by-stack).

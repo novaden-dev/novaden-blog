@@ -477,7 +477,7 @@ Once that pair works you have an oracle, and you can extract data one character 
 | Oracle | `' \|\| dbms_pipe.receive_message(('a'),5) FROM dual--` | `banner FROM v$version` | `--` | `a\|\|b` |
 | SQLite | `' AND 1=randomblob(500000000)--` | `sqlite_version()` | `--` | `a\|\|b` |
 
-> **Gotcha:** the `--` comment needs a trailing space to be valid, so always write `-- -`. And Oracle requires a `FROM` on every query, so use `FROM dual` when you have no table to name.
+> **Watch out:** the `--` comment needs a trailing space to be valid, so always write `-- -`. And Oracle requires a `FROM` on every query, so use `FROM dual` when you have no table to name.
 
 **UNION**, for when the query's result set is rendered on the page:
 
@@ -899,7 +899,7 @@ x0a    DES-CBC3-SHA (3DES)           3DES    112   SWEET32
 - **Fail**: any cipher name containing `CBC`, plus RC4, DES, 3DES, export, NULL and anonymous ciphers, and anything under 128 bits.
 - **Evidence**: the cipher list with bit strengths.
 
-> **Gotcha:** 3DES is nominally 168-bit but effectively 112-bit and broken by SWEET32, so flag it even though the number looks acceptable.
+> **Watch out:** 3DES is nominally 168-bit but effectively 112-bit and broken by SWEET32, so flag it even though the number looks acceptable.
 
 ### TLS-03: Named cipher vulnerabilities
 
