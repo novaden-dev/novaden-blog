@@ -4,10 +4,10 @@ pubDatetime: 2026-05-27T00:00:00Z
 title: Docker Foundations
 slug: docker-foundations
 featured: false
-draft: true
+draft: false
 tags: ["containers"]
 category: notes
-description: The mental model behind Docker. What containers actually are, how they differ from VMs, image layers, the Dockerfile, networking, volumes, and registries.
+description: What a container is and isn't, why images are layered, and how the Dockerfile, networking, volumes, and registries fit together.
 ---
 
 ## Introduction
@@ -75,7 +75,7 @@ COPY . .
 CMD ["python", "main.py"]
 ```
 
-### A Scenario
+### Why Order Matters
 
 Take the Dockerfile above. The first build runs all six layers end to end. The `pip install` step takes ~45 seconds because it's downloading and compiling packages. Total: ~50 seconds.
 
@@ -119,7 +119,7 @@ A Dockerfile is a declarative recipe for building an image. The instructions you
 | `CMD` | Default command, easy to override at `docker run` time. |
 | `ENTRYPOINT` | Default command, harder to override. The container effectively becomes that program. |
 
-> **Gotcha:** `EXPOSE` is documentation only. It does not publish a port to the host. That's what `-p 8080:80` does at `docker run` time.
+> **Watch out:** `EXPOSE` is documentation only. It does not publish a port to the host. That's what `-p 8080:80` does at `docker run` time.
 
 ### Multi-stage Builds
 
@@ -204,9 +204,9 @@ volumes:
 - Picked a **project name** (defaults to the directory name) and prefixed everything with it: containers, networks, and volumes all become `myapp_web`, `myapp_db`, `myapp_pgdata`. That keeps two projects on the same host from colliding.
 - Pulled or built images as needed, then started services in dependency order.
 
-The mental model is: the YAML file is the source of truth. Anything you'd otherwise type into `docker run`, `docker network create`, or `docker volume create` belongs in `compose.yml`. The commands in the cheat sheet (`up`, `down`, `logs`, `exec`) are all variations on "do this to the stack defined in the file."
+The rule is: the YAML file is the source of truth. Anything you'd otherwise type into `docker run`, `docker network create`, or `docker volume create` belongs in `compose.yml`. The commands in the cheat sheet (`up`, `down`, `logs`, `exec`) are all variations on "do this to the stack defined in the file."
 
-> **Gotcha:** Compose is a **single-host** tool. It runs your stack on one machine. Scaling across many machines is a different problem solved by Kubernetes or Swarm, not Compose.
+> **Watch out:** Compose is a **single-host** tool. It runs your stack on one machine. Scaling across many machines is a different problem solved by Kubernetes or Swarm, not Compose.
 
 ## Registries
 
@@ -225,4 +225,4 @@ Classic Docker runs a privileged daemon (`dockerd`) as root. The CLI talks to it
 
 **Rootless mode** runs the daemon as your own user, using user-namespace remapping. You trade some functionality (binding to ports below 1024 needs extra setup, performance is slightly lower) for a much smaller blast radius if a container is compromised.
 
-> **Quick reference:** the actual commands for building, running, inspecting, and cleaning up containers live in the [Docker Cheat Sheet](/posts/docker-cheatsheet).
+> The commands are in the [Docker Cheat Sheet](/posts/docker-cheatsheet).

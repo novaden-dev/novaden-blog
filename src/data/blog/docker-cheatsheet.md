@@ -4,13 +4,13 @@ pubDatetime: 2026-05-27T00:00:00Z
 title: Docker Cheat Sheet
 slug: docker-cheatsheet
 featured: false
-draft: true
+draft: false
 tags: ["containers", "cheatsheet"]
 category: notes
-description: A growing quick-reference of the Docker commands I actually reach for, from running containers and building images to networks, volumes, Compose, and cleanup.
+description: "The Docker commands I keep looking up: running containers, building images, networks, volumes, Compose, and cleanup."
 ---
 
-A living quick-reference for the Docker commands I actually use. Each section pairs commands with the moment you'd reach for them. For the model behind any of this, see [Docker Foundations](/posts/docker-foundations).
+If you want the why instead of the what, that's [Docker Foundations](/posts/docker-foundations).
 
 ## Getting Help
 
@@ -110,7 +110,7 @@ docker exec web ls /etc/nginx
 docker exec -u root -it web bash
 ```
 
-> **Gotcha:** `docker exec` requires the container to be running. To poke inside a stopped one, start it first or `docker run` a fresh shell against the same image.
+> **Watch out:** `docker exec` requires the container to be running. To poke inside a stopped one, start it first or `docker run` a fresh shell against the same image.
 
 ## Lifecycle
 
