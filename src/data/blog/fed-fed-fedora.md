@@ -3,7 +3,7 @@ author: Kayra
 pubDatetime: 2025-11-01T00:00:00Z
 title: Fed Fed Fedora
 slug: fed-fed-fedora
-featured: false
+featured: true
 draft: false
 tags: ["linux"]
 category: journal

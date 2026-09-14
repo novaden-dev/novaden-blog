@@ -3,7 +3,7 @@ author: Kayra
 pubDatetime: 2024-12-27T00:00:00Z
 title: "Homelab v0.1 – Why I Bought a Mini-PC Instead of Therapy"
 slug: homelab-v0-1-why-i-bought-a-mini-pc-instead-of-therapy
-featured: false
+featured: true
 draft: false
 tags: ["selfhosting"]
 category: journal
