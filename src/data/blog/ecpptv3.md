@@ -6,7 +6,7 @@ slug: ecpptv3
 category: cert-review
 tags: ["ecppt", "ine"]
 description: "I skipped the INE material, prepared with the HTB CPTS path instead, and finished the 24-hour exam half-conscious. Notes on how it went and where it stands next to the OSCP and CPTS."
-draft: true
+draft: false
 featured: false
 ---
 

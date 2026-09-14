@@ -102,6 +102,15 @@ export const TAGS: Record<string, TagDefinition> = {
   },
   "mass-assignment": { domain: "technical", parent: "web" },
   webdav: { domain: "technical", parent: "web" },
+
+  // Certifications and their providers. The reviews are how someone reads a
+  // certificate, so the certificate itself is the subject; a provider goes on
+  // the post when the review is substantially about them.
+  oscp: { domain: "career" },
+  ecppt: { domain: "career" },
+  ewptx: { domain: "career" },
+  ine: { domain: "career" },
+  offsec: { domain: "career" },
 };
 
 const names = new Set(Object.keys(TAGS));

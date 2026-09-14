@@ -6,7 +6,7 @@ slug: ewptxv3
 category: cert-review
 tags: ["ewptx", "ine"]
 description: "I took the eWPTXv3 the day after passing the eCPPT, still tired, and finished it in 9 hours. It wore the eXtreme label but felt like a victory lap."
-draft: true
+draft: false
 featured: false
 ---
 

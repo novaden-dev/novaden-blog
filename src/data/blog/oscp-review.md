@@ -4,9 +4,9 @@ pubDatetime: 2026-09-14T12:00:00+03:00
 title: "OSCP – The Only Certificate I Knew as a Kid"
 slug: oscp-review
 category: cert-review
-tags: ["oscp"]
+tags: ["oscp", "offsec"]
 description: "How I prepared for the OSCP with 1.5 months of Proving Grounds boxes and no course content, how the exam day went, and whether it's worth OffSec's price."
-draft: true
+draft: false
 featured: false
 ---
 
