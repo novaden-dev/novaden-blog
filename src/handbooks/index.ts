@@ -1,4 +1,5 @@
 import type { HandbookConfig } from "./types";
+import { mobile } from "./mobile";
 import { oscp } from "./oscp";
 
 // The handbook registry: the single place that knows which handbooks exist.
@@ -9,6 +10,7 @@ import { oscp } from "./oscp";
 //   export const HANDBOOKS = { oscp, devops };
 export const HANDBOOKS: Record<string, HandbookConfig> = {
   oscp,
+  mobile,
 };
 
 export type { HandbookConfig } from "./types";

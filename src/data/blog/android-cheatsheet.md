@@ -12,7 +12,7 @@ featured: false
 
 > **Note:** These are working notes and still in progress.
 
-If you want the why (app components, data storage, attack surface, RE methodology), that's [Android App Fundamentals](/posts/android-fundamentals).
+If you want the why (app components, data storage, attack surface, RE methodology), that's [Android App Fundamentals (Legacy)](/posts/android-fundamentals-legacy).
 
 ## Device Setup
 

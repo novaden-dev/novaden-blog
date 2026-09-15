@@ -71,6 +71,9 @@ export const TAGS: Record<string, TagDefinition> = {
   encoding: { domain: "technical", aliases: ["encodings", "base64"] },
   databases: { domain: "technical", aliases: ["database"] },
 
+  // Mobile.
+  android: { domain: "technical" },
+
   // Services and protocols worth browsing on their own.
   smb: { domain: "technical" },
   ftp: { domain: "technical" },
