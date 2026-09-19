@@ -72,6 +72,7 @@ export const TAGS: Record<string, TagDefinition> = {
   databases: { domain: "technical", aliases: ["database"] },
 
   // Mobile.
+  mobile: { domain: "technical" },
   android: { domain: "technical" },
 
   // Services and protocols worth browsing on their own.

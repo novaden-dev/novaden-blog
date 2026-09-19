@@ -14,6 +14,8 @@ Never announce that information is coming or that something matters. State the f
 - Wrong: `... and the difference matters:`
 - Wrong: `The catch, and it is the whole reason this step is fiddly: ...`
 - Wrong: `X is the usual trap. ...`
+- Wrong: `Here's the thing: ...`, `The reality is ...`, `At the end of the day ...` (filler openers; delete and start at the fact)
+- Wrong: `Additionally, ...` / `Moreover, ...` / `Furthermore, ...` as paragraph openers (the AI connective rhythm)
 - Wrong: `The mistake is invisible until ...`
 - Wrong: `That last row is the one worth internalising.`
 - Right: just delete the frame and let the facts stand, or connect plainly (`Pinning bypass does not help if the routing is wrong.`)
@@ -23,6 +25,8 @@ Never announce that information is coming or that something matters. State the f
 - Wrong: `This is the rig.`
 - Wrong: `You cannot satisfy a pin. You defeat it, by one of three routes.`
 - Wrong: `Each one fails in its own way.`
+- Wrong: `Treat every finding as a lead to confirm, not a conclusion.` (the `X, not Y` / `X, never Y` / `It's not just X` / `not only X, but Y` antithesis; state the action or fact plainly)
+- Wrong: `faster, cheaper, and more reliable` used as rhythm rather than content (the rule-of-three pad; keep lists that carry real content)
 - Wrong: `X is the channel between A and B, and ...` (intro sentence that sets a scene before saying anything)
 
 ### 3. No "the one ..." constructions
@@ -37,6 +41,8 @@ Never announce that information is coming or that something matters. State the f
 - Wrong: `the single most useful tool`, `The most useful single command in the list`
 - Wrong: `Cleanest option`, `This clears the large majority of apps`
 - Wrong: vague qualifiers that stand in for a definition: `lenient apps`, `interesting behaviour`, `important things`
+- Wrong: importance adjectives doing no work: `crucial`, `pivotal`, `vital`, `essential`, `significant`
+- Wrong: evaluative adjectives standing in for the actual cost: `tedious`, `painless`, `invaluable` (say what makes it slow or error-prone instead)
 - Right: `This works for most apps.` / name the concrete benefit instead. Say which apps, and why.
 
 ### 5. No personification or cute idioms

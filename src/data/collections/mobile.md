@@ -5,6 +5,12 @@ kind: handbook
 status: ongoing
 draft: false
 entries:
+  - id: mobile-and-009
+    post: mas-project
+    section: "Foundations"
+  - id: mobile-and-007
+    post: mobile-static-and-dynamic-analysis
+    section: "Foundations"
   - id: mobile-and-001
     post: android-foundations
     section: "Android/Foundations"
@@ -14,10 +20,13 @@ entries:
   - id: mobile-and-003
     post: android-adb
     section: "Android/Tools"
+  - id: mobile-and-006
+    post: mobsf
+    section: "Tools"
   - id: mobile-and-004
-    post: android-frida
-    section: "Android/Tools"
+    post: frida
+    section: "Tools"
   - id: mobile-and-005
-    post: android-intercepting-traffic
-    section: "Android/Techniques"
+    post: intercepting-mobile-traffic
+    section: "Techniques"
 ---

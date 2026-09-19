@@ -1,16 +1,18 @@
 ---
 title: "Dynamic Instrumentation with Frida"
-slug: android-frida
+slug: frida
 category: notes
 format: guide
 handbook: mobile
 tags: ["android"]
 draft: false
 pubDatetime: 2026-09-15T00:00:00+03:00
-description: "Frida for Android: how injection works, matching frida-server to the device, spawning and attaching, writing hooks to read and rewrite an app's behaviour at runtime, Objection for the common jobs, and Gadget when the device is not rooted."
+description: "Frida for mobile app testing: how injection works, matching frida-server to the device, spawning and attaching, writing hooks to read and rewrite an app's behaviour at runtime, Objection for the common jobs, and Gadget when the device is not rooted."
 ---
 
 Static analysis tells you what an app could do. Frida tells you what it does, while it runs. It injects a JavaScript engine into a running process, so you can read arguments and return values, replace method implementations, dump decrypted buffers, and call the app's own functions, all without touching the APK. Most of the other dynamic tools (Objection, half the SSL-unpinning scripts) are built on it.
+
+Frida runs on Android and iOS alike. The procedures below are the Android side: `frida-server` pushed over ADB, and Java/ART hooks through `Java.use`. The iOS equivalents (Frida over a jailbroken device, `ObjC.classes` hooks) differ in the specifics but not the shape, and get their own section here once the iOS material lands.
 
 ## How It Works
 
@@ -186,7 +188,7 @@ android keystore list                     # dump the app's KeyStore entries
 memory dump all app_memory.bin            # dump process memory to a file
 ```
 
-Use Objection first for pinning and root bypass. Drop to a hand-written Frida script only when its generic hooks miss. That, along with getting the app's HTTPS into a proxy, is covered in [Intercepting Android Traffic with Burp Suite](/collections/mobile/android-intercepting-traffic).
+Use Objection first for pinning and root bypass. Drop to a hand-written Frida script only when its generic hooks miss. That, along with getting the app's HTTPS into a proxy, is covered in [Intercepting Traffic with Burp Suite](/collections/mobile/intercepting-mobile-traffic).
 
 ## When the Device Is Not Rooted: Gadget
 

@@ -3,7 +3,7 @@ author: Kayra
 pubDatetime: 2026-07-06T00:00:00Z
 title: "Mobile Security Testing Foundations"
 slug: "mobile-security-testing-foundations"
-description: "The orientation for mobile app security testing: how the OWASP MAS project fits together, static versus dynamic analysis, the L1/L2/R/P profiles, the two-binary approach, and why scanner output is a lead rather than a verdict."
+description: "The orientation for mobile app security testing: how the OWASP MAS project fits together, static versus dynamic analysis, the L1/L2/R/P profiles, the two-binary approach, and why scanner findings need an exploit path before you rate them."
 tags: ["mobile", "security"]
 category: notes
 draft: true
@@ -12,18 +12,18 @@ featured: false
 
 ## Introduction
 
-Mobile application testing runs in two passes that see different things. Static analysis reads the app without running it: you decompile the package and work through the code, manifest, and resources, by hand or with tooling. Dynamic analysis watches the app while it runs, on the device and against its backend, and catches what only shows up at runtime, like a token on the wire or a check that fails open. Neither pass replaces the other. Static analysis finds the hardcoded key and the exported component; dynamic analysis proves whether the pinning actually holds.
+Mobile application testing runs in two passes that cover different ground. Static analysis reads the app without running it: you decompile the package and work through the code, manifest, and resources, by hand or with tooling. Dynamic analysis observes the app while it runs, on the device and against its backend, and catches what only shows up at runtime, like a token on the wire or a check that fails open. Neither pass replaces the other. Static analysis finds the hardcoded key and the exported component; dynamic analysis proves whether the pinning actually holds.
 
 ## The OWASP MAS Project
 
-The Mobile Application Security (MAS) project is not one document. It is four deliverables that reference each other, and most of the confusion around it comes from not knowing which one you are supposed to be reading.
+The Mobile Application Security (MAS) project is four deliverables that reference each other, and most of the confusion around it comes from not knowing which one you are supposed to be reading.
 
 - **MASVS** (Verification Standard): the requirements. Eight control groups, around twenty controls, each a single sentence of "the app must do X." This is short and high level. It is what you anchor an assessment to.
-- **MASWE** (Weakness Enumeration): a catalog of concrete weaknesses, in the same spirit as CWE. It is the bridge between a vague MASVS requirement and a specific test.
+- **MASWE** (Weakness Enumeration): a catalog of weaknesses, in the same spirit as CWE. It connects a MASVS requirement to a specific test.
 - **MASTG** (Testing Guide): the long one. It holds the actual procedures, split into Tests, Techniques, Demos, Tools, and Apps. You navigate into it from a control, you do not read it front to back.
 - **MAS Checklist**: a tracking sheet that maps every MASVS control to its MASTG tests, used to record coverage during an engagement.
 
-The path to go deep on anything is the same every time. Start at the **MASVS control** (the requirement), follow it to its **MASWE weaknesses** (what can go wrong), then follow those to the **MASTG tests** (how to check). Reading MASTG on its own, front to back, does not work; you always enter it from a control.
+You go deep the same way every time: start at the **MASVS control** (the requirement), follow it to its **MASWE weaknesses** (what can go wrong), then follow those to the **MASTG tests** (how to check).
 
 ### The eight MASVS control groups
 
@@ -40,44 +40,44 @@ Some controls settle entirely from a decompiled build, some are pure runtime beh
 
 ## Static vs Dynamic Analysis
 
-**Static analysis** ranges from a fast keyword search to reading a class line by line. A quick grep surfaces candidates: a broken cipher, a log call carrying a token, an exported activity. Reading the code in full is where business-logic flaws and design mistakes show up, the kind no scanner catches, because catching them means understanding what the code is meant to do. That reading is the work; the grep only points you at where to start.
+**Static analysis** ranges from a fast keyword search to reading a class line by line. A quick grep surfaces candidates: a broken cipher, a log call carrying a token, an exported activity. Reading the code in full is where business-logic flaws and design mistakes show up, the kind no scanner catches, because catching them means understanding what the code is meant to do. The grep only points you at where to start.
 
-**Dynamic analysis** examines the app while it runs. The goal is the same, find the weak spots, but you are looking at the running app and its live API traffic instead of decompiled source. It covers both the app on the device and the backend services it talks to, and it answers the questions static analysis cannot: whether a control actually holds when something tries to bypass it.
+**Dynamic analysis** examines the app while it runs. The goal is the same, find the weak spots, but you are looking at the running app and its live API traffic instead of decompiled source. It covers both the app on the device and the backend services it calls, and it answers the questions static analysis cannot: whether a control actually holds when something tries to bypass it.
 
-The two are complements. A control like certificate pinning shows its presence in the code (static) but only proves itself against a live intercept (dynamic). When a control can be partly settled statically, say what the static pass can and cannot conclude, and leave the rest for runtime.
+The two are complements. A control like certificate pinning shows up in the code during the static pass, but only a live intercept proves whether it holds. Where a control can only be partly settled statically, record what the static pass concluded and leave the rest for the dynamic pass.
 
 ## Working Through an App
 
-The question that stalls people is whether you read the whole app line by line. You do not, and you cannot. A full mobile app is too large to read end to end on any real timeline, and most of it is UI plumbing that protects nothing. An assessment is time-boxed and coverage-driven: you work a list of controls, not a codebase. The reading you do is targeted, and three things make it targeted.
+The question that stalls people is whether to read the whole app line by line. You do not: a full mobile app is too large to read end to end on any real timeline, and most of it is UI plumbing that protects nothing. An assessment is time-boxed and coverage-driven: you work a list of controls, not a codebase. The reading you do is targeted, and three things make it that way.
 
-**Start with a sensitive data map.** Before any control, decide what is actually worth protecting in this app: auth tokens, the session, PII, payment data, encryption keys. Everything in STORAGE, CRYPTO, and NETWORK is then a single question repeated: where does that data go, and how is it protected on the way. This is what turns a search from a random keyword into "show me every place a token can land."
+**Start with a sensitive data map.** Before any control, decide what is actually worth protecting in this app: auth tokens, the session, PII, payment data, encryption keys. Every control in STORAGE, CRYPTO, and NETWORK then reduces to the same question: where does that data go, and how is it protected on the way. This is what turns a search from a random keyword into "show me every place a token ends up."
 
 **Get breadth from grep, across every control.** Sweep the whole app for the known weakness patterns of each control: a broken cipher, a cleartext store, an exported component, a log call carrying a secret. This is fast and it is how you get coverage. It does not conclude anything; it produces a list of places to look.
 
-**Get depth from reading, only where the sweep lands.** Read the hits and the classes that move sensitive data line by line: the storage layer, the crypto layer, the auth flow, the networking client. That is where design mistakes and misuse show up, the kind no grep catches. You are reading tens of classes, not the whole tree.
+**Get depth from reading, only where the sweep turns up hits.** Read the hits and the classes that move sensitive data line by line: the storage layer, the crypto layer, the auth flow, the networking client. That is where design mistakes and misuse show up, the kind no grep catches. You are reading tens of classes, not the whole tree.
 
-One caveat sets the ceiling on what a client-side read can find. A mobile app is the frontend of a web app: the client renders and collects, but the real gating and business logic almost always live on the server. Reading the client gives you the map (the endpoints it calls, the parameters it sends, any checks it makes locally), and it finds client-side flaws like a gate enforced only on the device. It cannot cover server-side logic, because that code is not in the binary. You test that through the API, in the dynamic phase.
+A client-side read has one hard limit: the server. A mobile app is the frontend of a web app: the client renders and collects, but the real gating and business logic almost always live on the server. Reading the client gives you the map (the endpoints it calls, the parameters it sends, any checks it makes locally), and it finds client-side flaws like a gate enforced only on the device. It cannot cover server-side logic, because that code is not in the binary. You test that through the API, in the dynamic phase.
 
-So a one-day scope covering both an Android and an iOS build is not a line-by-line read of either. It is a baseline (L1) coverage pass: grep the controls, read the hits and the sensitive flows, and record coverage on the MAS Checklist. Prioritize by data sensitivity and by profile, go deeper on the L2 items that touch the crown jewels, and leave the rest as recorded coverage rather than silent gaps. Reading everything is not the goal; spending your fixed time where the sensitive data is, is.
+So a one-day scope covering both an Android and an iOS build is not a line-by-line read of either. It is a baseline (L1) coverage pass: grep the controls, read the hits and the sensitive flows, and record coverage on the MAS Checklist. Prioritize by data sensitivity and by profile, go deeper on the L2 items that touch the most sensitive data, and leave the rest as recorded coverage rather than silent gaps. The goal is not to read everything. It is to spend your fixed time where the sensitive data is.
 
 ## Where Dynamic Analysis Splits
 
-Dynamic analysis is really two jobs against two different targets, and treating it as one ("just run the app") under-tests the half where the serious bugs usually are.
+Dynamic analysis is two jobs against two different targets, and treating it as one ("just run the app") under-tests the API side, where the serious bugs usually are.
 
-- **On the device:** you test the app's own controls as it runs. Instrument it with Frida or Objection to bypass root or jailbreak detection and SSL pinning, read what is actually in local storage and memory at runtime, confirm whether local (biometric) auth genuinely gates anything, and tamper with the running app. This front is about the client's controls and its resilience, not its logic.
+- **On the device:** you test the app's own controls as it runs. Instrument it with Frida or Objection to bypass root or jailbreak detection and SSL pinning, read what is actually in local storage and memory at runtime, confirm whether local (biometric) auth genuinely gates anything, and tamper with the running app. The on-device work covers the client's controls and its resilience, not its business logic.
 - **Against the API:** once you are past pinning and can see the traffic, the app is mostly a request generator, and you test the server like any web API: broken object-level authorization (IDOR/BOLA), authentication flaws, injection, mass assignment, missing rate limits, and server-side business logic. The phone barely matters here; the weaknesses are server-side.
 
 On most engagements the high-impact findings come from the API side, because that is where authorization and business decisions are made. The on-device work often exists to get you to the API cleanly (defeat pinning and root detection) and to confirm the client-side controls that only exist on the device, like data at rest and local auth binding.
 
 ## Android and iOS: What Changes
 
-The MASVS controls are identical on both platforms, and so is the reasoning behind each check. What changes is the binary you open, how much of it you can read, and the exact API that counts as the protected path. Three differences matter before any control.
+The MASVS controls are identical on both platforms, and so is the reasoning behind each check. What changes is the binary you open, how much of it you can read, and the exact API that counts as the protected path.
 
-**The package.** An APK is a ZIP of Dalvik bytecode (`classes.dex`) plus resources. An IPA is a ZIP containing a compiled Mach-O application bundle (`.app`): native machine code, resources, and a property list. Both unzip, but what falls out is not the same kind of artifact.
+**The package.** An APK is a ZIP of Dalvik bytecode (`classes.dex`) plus resources. An IPA is a ZIP containing a compiled Mach-O application bundle (`.app`): native machine code, resources, and a property list. Both unzip, but what you get is not the same kind of artifact.
 
-**How much you can read.** This is the difference that shapes the whole iOS static pass. Android's DEX bytecode decompiles back to fairly readable Java, so jadx hands you something close to source. iOS ships compiled native code built from Swift or Objective-C, and that does not decompile to clean source. You disassemble it (Hopper, Ghidra, IDA), recover Objective-C class and method signatures with a tool like class-dump, and read embedded strings, but you are working with assembly and metadata, not reconstructed logic. Swift is harder still, because class-dump leans on Objective-C runtime metadata that Swift largely does not expose. The practical result: an iOS static pass yields less readable code than an Android one, so you lean harder on class metadata, strings, and the dynamic phase (Frida) to see behavior the static view hides.
+**How much you can read.** This difference shapes the whole iOS static pass. Android's DEX bytecode decompiles back to fairly readable Java, so jadx hands you something close to source. iOS ships compiled native code built from Swift or Objective-C, and that does not decompile to clean source. You disassemble it (Hopper, Ghidra, IDA), recover Objective-C class and method signatures with a tool like class-dump, and read embedded strings, but you are working with assembly and metadata, not reconstructed logic. Swift is harder still, because class-dump leans on Objective-C runtime metadata that Swift largely does not expose. The practical result: an iOS static pass yields less readable code than an Android one, so you lean harder on class metadata, strings, and the dynamic phase (Frida) to see behavior the static view hides.
 
-**The security APIs.** Same purpose, different names, and most of a storage or crypto check comes down to knowing which API is the protected path and which is not. That mapping is platform-specific. The common pairs:
+**The security APIs.** The APIs serve the same purposes under different names, and most of a storage or crypto check comes down to knowing which API is the protected path and which is not. That mapping is platform-specific. The common pairs:
 
 | Purpose | Android | iOS |
 |---------|---------|-----|
@@ -102,17 +102,17 @@ MASVS sorts its requirements into profiles so you test against the bar an app ac
 
 ## Working With Two Binaries
 
-You will often be handed two builds of the same app, and it matters which one you use for what.
+You will often be handed two builds of the same app, and the two are not interchangeable.
 
-- **The production build** has every control in place. This is the one you report findings against. If pinning or root detection is missing here, it is a real weakness.
+- **The production build** has every control in place. Report findings against this build. If pinning or root detection is missing here, it is a real weakness.
 - **The test build** has specific controls disabled, usually SSL pinning and root detection, so you can intercept traffic and exercise the app without fighting its defenses.
 
-Run static analysis on the production build. The test build's missing pinning is an intended change, not a vulnerability, and analyzing it produces a false "no pinning" finding that reports a deliberate modification as a real weakness. Keep the modified build for the dynamic pass, where it earns its place, and confirm every code-level finding against the build that ships to users.
+Run static analysis on the production build. The test build's missing pinning is an intended change, not a vulnerability, and analyzing it produces a false "no pinning" finding that reports a deliberate modification as a real weakness. Keep the modified build for the dynamic pass, and confirm every code-level finding against the build that ships to users.
 
-## Scanner Output Is a Lead, Not a Verdict
+## Scanner Output Is a Starting Point
 
-Automated tools have no sense of context, so they over-report. Take CSRF: a real attack needs a logged-in user to open an attacker's link in a browser that then attaches the session cookie on its own. A mobile app breaks that chain. Even with a WebView and cookie-based sessions, an external link opens in the system browser, which keeps its own separate cookie store, so the forged request rides no session. A scanner flags the pattern anyway.
+Automated tools have no sense of context, so they over-report. Take CSRF: a real attack needs a logged-in user to open an attacker's link in a browser that then attaches the session cookie on its own. A mobile app breaks that chain. Even with a WebView and cookie-based sessions, an external link opens in the system browser, which keeps its own separate cookie store, so the forged request carries no session cookie. A scanner flags the pattern anyway.
 
-The lesson generalizes. Always trace a finding to an actual exploit path before you rate it, and treat tool output as something to confirm, never a conclusion. The exploit scenario is what turns a flagged pattern into a risk, and a flagged pattern with no path is noise.
+Always trace a finding to an actual exploit path before you rate it. The exploit scenario is what turns a flagged pattern into a risk, and a flagged pattern with no path is noise.
 
 > The per-control checks, with PASS and FAIL conditions, are in [Android App Security Testing](/posts/mobile-app-security-testing).

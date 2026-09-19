@@ -1,22 +1,24 @@
 ---
-title: "Intercepting Android Traffic with Burp Suite"
-slug: android-intercepting-traffic
+title: "Intercepting Traffic with Burp Suite"
+slug: intercepting-mobile-traffic
 category: notes
 format: guide
 handbook: mobile
 tags: ["android", "web"]
 draft: false
 pubDatetime: 2026-09-15T00:00:00+03:00
-description: "Getting an Android app's HTTPS through Burp: routing traffic to the proxy, installing the CA so the app trusts it, why Android 14 changed where that CA has to go, and defeating certificate pinning when the app still does not trust the proxy."
+description: "Getting a mobile app's HTTPS through Burp: route traffic to the proxy, make the app trust the CA, and defeat certificate pinning. The steps below are the Android procedure; iOS follows the same three-step shape."
 ---
 
-Most of what an Android app does is visible in its network traffic: how it authenticates, what data it sends back, which endpoints it talks to. Getting that traffic into Burp Suite takes three things to line up:
+Most of what a mobile app does is visible in its network traffic: how it authenticates, what data it sends back, which endpoints it talks to. Getting that traffic into Burp Suite takes three things to line up:
 
 1. The app's traffic has to reach Burp.
 2. The app has to trust Burp's certificate, or TLS breaks.
 3. The app must not be pinning a certificate, or it rejects Burp regardless.
 
 Work through them in order. Pinning bypass does not help if the routing is wrong.
+
+That three-step shape is the same on Android and iOS. Only the middle step really differs: Android has its user and system CA stores (and the Android 14 APEX move below), while iOS installs a configuration profile and then needs full trust enabled in Certificate Trust Settings. Routing is a proxy setting either way, and pinning bypass is the same Objection and Frida on both. The procedure here is the Android side; iOS gets its own section once that material lands.
 
 ## Prerequisites
 
@@ -119,7 +121,7 @@ You cannot satisfy a pin, only bypass it. Three routes:
 
 ### Objection
 
-[Objection](https://github.com/sensepost/objection) wraps Frida with ready-made bypasses. With a Frida server running on the device (see [Dynamic Instrumentation with Frida](/collections/mobile/android-frida) for how to match versions and push the right build):
+[Objection](https://github.com/sensepost/objection) wraps Frida with ready-made bypasses. With a Frida server running on the device (see [Dynamic Instrumentation with Frida](/collections/mobile/frida) for how to match versions and push the right build):
 
 ```bash
 objection -g com.example.app explore
