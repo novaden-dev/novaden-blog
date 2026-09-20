@@ -15,6 +15,7 @@ import { postHref } from "@/utils/handbook";
 import { CATEGORIES } from "@/utils/categories";
 import { slugifyStr } from "@/utils/slugify";
 import { getReadingTime } from "@/utils/readingTime";
+import ImageZoom from "@/components/ImageZoom.astro";
 import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
 import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import { SITE } from "@/config";
@@ -301,6 +302,8 @@ const path = [
   </Shell>
 </Layout>
 
+<ImageZoom />
+
 <script is:inline data-astro-rerun>
   /** Create a progress indicator
    *  at the top */
@@ -413,56 +416,6 @@ const path = [
     }
   }
   attachCopyButtons();
-
-  /** Network diagrams and screenshots are unreadable at column width, so an
-   *  image opens full-screen on click. */
-  function attachImageZoom() {
-    const images = Array.from(document.querySelectorAll(".read-body img"));
-    if (images.length === 0) return;
-
-    let overlay = document.querySelector(".zoom");
-
-    if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.className = "zoom";
-      overlay.hidden = true;
-      overlay.innerHTML = '<img alt="" />';
-      document.body.appendChild(overlay);
-      overlay.addEventListener("click", close);
-    }
-
-    function close() {
-      overlay.hidden = true;
-      document.documentElement.style.overflow = "";
-    }
-
-    // The body is replaced on a view transition, so the overlay is rebuilt each
-    // time; the document-level key handler is bound once.
-    if (!window.__zoomBound) {
-      window.__zoomBound = true;
-      document.addEventListener("keydown", event => {
-        if (event.key === "Escape") {
-          const current = document.querySelector(".zoom");
-          if (current && !current.hidden) {
-            current.hidden = true;
-            document.documentElement.style.overflow = "";
-          }
-        }
-      });
-    }
-
-    for (const image of images) {
-      image.classList.add("zoomable");
-      image.addEventListener("click", () => {
-        const full = overlay.querySelector("img");
-        full.src = image.currentSrc || image.src;
-        full.alt = image.alt || "";
-        overlay.hidden = false;
-        document.documentElement.style.overflow = "hidden";
-      });
-    }
-  }
-  attachImageZoom();
 
   /* Go to page start after page swap */
   document.addEventListener("astro:after-swap", () =>

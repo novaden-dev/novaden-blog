@@ -49,6 +49,8 @@ adb shell settings put global http_proxy 127.0.0.1:8080
 adb shell settings delete global http_proxy
 ```
 
+**Any device, through a VPN app.** A VPN app routes every connection on the device through its local VPN service, so it catches apps that ignore the Wi-Fi proxy setting. [ReThink DNS](https://github.com/celzero/rethink-app) lets you enter a custom proxy endpoint: set the app to use **Other DNS** → **Proxy DNS** and point it at your machine's IP and Burp's port. No root needed, and it covers the whole device rather than one network type.
+
 To confirm routing works, open a plain HTTP site in the device browser. It should appear in Burp's HTTP history. At this point HTTPS will throw a certificate error on the device: that is expected, and the next step fixes it.
 
 ## Step 2: Make the App Trust Burp's CA
@@ -168,6 +170,69 @@ When runtime hooking is blocked, or you need a device without Frida attached, pa
 3. Repack, sign, and install. A repacked APK is unsigned, so it has to be signed with your own key (`keytool` to generate one, `apksigner` to sign) before Android will install it.
 
 The config alone defeats apps that pin only through the network security config's `<pin-set>`. An app pinning in its own code needs the smali for that check edited out as well, or one of the runtime bypasses above instead.
+
+## DNS Spoofing with an Invisible Proxy
+
+Some apps ignore the proxy settings entirely, or hardcode a hostname and open their own TLS connection. One route around both: make the device resolve the app's hostname to your machine, and have Burp serve the HTTPS itself.
+
+1. Map the app's domains to your machine's IP with dnsmasq:
+
+   ```text
+   # dnsmasq.conf
+   address=/hextree.io/192.168.178.37
+   address=/api.hextree.io/192.168.178.37
+   log-queries
+   ```
+
+   ```bash
+   docker run --name dns-spoof --rm -p 0.0.0.0:53:53/udp \
+     -v "$PWD/dnsmasq.conf:/etc/dnsmasq.conf" \
+     andyshinn/dnsmasq
+   ```
+
+   Unlisted domains are forwarded upstream, so the rest of the device keeps working.
+
+2. Force the device to use your DNS. Android's normal DNS settings accept only encrypted DNS or the network's own servers, so the clean way is a VPN app again: in ReThink DNS, set **Other DNS** → **Proxy DNS** and add an entry pointing at your dnsmasq host. Check that spoofing works by opening `chrome://net-internals` in the device browser and looking up the hostname in the DNS tab; the resolved address should be your machine's.
+
+3. Add invisible proxy listeners in Burp on ports **80 and 443** (**Proxy settings** → **Proxy listeners** → add, bind to all interfaces, then under **Request handling** enable **Support invisible proxying**). An invisible listener acts as a full HTTP(S) server instead of a forward proxy: it parses the `Host` header or SNI value and forwards the request to the real destination, so the device needs no proxy configuration at all.
+
+With the hostname resolving to your machine and Burp's CA installed as in step 2, the app's TLS terminates at Burp and the traffic appears in the history. This setup also covers tools that open raw HTTPS sockets the system proxy does not capture.
+
+## Flutter Apps
+
+A Flutter app's networking runs in Dart, and Dart breaks the standard setup in two ways:
+
+- Dart's `HttpClient` does not read the system proxy settings. The app opens its own TCP connection straight to the server, so the traffic never reaches Burp no matter how routing is configured.
+- Flutter ships its own TLS stack, BoringSSL compiled into `libflutter.so`, and checks certificates against its own embedded trust list. The system and user CA stores, and the network security config, are all ignored, so the CA install in step 2 does nothing for the Flutter layer.
+
+Both parts need their own fix.
+
+### Routing: iptables
+
+On a rooted device, DNAT rules rewrite the destination of the app's outbound connections before the packets leave the device:
+
+```bash
+# Redirect HTTP and HTTPS to the machine running Burp
+adb shell su -c 'iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination 192.168.1.10:8080'
+adb shell su -c 'iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination 192.168.1.10:8080'
+
+# On an emulator, use 10.0.2.2 as the destination instead: that address is the emulator's alias for the host machine
+```
+
+The app connects thinking it talks to the real server, and the kernel hands the connection to Burp. Two setup details:
+
+- The redirected traffic arrives as raw TCP with no proxy handshake, so the Burp listener on 8080 must have invisible proxying enabled (the setting is covered in the DNS spoofing section above).
+- Re-running the same `-A` command adds a duplicate rule instead of replacing anything, and duplicates make connections behave unpredictably. List what is loaded with `iptables -t nat -L OUTPUT -n -v`, and delete a rule by repeating it with `-D` instead of `-A`.
+
+### TLS: disable Flutter's certificate check
+
+The `disable-flutter-tls-verification` Frida script (search the CodeShare directory) patches the BoringSSL verification in `libflutter.so` at runtime, so the app accepts Burp's certificate:
+
+```bash
+frida -U -f com.example.app -l disable-flutter-tls-verification.js
+```
+
+The alternative is [reFlutter](https://github.com/Impact-I/reFlutter), which repacks the APK with a modified Flutter engine that points at a proxy of your choice and skips TLS verification. It avoids needing Frida at runtime, at the cost of shipping a re-signed build.
 
 ## When Traffic Still Will Not Appear
 

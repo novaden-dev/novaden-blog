@@ -2,6 +2,7 @@
 import type { MarkdownHeading } from "astro";
 import Layout from "@/layouts/Layout.astro";
 import TableOfContents from "@/components/TableOfContents.astro";
+import ImageZoom from "@/components/ImageZoom.astro";
 import HandbookTree from "@/components/HandbookTree.astro";
 import type { HandbookConfig, TreeNode } from "@/utils/handbook";
 import { SITE } from "@/config";
@@ -138,6 +139,8 @@ const navHeading = handbook.navHeading ?? handbook.title;
 
     <div class="handbook-backdrop" data-handbook-backdrop hidden></div>
   </div>
+
+  <ImageZoom />
 </Layout>
 
 <style is:global>

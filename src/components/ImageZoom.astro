@@ -1,0 +1,56 @@
+---
+// Screenshots and diagrams are shrunk to fit the reading column, so clicking
+// one opens it full-screen. Both the blog post layout and the handbook shell
+// include this, since they share the .app-prose body class.
+---
+
+<script is:inline data-astro-rerun>
+  (function attachImageZoom() {
+    const images = Array.from(document.querySelectorAll(".app-prose img"));
+    if (images.length === 0) return;
+
+    let overlay = document.querySelector(".zoom");
+
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.className = "zoom";
+      overlay.hidden = true;
+      overlay.innerHTML = '<img alt="" />';
+      document.body.appendChild(overlay);
+      overlay.addEventListener("click", close);
+    }
+
+    function close() {
+      overlay.hidden = true;
+      document.documentElement.style.overflow = "";
+    }
+
+    // The body is replaced on a view transition, so the overlay is rebuilt each
+    // time; the document-level key handler is bound once.
+    if (!window.__zoomBound) {
+      window.__zoomBound = true;
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          const current = document.querySelector(".zoom");
+          if (current && !current.hidden) {
+            current.hidden = true;
+            document.documentElement.style.overflow = "";
+          }
+        }
+      });
+    }
+
+    for (const image of images) {
+      if (image.dataset.zoomBound) continue;
+      image.dataset.zoomBound = "1";
+      image.classList.add("zoomable");
+      image.addEventListener("click", () => {
+        const full = overlay.querySelector("img");
+        full.src = image.currentSrc || image.src;
+        full.alt = image.alt || "";
+        overlay.hidden = false;
+        document.documentElement.style.overflow = "hidden";
+      });
+    }
+  })();
+</script>

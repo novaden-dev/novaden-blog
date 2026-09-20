@@ -81,7 +81,7 @@ frida-ps -Ua                   # only running apps, with their identifiers
 frida-ps -Uai                  # all installed apps, running or not
 ```
 
-The identifier (`com.example.app`) is what you pass to spawn; the numeric PID is for attaching to a process that is already running.
+The identifier (`com.example.app`) is what you pass to spawn. To attach to a process that is already running, use its name from `frida-ps -U` or its numeric PID.
 
 ## Running a Script
 
@@ -91,14 +91,16 @@ Use spawn:
 # Spawn the app under Frida and load a script
 frida -U -f com.example.app -l hook.js
 
-# Attach to a running process instead
-frida -U -n com.example.app -l hook.js
+# Attach to a running process instead; -n takes the Name
+# column of frida-ps -U, which on Android is the app's
+# label, not its package identifier
+frida -U -n "Example App" -l hook.js
 
 # No script, an interactive console in the process
 frida -U -f com.example.app
 ```
 
-`-f` spawns and pauses until your script is in place, then resumes. `-n` attaches to a running process by name. Without `-l`, Frida opens an interactive console in the process where you can try a hook before saving it to a file.
+`-f` spawns and pauses until your script is in place, then resumes. `-n` attaches to a running process by name, and the name is what `frida-ps -U` prints. Without `-l`, Frida opens an interactive console in the process where you can try a hook before saving it to a file.
 
 ## Writing Hooks
 
@@ -133,6 +135,41 @@ Java.perform(function () {
     console.log("[+] isDeviceRooted() -> forcing false");
     return false;
   };
+});
+```
+
+### Call a Method Directly
+
+Hooks change how a method runs; a direct call runs it for you. A method that decrypts a hardcoded key or builds a signed token is often easier to invoke than to re-implement:
+
+```javascript
+Java.perform(function () {
+  const Flags = Java.use("com.example.app.FlagClass");
+
+  // A static method is called off the class object, no instance needed
+  console.log(Flags.flagFromStaticMethod());
+
+  // An instance method needs an object: $new() runs the constructor
+  const f = Flags.$new();
+  console.log(f.flagFromInstanceMethod());
+
+  // Arguments pass through as normal
+  console.log(f.flagIfYouCallMeWithSesame("sesame"));
+});
+```
+
+This works from the REPL or inside any script, and it does not modify the app's behaviour at all. To write these calls quickly, right-click the class in jadx-gui and use **Copy as Frida snippet** ([Decompiling with jadx](/collections/mobile/jadx)) for a starting template.
+
+A `$new()` copy is a bare object, though. Some instance methods depend on state the running app owns: an Activity's `getSharedPreferences()` and `getIntent()` come from the Context Android creates when it starts the Activity, and a `$new()` copy has no Context behind it. `Java.choose` walks the heap, finds the instances the app actually constructed, and calls methods on one of those:
+
+```javascript
+Java.perform(function () {
+  Java.choose("com.example.app.MainActivity", {
+    onMatch: function (live) {
+      live.refreshAccountCache();   // needs the real Activity behind it
+    },
+    onComplete: function () {},
+  });
 });
 ```
 

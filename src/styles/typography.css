@@ -77,8 +77,12 @@
       @apply my-10 border-t border-border;
     }
 
+    /* A landscape screenshot fits the column in about 440px of height, while
+       a portrait phone capture at the same width runs past 900px. Capping the
+       height keeps both at a comparable size; clicking opens the full image. */
     img {
       @apply mx-auto rounded-xs border border-border;
+      max-height: 30rem;
     }
 
     figcaption {

@@ -99,7 +99,7 @@ Verified boot makes sure all the code that runs during boot comes from a trusted
 2. The bootloader checks the kernel and the system partitions.
 3. Android keeps checking the system partitions while the device is running.
 
-If a check fails, the device shows a warning or refuses to boot.
+If a check fails, the device shows a warning or the boot stops.
 
 ### Network Security
 
@@ -171,17 +171,49 @@ Every app has an `AndroidManifest.xml` file. It includes:
 
 - The package name, which is the app's unique ID.
 - The app components.
+- The app's entry point: the activity with an intent filter for `android.intent.action.MAIN` and `android.intent.category.LAUNCHER` is what the launcher icon starts.
 - The permissions the app asks for.
 - Flags that affect security, like `android:exported` (whether other apps can reach a component), `android:debuggable`, and `android:allowBackup`.
 
 ### App Components
 
-- **Activities**: the UI. Each activity is a screen.
-- **Services**: run in the background, with no UI.
-- **Broadcast receivers**: listen for broadcasts from the system (like boot completed or battery low) or from other apps.
-- **Content providers**: share an app's data with other apps through a `content://` URI.
+An app is built from four component types. The manifest declares each one, and intents (below) are how anything reaches them.
 
-If a component is exported, other apps can start it or send it data. Exported components are the main way into an app from outside.
+### Activities
+
+An activity is one screen: the login form, the message list, the settings page. It is the only component with a UI, and it is what the user interacts with. When a new activity starts, the system places it on top of a stack, so the previous screen sits below it and comes back when the new one closes. Any app can start an exported activity and hand it data in the intent.
+
+### Activity States
+
+An activity moves through four states as the user navigates:
+
+- **Active**: the activity is in the foreground and receives the user's input.
+- **Paused**: the activity lost focus but is still visible, for example behind a translucent activity or in multi-window mode. It keeps all its state.
+- **Stopped**: another activity completely covers it. It is invisible but still holds its state, and the system kills it first when the device needs memory.
+- **Destroyed**: the system either asks the activity to finish or kills its process, and it is gone.
+
+When an activity stops being the foreground one, the system takes a screenshot of it for the task switcher, so whatever was on screen at that moment stays visible in the recents list.
+
+### Services
+
+A service runs work in the background with no UI: playing music, syncing data, uploading a file. Work can keep running while the user is elsewhere, and other components or apps can bind to a service and call it directly. It runs in the app's own process on the main thread, so long work needs its own thread.
+
+### Broadcast Receivers
+
+A broadcast receiver listens for broadcast messages. The system sends many (boot completed, battery low, connectivity changes), and apps can send their own. A receiver declared in the manifest runs code whenever a matching broadcast arrives, including one sent by another app, so an exported receiver is an external entry point in the same sense as an exported activity.
+
+### Content Providers
+
+A content provider shares an app's data with other apps. Other apps query it through `content://` URIs (for example `content://com.example.app/notes/3`), and the provider decides which URIs and rows they can read. A provider that checks its callers loosely exposes data the app treats as private.
+
+### Intents
+
+An intent is a messaging object that asks the system to do one of three things: start an activity, start a service, or deliver a broadcast. It is the only way an app reaches another app's activity, service, or receiver, which makes it the main carrier of data across app boundaries.
+
+- **Explicit intent**: names the target component by package and class. The sender already knows exactly what it is calling, and apps use these internally, for example to open their own second screen.
+- **Implicit intent**: names only an action, such as `android.intent.action.VIEW` with a URL attached. The system matches the action against the **intent filters** that components declare in the manifest, and offers the intent to every matching component.
+
+An intent filter lists the actions, data types, and URI schemes a component accepts. An implicit intent reaches a component only if its filter matches, and a component that receives intents from other apps must also be exported. The combination of `android:exported="true"` with a filter marks an external entry point.
 
 ## Android IPC
 
@@ -189,9 +221,7 @@ Inter-Process Communication (IPC) is how apps pass data to each other. Each app 
 
 On Android this goes through **Binder**, a driver in the kernel. Starting another app's activity, sending a broadcast, querying a content provider, and calling system services all go through Binder. On every call, Binder tells the receiver the caller's UID, and the system uses it to check permissions.
 
-Apps usually don't use Binder directly. They send **intents**, messages that describe something to do, like "open this URL" or "start this service", and the system delivers them.
-
-The system controls how apps talk to each other, but the receiving app still has to check what it gets. An exported component that trusts any data sent to it is a common vulnerability.
+Apps don't call Binder directly. The **intents** described under App Components are what an app writes, and the system turns them into Binder transactions under the hood. The system controls how apps talk to each other, but the receiving app still has to check what it gets. An exported component that trusts any data sent to it is a common vulnerability.
 
 ## Publishing an Android App
 
