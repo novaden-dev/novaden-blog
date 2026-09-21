@@ -35,7 +35,13 @@ entries:
   - id: mobile-and-010
     post: intercepting-mobile-traffic
     section: "Techniques"
+  - id: mobile-and-013
+    post: reverse-shells-android
+    section: "Techniques"
   - id: mobile-and-011
     post: mhl-strings-lab
+    section: "Labs/Mobile Hacking Labs"
+  - id: mobile-and-012
+    post: mhl-cyclic-scanner-lab
     section: "Labs/Mobile Hacking Labs"
 ---

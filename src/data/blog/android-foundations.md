@@ -46,6 +46,12 @@ The runtime runs the app code. Java or Kotlin code is compiled into DEX (Dalvik 
 
 Either way, the APK doesn't change. It still contains the DEX bytecode, and that's what you decompile when testing an app.
 
+### Shell and Core Commands
+
+Android's shell is mksh, shipped as `/system/bin/sh`. mksh does not implement `/dev/tcp`, which is a bash feature, so bash-specific shell one-liners do not run on the device. There is no GNU coreutils either: shipping dozens of separate binaries would take space Android does not spend. Instead one compact binary, toybox, acts as the whole set: a single executable that behaves as the tool whose name it was invoked under. The commands in `/system/bin` (`ls`, `cp`, `ps`, `sha1sum`, `nc`) are links to it, so `ls` runs toybox's `ls` code, and `toybox` with no arguments prints the tool list. busybox is the same idea on other small Linux systems: one binary providing many standard commands.
+
+Because the tools are already installed on every device, process-spawning code and payloads can rely on `toybox sha1sum file` or `toybox nc` with nothing to install.
+
 ### Java API Framework
 
 These are the high-level APIs developers use to build apps. The framework also manages apps while they run: it controls each app's life cycle (when screens start, pause, and close) and handles user interaction. Its main parts:
