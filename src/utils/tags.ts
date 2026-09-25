@@ -24,6 +24,7 @@ type TagDefinition = {
 
 export const TAGS: Record<string, TagDefinition> = {
   // Infrastructure and homelab.
+  ansible: { domain: "technical" },
   docker: { domain: "technical" },
   git: { domain: "technical" },
   gitops: { domain: "technical" },

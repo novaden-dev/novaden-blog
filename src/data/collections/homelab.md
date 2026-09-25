@@ -21,4 +21,8 @@ entries:
     post: homelab-v1-5-real-governance
   - id: homelab-08
     post: homelab-v2-0-the-useful-one
+  - id: homelab-09
+    post: homelab-v2-1-the-network
+  - id: homelab-10
+    post: homelab-v2-2-ansible
 ---
