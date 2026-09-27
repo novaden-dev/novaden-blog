@@ -47,6 +47,7 @@ entries:
   - id: mobile-and-014
     post: android-testing-checklist
     section: "Checks"
+    required: false
   - id: mobile-and-011
     post: mhl-strings-lab
     section: "Labs/Mobile Hacking Labs"
