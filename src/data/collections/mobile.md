@@ -44,6 +44,18 @@ entries:
   - id: mobile-and-016
     post: android-debugging
     section: "Techniques"
+  - id: mobile-and-018
+    post: android-deep-links
+    section: "Techniques"
+  - id: mobile-and-019
+    post: android-webviews
+    section: "Techniques"
+  - id: mobile-and-020
+    post: android-shared-preferences
+    section: "Techniques"
+  - id: mobile-and-021
+    post: android-local-storage
+    section: "Techniques"
   - id: mobile-and-014
     post: android-testing-checklist
     section: "Checks"

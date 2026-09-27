@@ -55,7 +55,7 @@ adb shell content query --uri content://com.example.app.provider/items
 
 Extras are typed: `--es` for string, `--ei` for int, `--ez` for boolean. Since Android 8, background execution limits stop an app in the background from starting a service; adb's shell is exempt, so `am startservice` from adb still works.
 
-`drozer` is an Android security-testing framework: an agent app you install on the device plus a console that runs commands on it, so Android applies the same checks it would for any attacker app. That matters when a component behaves differently for a real caller than for the shell UID. It also automates the sending:
+`drozer` is an Android security-testing framework: an agent app you install on the device plus a console that runs commands on it, so Android applies the same checks it would for any attacker app, the caller a component actually sees. It also automates the sending:
 
 ```text
 run app.package.attacksurface com.example.app
@@ -78,7 +78,7 @@ Read the activity's `onCreate` for how it consumes `getIntent()` extras and whet
 
 ## Services
 
-An exported service can be started or bound. `am startservice` drives the start path; a bound service hands back a `Binder` the caller invokes, which `am` cannot drive, so test bound services with drozer or a small client app. This is MASTG-TEST-0365.
+An exported service can be started or bound. `am startservice` drives the start path; a bound service returns a `Binder` the caller invokes, which `am` cannot drive, so test bound services with drozer or a small client app. This is MASTG-TEST-0365.
 
 ```bash
 adb shell am startservice -n com.example.app/.ExportService
@@ -118,7 +118,7 @@ If the receiver starts a download or an activity on receipt, that is the proof.
 
 ## Content Providers
 
-A provider that serves stored data is covered by the storage checks; the angle here is the provider as a reachable component. Provider defaults have changed across Android versions, so read the explicit `android:exported` attribute rather than assuming one. Check `android:readPermission` and `android:writePermission` and `android:grantUriPermissions`, then query the exposed authorities:
+A provider that serves stored data is covered by the storage checks; this section treats the provider as a reachable component. Provider defaults have changed across Android versions, so read the explicit `android:exported` attribute rather than assuming one. Check `android:readPermission` and `android:writePermission` and `android:grantUriPermissions`, then query the exposed authorities:
 
 ```bash
 adb shell content query --uri content://com.example.app.provider/items
@@ -130,19 +130,11 @@ adb shell content query --uri content://com.example.app.provider/items
 
 ## Deep Links
 
-An activity with an intent filter for a custom scheme and the `BROWSABLE` category is launchable by any app, and a browser can open it from a link. Custom schemes have no ownership check; App Links (`https` plus `android:autoVerify`) verify domain ownership through `assetlinks.json`. The failure is a handler that trusts the URI and its parameters. This is MASTG-TEST-0394.
-
-```bash
-adb shell am start -a android.intent.action.VIEW -d "com.example.app://profile?token=attacker"
-```
-
-- **Pass**: handlers validate the scheme, host, and every parameter before acting.
-- **Fail**: a handler reads a path or parameter from the URI and acts on it without validation.
-- **Evidence**: the intent filter and the handler code that consumes the URI.
+An exported activity with a `VIEW` intent filter and a scheme is a deep link, and it is part of the same surface: another app or a browser fires the URI and the handler trusts it. The full technique, including how App Links verify ownership, is in [Deep Links and URL Schemes on Android](/collections/mobile/android-deep-links).
 
 ## PendingIntent
 
-A `PendingIntent` hands a future intent to another app or to the system, and it runs with the creating app's identity and permissions. The failure is a mutable `PendingIntent` wrapping an implicit intent: another app can replace the base intent with its own and get the delegated action executed with the app's privileges. `FLAG_IMMUTABLE` is the safe default. This is MASTG-TEST-0381.
+A `PendingIntent` passes a future intent to another app or to the system, and it runs with the creating app's identity and permissions. The failure is a mutable `PendingIntent` wrapping an implicit intent: another app can replace the base intent with its own and get the delegated action executed with the app's privileges. `FLAG_IMMUTABLE` is the safe default. This is MASTG-TEST-0381.
 
 ```bash
 grep -rnE 'PendingIntent\.(getActivity|getService|getBroadcast)|FLAG_MUTABLE|FLAG_IMMUTABLE' jadx_out/sources/

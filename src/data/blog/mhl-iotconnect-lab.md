@@ -10,7 +10,7 @@ pubDatetime: 2026-09-27T00:00:00+03:00
 description: "Solving the Mobile Hacking Lab IOTConnect challenge: every signup is a guest and guests are locked out of the master switch in the UI, the receiver that actually enforces the PIN is reachable from outside the app, and a broadcast brute force turns on every device."
 ---
 
-The IOTConnect app (`com.mobilehackinglab.iotconnect`) is a smart home controller. Six device categories (fans, AC, bulbs, speaker, TV, smart plug) sit behind tabs in a ViewPager, and a master switch turns all of them on at once. The master switch asks for a PIN, and a fresh account cannot use it: the signup screen creates every user as a guest, and guests get `Sorry, the masterswitch can't be controlled by guests`. That gate only exists in the UI. The receiver that actually validates the PIN is registered to accept broadcasts from any app, and the PIN is three digits, so a short `adb` loop turns everything on.
+The IOTConnect app (`com.mobilehackinglab.iotconnect`) is a smart home controller. Six device categories (fans, AC, bulbs, speaker, TV, smart plug) are organized into tabs in a ViewPager, and a master switch turns all of them on at once. The master switch is gated by a PIN, and a fresh account cannot use it: the signup screen creates every user as a guest, and guests get `Sorry, the masterswitch can't be controlled by guests`. That gate only exists in the UI. The receiver that actually validates the PIN is registered to accept broadcasts from any app, and the PIN is three digits, so a short `adb` loop turns everything on.
 
 ## Every Signup Is a Guest
 
@@ -35,7 +35,7 @@ if (user.isGuest() != 1) {
 
 ![The master switch PIN screen rejecting a guest with the masterswitch toast](/images/mhl-iotconnect-lab/master-switch-guest-error.png)
 
-A logged-in guest typing a PIN only ever sees the toast. The PIN never leaves the activity, because the branch returns before the broadcast. To reach the check you have to go around this handler.
+A logged-in guest typing a PIN only ever sees the toast. The PIN never leaves the activity, because the branch returns before the broadcast. Reaching the check means going around this handler.
 
 ## The MASTER_ON Receiver
 
@@ -104,7 +104,7 @@ The UI path sends the PIN as an int extra named `key` inside a `MASTER_ON` broad
 adb shell am broadcast -a MASTER_ON --ei key 1
 ```
 
-This prints a `Wrong PIN!!` toast. Now the question is which key prints the other one.
+This prints a `Wrong PIN!!` toast, and the success toast appears only for the right key.
 
 ## Method 1: Broadcast Brute Force
 
@@ -157,7 +157,7 @@ for pin in range(0, 1000):
 
 ![crack_pin.py printing the recovered PIN](/images/mhl-iotconnect-lab/crack-pin-345.png)
 
-The script prints `345`. This is the same integer the broadcast loop finds, and it is also the value you would submit through the lab's assessment.
+The script prints `345`. This is the same integer the broadcast loop finds, and it is also the value to submit through the lab's assessment.
 
 ## The Master Is On
 
@@ -169,4 +169,4 @@ adb shell am broadcast -a MASTER_ON --ei key 345
 
 ![The MASTER_ON broadcast with key 345 and the success toast](/images/mhl-iotconnect-lab/broadcast-success.png)
 
-The receiver accepts it, `check_key` passes, and `turnOnAllDevices` flips all six device preferences to on. The account, the login, and the guest gate were never the boundary: the exported receiver and a three-digit PIN were the whole defense.
+The receiver accepts it, `check_key` passes, and `turnOnAllDevices` flips all six device preferences to on. The account, the login, and the guest gate were never the boundary: the exported receiver and a three-digit PIN were the only defense.
