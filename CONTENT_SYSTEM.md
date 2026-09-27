@@ -63,7 +63,6 @@ Third-person, instructional. Write so the reader landing cold understands withou
 - `## Introduction` opens with one short paragraph framing what the concept is and why it matters
 - `## <Section>` for each sub-topic
 - `### <Subsection>` for breakdowns inside a section
-- End with a one-line blockquote linking to the relevant cheat sheet: `> The commands are in the [Linux Cheat Sheet](/posts/linux-cheatsheet).`
 
 ### Use commands as illustration, not as content
 When you mention a command inside an atom, show the canonical form once as an example of the concept. Do not list every flag, every variation, or every related command. Those belong in the cheat sheet.
@@ -402,7 +401,6 @@ Rules:
 
 ## Cross-linking
 
-- **Atom to cheat sheet:** every atom ends with `> The commands are in the [Linux Cheat Sheet](/posts/linux-cheatsheet).` pointing to the relevant cheat sheet.
 - **Cheat sheet to atom:** every cheat sheet's intro line points to the related atom(s).
 - **Cert review to atoms:** every concept covered in the cert gets a link to its atom.
 - **URL pattern:** `/posts/<slug>` (set by `slug:` in frontmatter, decoupled from filename).
@@ -505,6 +503,6 @@ For every new post:
 - [ ] At least one topic tag, picked at the most specific useful level
 - [ ] `format:` set only if the post's shape clearly matches one (`cheatsheet`/`guide`/`writeup`/`methodology`/`checklist`); no format word inside `tags`; no retired `notes`/`certification` meta tags
 - [ ] Collection membership is a placement in `src/data/collections/`, never frontmatter on the post and never a tag
-- [ ] Atom links to its cheat sheet; cheat sheet links back to its atom(s)
+- [ ] Cheat sheet links back to its atom(s)
 - [ ] Frontmatter is complete and `description` is one concrete sentence
 - [ ] Follows [CONTENT_FORMATTING.md](./CONTENT_FORMATTING.md) for prose, voice, tables, code, and blockquotes

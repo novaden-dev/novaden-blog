@@ -38,10 +38,22 @@ entries:
   - id: mobile-and-013
     post: reverse-shells-android
     section: "Techniques"
+  - id: mobile-and-015
+    post: android-exported-components
+    section: "Techniques"
+  - id: mobile-and-016
+    post: android-debugging
+    section: "Techniques"
+  - id: mobile-and-014
+    post: android-testing-checklist
+    section: "Checks"
   - id: mobile-and-011
     post: mhl-strings-lab
     section: "Labs/Mobile Hacking Labs"
   - id: mobile-and-012
     post: mhl-cyclic-scanner-lab
+    section: "Labs/Mobile Hacking Labs"
+  - id: mobile-and-017
+    post: mhl-iotconnect-lab
     section: "Labs/Mobile Hacking Labs"
 ---
