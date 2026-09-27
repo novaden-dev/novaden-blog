@@ -69,4 +69,7 @@ entries:
   - id: mobile-and-017
     post: mhl-iotconnect-lab
     section: "Labs/Mobile Hacking Labs"
+  - id: mobile-and-022
+    post: diva
+    section: "Labs/Other Labs"
 ---

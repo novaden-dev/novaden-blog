@@ -53,6 +53,20 @@ SQLite and Room databases are plaintext files in `databases/`. Tokens, PII, or c
 grep -rnE 'SQLiteDatabase|Room\.databaseBuilder|getWritableDatabase' jadx_out/sources/
 ```
 
+### Injection in App Databases
+
+The query builders are injection sinks on top of the storage. A handler that concatenates user input into `rawQuery` or `execSQL` lets a value break out of the string, and the query runs against the app's own data. The classic proof is `' OR 1=1 --` against a `WHERE user = '<input>'` query, which returns every row instead of one:
+
+```bash
+grep -rnE 'rawQuery|execSQL|\.query\(' jadx_out/sources/
+```
+
+Read the hits that build a query string with `+` and pass user input into it.
+
+- **Pass**: queries pass user input through `selectionArgs` or a parameterized API such as Room or SQLCipher.
+- **Fail**: a query concatenates user input into SQL, and an injected value returns rows beyond the intended one.
+- **Evidence**: the concatenated query call and the injected payload result.
+
 ## Cache
 
 Cache files hold copies of whatever the app fetched, and session data or tokens can be written there through `getCacheDir`. Cache is private but not encrypted, and the system can clear it, so an app should not rely on it for anything that must survive. The check is the same: a sensitive value in a cache file is a finding.

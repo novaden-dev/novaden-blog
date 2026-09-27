@@ -47,10 +47,17 @@ grep -rnE 'EncryptedSharedPreferences|MasterKey|AndroidKeyStore' jadx_out/source
 
 ## Reading the Store Back
 
-On a rooted device or a debuggable build, read the file with the app's own uid so the sandbox applies no restrictions:
+On a rooted device or a debuggable build, read the file with the app's own uid so the sandbox applies no restrictions. The filename depends on how the app calls `getSharedPreferences`: the default preferences file is `<package>_preferences.xml`, and a named store uses its own file. List the directory first, then read the file by name:
 
 ```bash
-adb shell run-as com.example.app cat shared_prefs/*.xml
+adb shell run-as com.example.app ls shared_prefs/
+adb shell run-as com.example.app cat shared_prefs/com.example.app_preferences.xml
+```
+
+A `*` in the path is expanded by the device shell before `run-as` changes into the sandbox, so a bare `cat shared_prefs/*.xml` fails even when the file is there. Wrap the glob in `sh -c` to expand it after the change of directory:
+
+```bash
+adb shell run-as com.example.app sh -c 'cat shared_prefs/*.xml'
 ```
 
 On a rooted device the whole store can be pulled without `run-as`:

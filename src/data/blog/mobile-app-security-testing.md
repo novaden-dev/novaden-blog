@@ -167,8 +167,8 @@ adb shell run-as "$PKG" tar c . > sandbox.tar    # or: adb pull /data/data/$PKG
 Inspect what came out:
 
 ```bash
-# SharedPreferences land here as plaintext XML
-adb shell run-as "$PKG" cat shared_prefs/*.xml
+# SharedPreferences land here as plaintext XML; the glob must expand inside the sandbox
+adb shell run-as "$PKG" sh -c 'cat shared_prefs/*.xml'
 
 # Open any database and read sensitive tables
 adb shell run-as "$PKG" ls databases

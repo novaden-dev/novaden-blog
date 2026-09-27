@@ -156,6 +156,30 @@ adb shell dumpsys activity activities    # the current activity stack
 adb shell dumpsys window | grep mCurrentFocus   # what is on screen right now
 ```
 
+### Runtime permissions
+
+Since Android 6, dangerous permissions need runtime consent. The manifest declares them, but the app must ask while running, and until it does, or until the permission is granted, it stays `granted=false` and the protected call throws. `dumpsys package` shows the state:
+
+```bash
+adb shell dumpsys package <package> | grep WRITE_EXTERNAL_STORAGE
+# android.permission.WRITE_EXTERNAL_STORAGE: granted=false
+```
+
+An app that declares a dangerous permission but never requests it (common in old apps) throws on the protected call and shows an error. Grant it from adb:
+
+```bash
+adb shell pm grant <package> android.permission.WRITE_EXTERNAL_STORAGE
+adb shell am force-stop <package>
+```
+
+The force-stop matters: a running app keeps the permission state it started with, so the grant only applies after the process restarts. `pm revoke` undoes a grant:
+
+```bash
+adb shell pm revoke <package> android.permission.WRITE_EXTERNAL_STORAGE
+```
+
+`adb install -g` grants every runtime permission at install time, which is the one-step version for a fresh install.
+
 ## Starting Components
 
 Exported components are the main way into an app from outside, and `am` is how you reach them by hand.
