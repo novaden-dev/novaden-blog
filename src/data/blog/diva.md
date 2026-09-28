@@ -9,7 +9,7 @@ handbook: mobile
 tags: ["android"]
 draft: false
 featured: false
-description: "Writeups for the DIVA (Damn Insecure and Vulnerable App) Android labs: each solved lab gets a section with the task, the vulnerable code, the exploit, and the finding, covering Insecure Logging, the hardcoded vendor key, the third-party credentials stored plaintext in SharedPreferences, a SQLite database, a temp file, and external storage, a SQL injection, and a WebView loading attacker content with JavaScript enabled."
+description: "Writeups for the DIVA (Damn Insecure and Vulnerable App) Android labs: each solved lab gets a section with the task, the vulnerable code, the exploit, and the finding, covering Insecure Logging, the hardcoded vendor key, the third-party credentials stored plaintext in SharedPreferences, a SQLite database, a temp file, and external storage, a SQL injection, a WebView loading attacker content with JavaScript enabled, and an implicitly exported activity that shows hardcoded API credentials."
 ---
 
 DIVA (Damn Insecure and Vulnerable App) is Payatu's deliberately insecure Android app, built for practicing Android weaknesses. It ships as a beta APK, installs cleanly on an API 33 emulator, and its thirteen labs each exercise one weakness, which makes it a fast drill for the checks in this handbook. This page collects the writeups, one section per solved lab, as they are worked.
@@ -26,7 +26,7 @@ DIVA (Damn Insecure and Vulnerable App) is Payatu's deliberately insecure Androi
 | 6 | Insecure Data Storage, Part 4 | Solved |
 | 7 | Input Validation Issues, Part 1 | Solved |
 | 8 | Input Validation Issues, Part 2 | Solved |
-| 9 | Access Control Issues, Part 1 | Open |
+| 9 | Access Control Issues, Part 1 | Solved |
 | 10 | Access Control Issues, Part 2 | Open |
 | 11 | Access Control Issues, Part 3 | Open |
 | 12 | Hardcoding Issues, Part 2 | Open |
@@ -178,7 +178,7 @@ This is MASTG-TEST-0287, runtime storage of unencrypted data via the SharedPrefe
 
 ## Lab 4: Insecure Data Storage, Part 2
 
-The screen asks for the same 3rd party credentials, but the write path is a SQLite database instead of preferences. `onCreate` opens a database named `ids2` and creates a `myuser(user, password)` table, and the Save button inserts into it. The database file is created when the activity opens, so it exists before any save.
+The 3rd party credentials screen is back, but the write path is a SQLite database instead of preferences. `onCreate` opens a database named `ids2` and creates a `myuser(user, password)` table, and the Save button inserts into it. The database file is created when the activity opens, so it exists before any save.
 
 ![The credentials screen for the SQLite lab](/images/diva/lab4-ids2-screen.png)
 
@@ -212,7 +212,7 @@ public void saveCredentials(View view) {
 
 ![The saveCredentials and onCreate source for the SQLite lab](/images/diva/lab4-ids2-source.png)
 
-The database lives at `databases/ids2`. `adb shell` rewrites line endings in the stream, so pull it with `exec-out`, which passes bytes through unchanged, then open it on the host:
+The database file is at `databases/ids2`. `adb shell` rewrites line endings in the stream, so pull it with `exec-out`, which passes bytes through unchanged, then open it on the host:
 
 ```bash
 adb exec-out run-as jakhar.aseem.diva cat databases/ids2 > ids2.db
@@ -225,7 +225,7 @@ test|tototo
 
 ![sqlite3 showing the myuser table with the credentials in plaintext](/images/diva/lab4-ids2-readback.png)
 
-The credentials sit in a plaintext table. This is the same failure as Lab 3 with a different store, and it is MASTG-TEST-0207, runtime storage of unencrypted data in the app sandbox.
+The credentials are stored in a plaintext table. This is the same failure as Lab 3 with a different store, and it is MASTG-TEST-0207, runtime storage of unencrypted data in the app sandbox.
 
 The concatenated INSERT is a second finding on its own: a value containing a quote breaks out of the string literal, so a password of `b'),('c','d` turns one INSERT into two rows. The credentials are stored unencrypted and the write path is injectable, so both the store and the sink fail.
 
@@ -309,7 +309,7 @@ public void saveCredentials(View view) {
 
 On a modern device `getExternalStorageDirectory()` returns `/storage/emulated/0`, and the file is written to `/sdcard/.uinfo.txt`, a dotfile at the root of the shared volume. The `setReadable(true)` and `setWritable(true)` calls are no-ops again, and the file is owned by `media_rw` on the emulated volume.
 
-External storage has a permission gate. DIVA declares `WRITE_EXTERNAL_STORAGE` in the manifest but never asks for it at runtime, so on Android 6 and later the permission starts denied and the write throws: the save shows the "File error occurred" toast and no file appears. The grant has to come from outside:
+External storage has a permission gate. DIVA declares `WRITE_EXTERNAL_STORAGE` in the manifest but never requests it at runtime, so on Android 6 and later the permission starts denied and the write throws: the save shows the "File error occurred" toast and no file appears. The grant has to come from outside:
 
 ```bash
 adb shell pm grant jakhar.aseem.diva android.permission.WRITE_EXTERNAL_STORAGE
@@ -327,7 +327,7 @@ testy:bigtick
 
 ![run-as free readback of the .uinfo.txt file](/images/diva/lab6-readback.png)
 
-This is the worst store of the four. External storage is shared space: any app with the read permission can read the file, the data outlives the app's uninstall, and the credentials are in plaintext. The weakness is MASWE-0007, unencrypted sensitive data in shared storage, checked by MASTG-TEST-0200, files written to external storage.
+External storage is the only one of the four that other apps can read directly: any app with the read permission can read the file, the data outlives the app's uninstall, and the credentials are in plaintext. The weakness is MASWE-0007, unencrypted sensitive data in shared storage, checked by MASTG-TEST-0200, files written to external storage.
 
 - **Pass**: no sensitive value is written to external storage, or anything written there is encrypted with a keystore-backed key.
 - **Fail**: credentials are readable in plaintext in a file on external storage, reachable by other apps with the storage permission.
@@ -335,7 +335,7 @@ This is the worst store of the four. External storage is shared space: any app w
 
 ## Lab 7: Input Validation Issues, Part 1
 
-The screen asks for a username to search. `onCreate` opens a SQLite database named `sqli`, creates a `sqliuser(user, password, credit_card)` table, and seeds three rows, each with a password and a credit card. The search handler builds the query by concatenating the input:
+The search screen takes a username. `onCreate` opens a SQLite database named `sqli`, creates a `sqliuser(user, password, credit_card)` table, and seeds three rows, each with a password and a credit card. The search handler builds the query by concatenating the input:
 
 ```java
 public void search(View view) {
@@ -408,5 +408,66 @@ The depth is the combination. JavaScript is enabled, and the input is trusted in
 - **Pass**: the WebView loads only allowlisted HTTPS content the app controls, and JavaScript is enabled only where the app owns the page.
 - **Fail**: the WebView loads attacker-influenced content (an arbitrary URL, or a `javascript:` or `data:` scheme) with JavaScript enabled.
 - **Evidence**: the URL entered and the page or script result rendered in the WebView.
+
+## Lab 9: Access Control Issues, Part 1
+
+The screen has one button, View API Credentials, which fires an implicit intent with the action `jakhar.aseem.diva.action.VIEW_CREDS` and resolves it to an activity in the app:
+
+```java
+public void viewAPICredentials(View view) {
+    Intent i = new Intent();
+    i.setAction("jakhar.aseem.diva.action.VIEW_CREDS");
+    if (i.resolveActivity(getPackageManager()) != null) {
+        startActivity(i);
+    } else {
+        Toast.makeText(this, "Error while getting API details", 0).show();
+        Log.e("Diva-aci1", "Couldn't resolve the Intent VIEW_CREDS to our activity");
+    }
+}
+```
+
+![The AccessControl1Activity button source firing the VIEW_CREDS intent](/images/diva/lab9-source.png)
+
+The manifest declares `APICredsActivity` with that intent filter and no `android:exported` attribute:
+
+```xml
+<activity
+    android:label="@string/apic_label"
+    android:name="jakhar.aseem.diva.APICredsActivity">
+    <intent-filter>
+        <action android:name="jakhar.aseem.diva.action.VIEW_CREDS"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+    </intent-filter>
+</activity>
+```
+
+![The manifest declaration with the VIEW_CREDS intent filter and no exported attribute](/images/diva/lab9-manifest.png)
+
+The export is implicit. Before Android 12, a component with an intent filter and no `android:exported` attribute is exported by default; DIVA targets SDK 23, so the old rule applies and the activity is reachable from outside the app. The target activity shows the hardcoded API credentials in its layout:
+
+```java
+apicview.setText("API Key: 123secretapikey123\nAPI User name: diva\nAPI Password: p@ssword");
+```
+
+![The credentials screen inside the app, reached through the button](/images/diva/lab9-before.png)
+
+The button is one way in. An implicit intent with the action reaches the activity directly from adb, because the `DEFAULT` category is implied for any activity-starting intent, so the action alone resolves:
+
+```bash
+adb shell am start -a jakhar.aseem.diva.action.VIEW_CREDS
+Starting: Intent { act=jakhar.aseem.diva.action.VIEW_CREDS }
+```
+
+![The am start command launching the VIEW_CREDS action](/images/diva/lab9-am-start.png)
+
+The credentials screen opens with no button tap and no permission check:
+
+![The API credentials screen opened directly from adb](/images/diva/lab9-after.png)
+
+The finding is an exported activity with no permission exposing hardcoded credentials, the exported-components check MASTG-TEST-0364.
+
+- **Pass**: activities with intent filters are exported only where required, and those that reach sensitive data are guarded by a signature-level permission.
+- **Fail**: an activity with a filter and no `android:exported` is implicitly exported, and it shows credentials to any caller.
+- **Evidence**: the manifest declaration, the `am start` that reached it, and the credentials screen it opened.
 
 The MASVS control mapping for these labs is in [The OWASP MAS Project](/collections/mobile/mas-project).
