@@ -9,7 +9,7 @@ handbook: mobile
 tags: ["android"]
 draft: false
 featured: false
-description: "Writeups for the DIVA (Damn Insecure and Vulnerable App) Android labs: each solved lab gets a section with the task, the vulnerable code, the exploit, and the finding, covering Insecure Logging, the hardcoded vendor key, the third-party credentials stored plaintext in SharedPreferences, a SQLite database, a temp file, and external storage, a SQL injection, a WebView loading attacker content with JavaScript enabled, and an implicitly exported activity that shows hardcoded API credentials."
+description: "Writeups for the DIVA (Damn Insecure and Vulnerable App) Android labs: each solved lab gets a section with the task, the vulnerable code, the exploit, and the finding, covering Insecure Logging, the hardcoded vendor key, the third-party credentials stored plaintext in SharedPreferences, a SQLite database, a temp file, and external storage, a SQL injection, a WebView loading attacker content with JavaScript enabled, an implicitly exported activity that shows hardcoded API credentials, and an exported activity that trusts a caller-supplied boolean to skip a PIN gate."
 ---
 
 DIVA (Damn Insecure and Vulnerable App) is Payatu's deliberately insecure Android app, built for practicing Android weaknesses. It ships as a beta APK, installs cleanly on an API 33 emulator, and its thirteen labs each exercise one weakness, which makes it a fast drill for the checks in this handbook. This page collects the writeups, one section per solved lab, as they are worked.
@@ -27,7 +27,7 @@ DIVA (Damn Insecure and Vulnerable App) is Payatu's deliberately insecure Androi
 | 7 | Input Validation Issues, Part 1 | Solved |
 | 8 | Input Validation Issues, Part 2 | Solved |
 | 9 | Access Control Issues, Part 1 | Solved |
-| 10 | Access Control Issues, Part 2 | Open |
+| 10 | Access Control Issues, Part 2 | Solved |
 | 11 | Access Control Issues, Part 3 | Open |
 | 12 | Hardcoding Issues, Part 2 | Open |
 | 13 | Input Validation Issues, Part 3 | Open |
@@ -469,5 +469,97 @@ The finding is an exported activity with no permission exposing hardcoded creden
 - **Pass**: activities with intent filters are exported only where required, and those that reach sensitive data are guarded by a signature-level permission.
 - **Fail**: an activity with a filter and no `android:exported` is implicitly exported, and it shows credentials to any caller.
 - **Evidence**: the manifest declaration, the `am start` that reached it, and the credentials screen it opened.
+
+## Lab 10: Access Control Issues, Part 2
+
+The screen has two radio buttons, Register Now and Already Registered, and a button that opens the Tveeter credentials. The lab screen is `AccessControl2Activity`; the credentials screen it opens is `APICreds2Activity`.
+
+![The Lab 10 screen with the Register Now and Already Registered radio buttons](/images/diva/lab10-before.png)
+
+The button reads the Register Now state into a boolean, sets the action `jakhar.aseem.diva.action.VIEW_CREDS2`, and puts that boolean into the intent under the key from `R.string.chk_pin`:
+
+```java
+public void viewAPICredentials(View view) {
+    RadioButton rbregnow = (RadioButton) findViewById(R.id.aci2rbregnow);
+    Intent i = new Intent();
+    boolean chk_pin = rbregnow.isChecked();
+    i.setAction("jakhar.aseem.diva.action.VIEW_CREDS2");
+    i.putExtra(getString(R.string.chk_pin), chk_pin);
+    if (i.resolveActivity(getPackageManager()) != null) {
+        startActivity(i);
+    } else {
+        Toast.makeText(this, "Error while getting Tveeter API details", 0).show();
+        Log.e("Diva-aci1", "Couldn't resolve the Intent VIEW_CREDS2 to our activity");
+    }
+}
+```
+
+![The AccessControl2Activity button source putting the check_pin boolean into the VIEW_CREDS2 intent](/images/diva/lab10-source.png)
+
+The extra key is a string resource, so the code alone does not show its name. `res/values/strings.xml` resolves it:
+
+```xml
+<string name="chk_pin">check_pin</string>
+```
+
+The caller puts a boolean under the key `check_pin`. The target reads it in `APICreds2Activity`:
+
+```java
+Intent i = getIntent();
+boolean bcheck = i.getBooleanExtra(getString(R.string.chk_pin), true);
+if (!bcheck) {
+    apicview.setText("TVEETER API Key: secrettveeterapikey\nAPI User name: diva2\nAPI Password: p@ssword2");
+    return;
+}
+apicview.setText("Register yourself at http://payatu.com to get your PIN and then login with that PIN!");
+pintext.setVisibility(0);
+vbutton.setVisibility(0);
+```
+
+![The APICreds2Activity source reading check_pin with a default of true](/images/diva/lab10-target.png)
+
+The default is `true`, so a missing extra sends the activity down the PIN path. With Register Now selected, the button sends `true`, and the target shows the PIN screen:
+
+![The PIN screen shown when check_pin is true or missing](/images/diva/lab10-pin.png)
+
+The PIN field is decorative. `viewCreds()` only shows `Invalid PIN. Please try again` and never compares the input to anything. The real gate is the boolean, and the caller decides its value.
+
+The manifest declares `APICreds2Activity` with the `VIEW_CREDS2` filter and no `android:exported` or `android:permission`:
+
+```xml
+<activity
+    android:label="@string/apic2_label"
+    android:name="jakhar.aseem.diva.APICreds2Activity">
+    <intent-filter>
+        <action android:name="jakhar.aseem.diva.action.VIEW_CREDS2"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+    </intent-filter>
+</activity>
+```
+
+![The manifest declaration with the VIEW_CREDS2 intent filter and no exported attribute](/images/diva/lab10-manifest.png)
+
+The caller sets the action, and this filter is what resolves it to `APICreds2Activity`; the caller never names the class. The export rule is the same one from Lab 9. DIVA targets SDK 23, so the filter makes the target reachable from outside the app. The lab screen, `AccessControl2Activity`, has no filter and is not exported, so adb cannot start it by name; the app's main menu opens it internally. The attack does not need it. It starts the exported target through the action the lab screen would have used.
+
+The caller-supplied boolean is the authorization decision, so send `false` as a boolean:
+
+```bash
+adb shell am start -a jakhar.aseem.diva.action.VIEW_CREDS2 --ez check_pin false
+Starting: Intent { act=jakhar.aseem.diva.action.VIEW_CREDS2 (has extras) }
+```
+
+![The am start command sending check_pin as a false boolean](/images/diva/lab10-am-start.png)
+
+The credentials branch runs before the PIN screen is built:
+
+![The Tveeter API credentials shown by the false boolean](/images/diva/lab10-after.png)
+
+The extra type is part of the exploit. `--ez` sends a boolean; `--es` sends a string. With `--es check_pin false`, `getBooleanExtra` finds a String, logs a type warning, and returns the default `true`, so the PIN screen stays up. The bypass needs `--ez`.
+
+The finding is an exported activity that trusts caller-controlled data as an authorization decision. Any app, or adb, can set `check_pin` to `false` and read the Tveeter credentials without registering or knowing the PIN. This is the exported-components check MASTG-TEST-0364.
+
+- **Pass**: an exported activity decides whether sensitive data is shown from state it controls, and accepts no caller-supplied authorization flag.
+- **Fail**: an exported activity reads `check_pin` from the intent and shows credentials when the caller sends `false`.
+- **Evidence**: the caller source, the manifest declaration, the target source, the PIN screen, the `am start` command, and the credentials screen it opened.
 
 The MASVS control mapping for these labs is in [The OWASP MAS Project](/collections/mobile/mas-project).
