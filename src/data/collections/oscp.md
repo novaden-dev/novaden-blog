@@ -1,6 +1,6 @@
 ---
 title: OSCP
-description: "A practical PEN-200 field manual: enumeration through Active Directory, built from lab work and repeatable attack paths."
+description: "A practical OSCP field manual: enumeration through Active Directory, built from lab work and repeatable attack paths."
 kind: handbook
 status: ongoing
 draft: false
@@ -308,6 +308,6 @@ entries:
     section: "Tools"
 ---
 
-The offensive-security body I built preparing for PEN-200 and the OSCP: a repeatable path from the first scan to Domain Admin, and the technique and tool notes it leans on.
+The offensive-security body I built preparing for the OSCP: a repeatable path from the first scan to Domain Admin, and the technique and tool notes it leans on.
 
 Read the methodology first for the decision workflow, then drop into a technique or tool note as a specific target calls for it. Nothing here walks through a named machine; it is the reusable method, not the answers. The methodology grew from paths that actually worked in the labs, so it favours decisions and workflow over exhaustive documentation.

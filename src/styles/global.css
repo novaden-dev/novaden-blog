@@ -9,8 +9,8 @@
 
    NovaDen is a shell you are inside, so the page has two grounds, not one:
 
-     CHROME  the frame — path bar, sidebar, status strip. Always the darker of
-             the two, in BOTH themes, so the shell always reads as chrome.
+     CHROME  the frame — path bar, sidebar, status strip. A shade darker than
+             the pane in both themes, so the shell still reads as chrome.
      PANE    the content area. Paper in light, near-black in dark.
 
    Ember marks one thing only: where you are (the selected row, the current
@@ -21,11 +21,11 @@
 
 :root,
 html[data-theme="light"] {
-  --chrome: #11110f;
-  --chrome-ink: #ece8dd;
-  --chrome-dim: #98978f;
-  --chrome-rule: #292a26;
-  --chrome-hover: #1c1c19;
+  --chrome: #dfdacd;
+  --chrome-ink: #14140f;
+  --chrome-dim: #66655c;
+  --chrome-rule: #cdc7b8;
+  --chrome-hover: #d4cebf;
 
   --background: #ece8dd; /* the pane — paper */
   --foreground: #14140f;
@@ -37,10 +37,9 @@ html[data-theme="light"] {
 
   /* Lime is a dark-ground colour: at #d8ff62 it scores 1.07:1 on paper and is
      unreadable. Light gets the same hue taken down to where it carries text,
-     and the chrome keeps a bright one because the frame stays dark in both
-     themes. */
+     in the pane and the chrome alike. */
   --accent: #4f6b0a;
-  --chrome-accent: #a8cc33;
+  --chrome-accent: #4f6b0a;
   --on-accent: #f4f1e7;
 
   --k-notes: #2a7fa0;

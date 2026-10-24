@@ -6,7 +6,7 @@ export const oscp: HandbookConfig = {
   id: "oscp",
   title: "OSCP",
   description:
-    "A practical PEN-200 field manual: enumeration through Active Directory, built from lab work and repeatable attack paths.",
+    "A practical OSCP field manual: enumeration through Active Directory, built from lab work and repeatable attack paths.",
   base: "/collections/oscp",
   collectionId: "oscp",
   navHeading: "OSCP Field Manual",
