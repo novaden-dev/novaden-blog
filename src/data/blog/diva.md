@@ -9,7 +9,7 @@ handbook: mobile
 tags: ["android"]
 draft: false
 featured: false
-description: "Writeups for the DIVA (Damn Insecure and Vulnerable App) Android labs: each solved lab gets a section with the task, the vulnerable code, the exploit, and the finding, covering Insecure Logging, the hardcoded vendor key, the third-party credentials stored plaintext in SharedPreferences, a SQLite database, a temp file, and external storage, a SQL injection, a WebView loading attacker content with JavaScript enabled, an implicitly exported activity that shows hardcoded API credentials, and an exported activity that trusts a caller-supplied boolean to skip a PIN gate."
+description: "Writeups for the DIVA (Damn Insecure and Vulnerable App) Android labs: each solved lab gets a section with the task, the vulnerable code, the exploit, and the finding, covering Insecure Logging, the hardcoded vendor key, the third-party credentials stored plaintext in SharedPreferences, a SQLite database, a temp file, and external storage, a SQL injection, a WebView loading attacker content with JavaScript enabled, an implicitly exported activity that shows hardcoded API credentials, an exported activity that trusts a caller-supplied boolean to skip a PIN gate, an exported content provider that serves private notes without the PIN, and a native JNI library that hides the Part 2 vendor key."
 ---
 
 DIVA (Damn Insecure and Vulnerable App) is Payatu's deliberately insecure Android app, built for practicing Android weaknesses. It ships as a beta APK, installs cleanly on an API 33 emulator, and its thirteen labs each exercise one weakness, which makes it a fast drill for the checks in this handbook. This page collects the writeups, one section per solved lab, as they are worked.
@@ -28,8 +28,8 @@ DIVA (Damn Insecure and Vulnerable App) is Payatu's deliberately insecure Androi
 | 8 | Input Validation Issues, Part 2 | Solved |
 | 9 | Access Control Issues, Part 1 | Solved |
 | 10 | Access Control Issues, Part 2 | Solved |
-| 11 | Access Control Issues, Part 3 | Open |
-| 12 | Hardcoding Issues, Part 2 | Open |
+| 11 | Access Control Issues, Part 3 | Solved |
+| 12 | Hardcoding Issues, Part 2 | Solved |
 | 13 | Input Validation Issues, Part 3 | Open |
 
 ## Lab 1: Insecure Logging
@@ -561,5 +561,231 @@ The finding is an exported activity that trusts caller-controlled data as an aut
 - **Pass**: an exported activity decides whether sensitive data is shown from state it controls, and accepts no caller-supplied authorization flag.
 - **Fail**: an exported activity reads `check_pin` from the intent and shows credentials when the caller sends `false`.
 - **Evidence**: the caller source, the manifest declaration, the target source, the PIN screen, the `am start` command, and the credentials screen it opened.
+
+## Lab 11: Access Control Issues, Part 3
+
+The lab is a private notes app. The first screen creates a PIN, and the notes screen asks for it before listing the notes. The objective is to read the private notes from outside the app without knowing the PIN.
+
+![The Lab 11 screen with the PIN field and the CREATE/CHANGE PIN button](/images/diva/lab11-before.png)
+
+`AccessControl3Activity.addPin` stores the chosen PIN in the default SharedPreferences under the key `notespin`:
+
+```java
+public void addPin(View view) {
+    SharedPreferences spref = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences.Editor spedit = spref.edit();
+    EditText pinTxt = (EditText) findViewById(R.id.aci3Pin);
+    String pin = pinTxt.getText().toString();
+    if (pin == null || pin.isEmpty()) {
+        Toast.makeText(this, "Please Enter a valid pin!", 0).show();
+        return;
+    }
+    Button vbutton = (Button) findViewById(R.id.aci3viewbutton);
+    spedit.putString(getString(R.string.pkey), pin);
+    spedit.commit();
+    if (vbutton.getVisibility() != 0) {
+        vbutton.setVisibility(0);
+    }
+    Toast.makeText(this, "PIN Created successfully. Private notes are now protected with PIN", 0).show();
+}
+```
+
+`res/values/strings.xml` resolves `pkey`:
+
+```xml
+<string name="pkey">notespin</string>
+```
+
+The notes screen reads that value back and compares it to the PIN field. On a match it queries `NotesProvider.CONTENT_URI` and binds the cursor to the list; otherwise it shows a toast:
+
+```java
+public void accessNotes(View view) {
+    EditText pinTxt = (EditText) findViewById(R.id.aci3notesPinText);
+    Button abutton = (Button) findViewById(R.id.aci3naccessbutton);
+    SharedPreferences spref = PreferenceManager.getDefaultSharedPreferences(this);
+    String pin = spref.getString(getString(R.string.pkey), "");
+    String userpin = pinTxt.getText().toString();
+    if (userpin.equals(pin)) {
+        ListView lview = (ListView) findViewById(R.id.aci3nlistView);
+        Cursor cr = getContentResolver().query(NotesProvider.CONTENT_URI, new String[]{"_id", "title", "note"}, null, null, null);
+        String[] columns = {"title", "note"};
+        int[] fields = {R.id.title_entry, R.id.note_entry};
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.notes_entry, cr, columns, fields, 0);
+        lview.setAdapter((ListAdapter) adapter);
+        pinTxt.setVisibility(4);
+        abutton.setVisibility(4);
+        return;
+    }
+    Toast.makeText(this, "Please Enter a valid pin!", 0).show();
+}
+```
+
+![The PIN check in AccessControl3NotesActivity and the notes query it guards](/images/diva/lab11-source.png)
+
+The PIN screen is the gate the app intends:
+
+![The Diva Private Notes screen asking for the PIN](/images/diva/lab11-pin.png)
+
+With the correct PIN, the app lists the six notes:
+
+![The private notes list after entering the correct PIN](/images/diva/lab11-notes.png)
+
+That check only guards the activity. The notes themselves live behind a content provider, and the manifest exports it with no permission:
+
+```xml
+<provider
+    android:name="jakhar.aseem.diva.NotesProvider"
+    android:enabled="true"
+    android:exported="true"
+    android:authorities="jakhar.aseem.diva.provider.notesprovider"/>
+```
+
+![The NotesProvider declaration with exported true and no permission attribute](/images/diva/lab11-manifest.png)
+
+There is no `android:permission`, `android:readPermission`, or `android:writePermission`, and the provider's `query` method applies no caller check of its own:
+
+```java
+@Override
+public Cursor query(Uri uri, String[] projection, String selection,
+                    String[] selectionArgs, String sortOrder) {
+    SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+    queryBuilder.setTables(TABLE);
+    switch (urimatcher.match(uri)) {
+        case 1:
+            break;
+        case 2:
+            queryBuilder.appendWhere("_id=" + uri.getLastPathSegment());
+            break;
+        default:
+            throw new IllegalArgumentException("Divanotes(query): Unknown URI " + uri);
+    }
+    if (sortOrder == null || sortOrder == "") {
+        sortOrder = C_TITLE;
+    }
+    Cursor cursor = queryBuilder.query(this.mDB, projection, selection, selectionArgs, null, null, sortOrder);
+    cursor.setNotificationUri(getContext().getContentResolver(), uri);
+    return cursor;
+}
+```
+
+![The NotesProvider query method building and returning the notes cursor](/images/diva/lab11-provider.png)
+
+The PIN screen is not the boundary. `AccessControl3NotesActivity` has no intent filter and is not exported, so adb cannot start it by name:
+
+```bash
+adb shell am start -n jakhar.aseem.diva/.AccessControl3NotesActivity
+java.lang.SecurityException: Permission Denial: starting Intent { ... } from null (pid=..., uid=2000) not exported from uid ...
+```
+
+The provider is the boundary, and it does not require the PIN. Query the exported authority directly:
+
+```bash
+adb shell content query --uri content://jakhar.aseem.diva.provider.notesprovider/notes
+Row: 0 _id=5, title=Exercise, note=Alternate days running
+Row: 1 _id=4, title=Expense, note=Spent too much on home theater
+Row: 2 _id=6, title=Weekend, note=b333333333333r
+Row: 3 _id=3, title=holiday, note=Either Goa or Amsterdam
+Row: 4 _id=2, title=home, note=Buy toys for baby, Order dinner
+Row: 5 _id=1, title=office, note=10 Meetings. 5 Calls. Lunch with CEO
+```
+
+![The content query returning every private note without a PIN](/images/diva/lab11-am-query.png)
+
+The output is the same data the app showed after a correct PIN, obtained without opening the app or knowing the PIN. The exported provider also exposes its `insert`, `update`, and `delete` paths, since no write permission is declared either.
+
+The app is also `debuggable`, so the PIN can be recovered from the default SharedPreferences file and entered in the notes screen:
+
+```bash
+adb shell run-as jakhar.aseem.diva cat shared_prefs/jakhar.aseem.diva_preferences.xml
+```
+
+![The notes PIN recovered from SharedPreferences with run-as](/images/diva/lab11-prefs.png)
+
+The file holds `notespin=1234`, along with the Lab 3 credentials. That is enough to open the notes normally, but it is not the intended access-control path: it recovers the secret rather than bypassing the check, and it only works because this build is `debuggable`. The provider query needs neither the PIN nor `run-as`.
+
+The finding is an exported content provider with no permission that serves the private notes database. This is the exported-provider check MASTG-TEST-0355, with the runtime confirmation in MASTG-TEST-0356.
+
+- **Pass**: providers over sensitive data are not exported, or require a signature-level read and write permission.
+- **Fail**: an exported provider with no permission returns the private notes to any caller.
+- **Evidence**: the provider declaration with its export and permission attributes, the query code, and the `content query` output.
+
+## Lab 12: Hardcoding Issues, Part 2
+
+The Part 2 screen has the same shape as Lab 2: a vendor-key field and an ACCESS button. The difference is that the comparison is no longer in Java. `Hardcode2Activity.access` hands the input to a `DivaJni` instance and checks the return value:
+
+![The Lab 12 screen with the vendor key field and the ACCESS button](/images/diva/lab12-before.png)
+
+```java
+public void access(View view) {
+    EditText hckey = (EditText) findViewById(R.id.hc2Key);
+    if (this.djni.access(hckey.getText().toString()) != 0) {
+        Toast.makeText(this, "Access granted! See you on the other side :)", 0).show();
+    } else {
+        Toast.makeText(this, "Access denied! See you in hell :D", 0).show();
+    }
+}
+```
+
+![Hardcode2Activity passing the vendor key to the native access method](/images/diva/lab12-source.png)
+
+`DivaJni` is only the bridge. It declares the native methods and loads `libdivajni.so`:
+
+```java
+public class DivaJni {
+    private static final String soName = "divajni";
+
+    public native int access(String str);
+
+    public native int initiateLaunchSequence(String str);
+
+    static {
+        System.loadLibrary(soName);
+    }
+}
+```
+
+The implementation is not in the DEX. The APK ships the library for seven ABIs, and the emulator runs the x86_64 copy. The ABI changes the machine code, not the JNI names or the logic, so another copy would lead to the same key; pick the one the device actually uses so the addresses match:
+
+```bash
+adb shell getprop ro.product.cpu.abi
+# x86_64
+adb shell dumpsys package jakhar.aseem.diva | grep primaryCpuAbi
+# primaryCpuAbi=x86_64
+
+unzip -l diva-beta.apk | grep 'lib/.*\.so'
+unzip -o diva-beta.apk 'lib/x86_64/libdivajni.so' -d diva-native
+```
+
+JNI resolves the native method by package, class, and method name. `nm -D` lists the exports:
+
+```bash
+nm -D diva-native/lib/x86_64/libdivajni.so | grep Java_
+00000000000004e0 T Java_jakhar_aseem_diva_DivaJni_access
+0000000000000510 T Java_jakhar_aseem_diva_DivaJni_initiateLaunchSequence
+```
+
+`Java_jakhar_aseem_diva_DivaJni_access` is the body of `access`. The second export, `initiateLaunchSequence`, belongs to Lab 13 and is not part of this gate. The ABI and symbol workflow is also in [Native Libraries](/collections/mobile/jadx#native-libraries).
+
+I opened the library in Ghidra to see how the check is built:
+
+![Ghidra decompiling DivaJni.access with the hardcoded 11-byte key](/images/diva/lab12-ghidra.png)
+
+The decompiled function reads the input with `GetStringUTFChars`, sets `lVar4 = 0xb` (11 bytes), points `pcVar5` at `"olsdfgad;lh"`, and walks both buffers until a byte differs. It returns `1` only when all 11 bytes match and `0` otherwise.
+
+The native reverse engineering was a bit hard for me. The Java-to-JNI hop and the decompiler output did not click on my own, and I needed external help from an AI assistant to work through it. The commands above are the path we reconstructed together.
+
+Enter the key and tap ACCESS. The same input can be sent from adb, with the quotes protecting the semicolon:
+
+```bash
+adb shell "input text 'olsdfgad;lh'"
+```
+
+![The access granted toast after entering the native vendor key](/images/diva/lab12-after.png)
+
+Moving the comparison into native code raises the effort, not the security: the library is in the APK and the literal is in `.rodata`, so the key is still recoverable from a static read. This is the hardcoded-secret finding in MASVS-AUTH-1, MASWE-0005, the same weakness as Lab 2 with a native implementation.
+
+- **Pass**: no usable secret ships in the package; values that must remain secret are fetched at runtime or held in the keystore.
+- **Fail**: a native function compares user input to a literal key in the `.so`, and the key is recoverable from the APK.
+- **Evidence**: the JNI export, the decompiled comparison, and the success toast.
 
 The MASVS control mapping for these labs is in [The OWASP MAS Project](/collections/mobile/mas-project).

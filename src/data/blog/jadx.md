@@ -126,6 +126,22 @@ jadx reads bytecode only. Code inside the `lib/*.so` files, C/C++ built with the
 - **`strings`**: `strings libsecret-lib.so | grep -iE 'key|secret|token'` finds values stored as plain literals in the binary. It costs one command, so run it before opening Ghidra.
 - **Run the library yourself**: build a small app that loads the same `.so` and calls the same function. Copy the `.so` into the PoC project's `jniLibs`, recreate the Java class with the same package and method name as the app's (JNI resolves native methods by package, class, and function name), and call it exactly as the app does. The library runs on your device and returns its result, so you read the output without reverse-engineering the binary at all.
 
+Before any of those, pick the copy the device actually runs and the function behind the Java method. An APK can ship the same library for several ABIs under `lib/`:
+
+```bash
+adb shell getprop ro.product.cpu.abi                    # device ABI
+adb shell dumpsys package <pkg> | grep primaryCpuAbi    # ABI Android selected for the app
+unzip -l app.apk | grep 'lib/.*\.so'
+```
+
+Open `lib/<abi>/<name>.so`. The machine code differs by instruction set; the JNI symbol names and the routine's logic do not. List the exported JNI entry points with:
+
+```bash
+nm -D libsecret-lib.so | grep Java_
+```
+
+`nm -D` reads the dynamic symbol table, the symbols the loader can resolve, and `grep Java_` keeps the JNI names. They follow `Java_<package>_<class>_<method>`, so `Java_com_example_App_check` is the implementation of `native int check(...)` in `com.example.App`. The hex address is where the function starts; `T` means it is code in `.text`.
+
 ## Obfuscation
 
 Commercial apps are built with an obfuscator, usually R8 or ProGuard, which renames classes, methods, and fields to short names. You will see packages like `a.b.c` and methods like `a()`. Two consequences:
