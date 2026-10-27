@@ -137,6 +137,84 @@
     pre {
       @apply focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-dashed;
     }
+
+    /* ===== Diagrams =====
+       Built from HTML rather than SVG so the boxes reflow at phone width
+       instead of shrinking their text. Each figure carries `not-prose`, so
+       only these rules style it. */
+    figure.diagram {
+      @apply my-8;
+      font-family: var(--font-app);
+      font-size: 0.8rem;
+      line-height: 1.5;
+
+      figcaption {
+        @apply mt-3;
+      }
+    }
+
+    .dg-box {
+      @apply rounded-xs border border-border bg-sheet p-3;
+    }
+
+    .dg-box b {
+      @apply block text-foreground;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+    }
+
+    .dg-box span {
+      @apply block text-soft;
+    }
+
+    .dg-base {
+      @apply border-accent;
+      border-width: 2px;
+    }
+
+    .dg-grid {
+      @apply grid grid-cols-2 gap-2 sm:grid-cols-3;
+    }
+
+    .dg-pair {
+      @apply grid gap-2 sm:grid-cols-2;
+    }
+
+    /* One row per item: a label, then a bar whose length carries the value. */
+    .dg-rows {
+      @apply grid gap-1;
+    }
+
+    .dg-row {
+      @apply grid items-center gap-x-3 rounded-xs px-1 py-1 hover:bg-sheet;
+      grid-template-columns: minmax(6.5rem, 11rem) 1fr;
+    }
+
+    .dg-row > :first-child {
+      @apply text-foreground;
+    }
+
+    /* The value label never wraps; on a narrow screen the bar gives way. */
+    .dg-track {
+      @apply flex min-w-0 items-center gap-2 text-soft;
+
+      > span:not(.dg-bar, .dg-note) {
+        @apply whitespace-nowrap;
+      }
+    }
+
+    .dg-bar {
+      @apply h-3.5 min-w-1 bg-accent;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .dg-bar.dim {
+      @apply bg-faint;
+    }
+
+    .dg-split {
+      @apply mt-2 border-t border-dashed border-border pt-2;
+    }
   }
 
   /* ===== Code blocks =====

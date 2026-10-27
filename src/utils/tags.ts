@@ -108,6 +108,13 @@ export const TAGS: Record<string, TagDefinition> = {
   "mass-assignment": { domain: "technical", parent: "web" },
   webdav: { domain: "technical", parent: "web" },
 
+  // Regulation: the control frameworks a regulator mandates, read as subjects
+  // in their own right rather than as a lens on another topic.
+  compliance: {
+    domain: "technical",
+    aliases: ["regulatory-compliance", "frameworks"],
+  },
+
   // Certifications and their providers. The reviews are how someone reads a
   // certificate, so the certificate itself is the subject; a provider goes on
   // the post when the review is substantially about them.
