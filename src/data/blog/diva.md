@@ -9,7 +9,7 @@ handbook: mobile
 tags: ["android"]
 draft: false
 featured: false
-description: "Writeups for the DIVA (Damn Insecure and Vulnerable App) Android labs: each solved lab gets a section with the task, the vulnerable code, the exploit, and the finding, covering Insecure Logging, the hardcoded vendor key, the third-party credentials stored plaintext in SharedPreferences, a SQLite database, a temp file, and external storage, a SQL injection, a WebView loading attacker content with JavaScript enabled, an implicitly exported activity that shows hardcoded API credentials, an exported activity that trusts a caller-supplied boolean to skip a PIN gate, an exported content provider that serves private notes without the PIN, and a native JNI library that hides the Part 2 vendor key."
+description: "Writeups for the DIVA (Damn Insecure and Vulnerable App) Android labs: each solved lab gets a section with the task, the vulnerable code, the exploit, and the finding, covering Insecure Logging, the hardcoded vendor key, the third-party credentials stored plaintext in SharedPreferences, a SQLite database, a temp file, and external storage, a SQL injection, a WebView loading attacker content with JavaScript enabled, an implicitly exported activity that shows hardcoded API credentials, an exported activity that trusts a caller-supplied boolean to skip a PIN gate, an exported content provider that serves private notes without the PIN, a native JNI library that hides the Part 2 vendor key, and a native launch function that overflows a 40-byte stack buffer."
 ---
 
 DIVA (Damn Insecure and Vulnerable App) is Payatu's deliberately insecure Android app, built for practicing Android weaknesses. It ships as a beta APK, installs cleanly on an API 33 emulator, and its thirteen labs each exercise one weakness, which makes it a fast drill for the checks in this handbook. This page collects the writeups, one section per solved lab, as they are worked.
@@ -30,7 +30,7 @@ DIVA (Damn Insecure and Vulnerable App) is Payatu's deliberately insecure Androi
 | 10 | Access Control Issues, Part 2 | Solved |
 | 11 | Access Control Issues, Part 3 | Solved |
 | 12 | Hardcoding Issues, Part 2 | Solved |
-| 13 | Input Validation Issues, Part 3 | Open |
+| 13 | Input Validation Issues, Part 3 | Solved |
 
 ## Lab 1: Insecure Logging
 
@@ -787,5 +787,65 @@ Moving the comparison into native code raises the effort, not the security: the 
 - **Pass**: no usable secret ships in the package; values that must remain secret are fetched at runtime or held in the keystore.
 - **Fail**: a native function compares user input to a literal key in the `.so`, and the key is recoverable from the APK.
 - **Evidence**: the JNI export, the decompiled comparison, and the success toast.
+
+## Lab 13: Input Validation Issues, Part 3
+
+This screen changes the target. It is still a launch-code field, but the objective says not to find the code: the task is to crash the app and explain the crash. The Java side passes the input to the same JNI bridge as Lab 12:
+
+![The Lab 13 screen with the missile-launch objective](/images/diva/lab13-before.png)
+
+```java
+public void push(View view) {
+    EditText cTxt = (EditText) findViewById(R.id.ivi3CodeText);
+    if (this.djni.initiateLaunchSequence(cTxt.getText().toString()) != 0) {
+        Toast.makeText(this, "Launching in T - 10 ...", 0).show();
+    } else {
+        Toast.makeText(this, "Access denied!", 0).show();
+    }
+}
+```
+
+![InputValidation3Activity passing the launch code to the native method](/images/diva/lab13-source.png)
+
+`initiateLaunchSequence` is the second export in `libdivajni.so`:
+
+```bash
+nm -D diva-native/lib/x86_64/libdivajni.so | grep initiateLaunchSequence
+# 0000000000000510 T Java_jakhar_aseem_diva_DivaJni_initiateLaunchSequence
+```
+
+The native code does two things. It compares seven bytes against `.dotdot`, after rewriting a leading `!` to `.`, so both `.dotdot` and `!dotdot` return 1 and show “Launching in T - 10 ...”. That is the code the screen tells you not to chase, and it is a decoy.
+
+The actual bug is the copy before the comparison. Ghidra shows a 40-byte stack buffer filled by `strcpy` with no length check:
+
+![Ghidra decompiling initiateLaunchSequence with strcpy into local_28](/images/diva/lab13-ghidra.png)
+
+The decompiled function declares `char local_28[40]`, calls `strcpy(local_28, pcVar3)` on the `GetStringUTFChars` result, and then compares the first seven bytes. There is no bounds check and no stack canary. The saved return address sits at `local_28 + 0x28`, so 48 bytes are enough to overwrite all eight bytes of it; longer input controls where the function returns.
+
+Enter 64 to 100 characters and press the button. The Java layer shows its toast, then the native function returns through the overwritten address and the process dies. The crash buffer is the evidence:
+
+```bash
+adb logcat -c
+# enter 100 A's in Lab 13 and press PUSH THE RED BUTTON
+adb logcat -d -b crash | tail -40
+```
+
+![The SIGSEGV in libdivajni.so with 0x4141414141414141 as the return address](/images/diva/lab13-crash.png)
+
+The key lines are:
+
+```text
+F libc  : Fatal signal 11 (SIGSEGV), code 128 (SI_KERNEL), fault addr 0x0
+F DEBUG : #00 pc 0000000000000553  .../lib/x86_64/libdivajni.so (Java_jakhar_aseem_diva_DivaJni_initiateLaunchSequence+67)
+F DEBUG : #01 pc 4141414141414141  <unknown>
+```
+
+`#00` is the `ret` in `initiateLaunchSequence`; `#01` is the return address the input overwrote. `0x41` is `A`. That is the root cause: a stack-based buffer overflow in native input handling, not a bad launch code.
+
+The weakness is CWE-121 (stack-based buffer overflow) and CWE-787 (out-of-bounds write), the native form of MASVS-CODE-4, validate and sanitize untrusted input. The same library also fails the compiler-hardening check in MASVS-CODE-3: it has no stack canary, so the overwrite reaches the saved return address instead of being caught.
+
+- **Pass**: input is length-checked before the copy, the destination cannot be overrun, and the native library is built with stack canaries.
+- **Fail**: `strcpy` copies unbounded input into a 40-byte stack buffer, and a 48-byte input overwrites the saved return address.
+- **Evidence**: the decompiled `local_28[40]` and `strcpy`, the `SIGSEGV` in `libdivajni.so`, and `#01 pc 4141414141414141`.
 
 The MASVS control mapping for these labs is in [The OWASP MAS Project](/collections/mobile/mas-project).
