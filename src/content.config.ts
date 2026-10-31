@@ -65,6 +65,19 @@ const projects = defineCollection({
     post: z.string().optional(),
     order: z.number().default(0),
     draft: z.boolean().optional(),
+    // Screenshots shown in this order on the app's page.
+    showcase: z
+      .array(
+        z.object({
+          image: z.string(),
+          width: z.number(),
+          height: z.number(),
+          alt: z.string(),
+          title: z.string(),
+          text: z.string(),
+        })
+      )
+      .optional(),
   }),
 });
 

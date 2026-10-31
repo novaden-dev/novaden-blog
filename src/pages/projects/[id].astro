@@ -1,0 +1,58 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import ProjectMeta from "@/components/ProjectMeta.astro";
+import Pane from "@/layouts/Pane.astro";
+import projectFilter from "@/utils/projectFilter";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects", projectFilter);
+  return projects.map(project => ({
+    params: { id: project.id },
+    props: { project },
+  }));
+}
+
+type Props = { project: CollectionEntry<"projects"> };
+
+const { project } = Astro.props;
+const { data } = project;
+const { Content } = await render(project);
+---
+
+<Pane
+  title={data.name.toLowerCase()}
+  desc={data.tagline}
+  pill={data.status}
+  path={[{ label: "apps", href: "/projects" }, { label: data.name }]}
+  place="apps"
+  head={data.name}
+>
+  <div class="project project-page">
+    <div class="project-body">
+      <Content />
+    </div>
+    <ProjectMeta {project} />
+
+    {
+      data.showcase?.length && (
+        <ol class="showcase" tabindex="0" aria-label={`${data.name} screens`}>
+          {data.showcase.map(screen => (
+            <li class="showcase-step">
+              <img
+                class="app-screen"
+                src={screen.image}
+                width={screen.width}
+                height={screen.height}
+                alt={screen.alt}
+                loading="lazy"
+                decoding="async"
+              />
+              <h2 class="showcase-title">{screen.title}</h2>
+              <p class="showcase-text">{screen.text}</p>
+            </li>
+          ))}
+        </ol>
+      )
+    }
+  </div>
+</Pane>

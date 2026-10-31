@@ -1,0 +1,20 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+type Props = { project: CollectionEntry<"projects"> };
+
+const { data } = Astro.props.project;
+---
+
+<div class="project-meta">
+  {data.stack.map(tech => <span class="tech">{tech}</span>)}
+  <a href={data.repo} target="_blank" rel="noopener">source ↗</a>
+  {
+    data.releases && (
+      <a href={data.releases} target="_blank" rel="noopener">
+        download ↗
+      </a>
+    )
+  }
+  {data.post && <a href={`/posts/${data.post}`}>how it got built →</a>}
+</div>

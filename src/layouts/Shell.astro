@@ -77,7 +77,7 @@ const index = [
   })),
   ...projects.map(project => ({
     t: project.data.name,
-    h: "/projects",
+    h: `/projects/${project.id}`,
     k: "apps",
   })),
 ];

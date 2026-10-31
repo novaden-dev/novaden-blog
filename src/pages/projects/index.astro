@@ -1,5 +1,5 @@
 ---
-import { getCollection, render } from "astro:content";
+import { getCollection } from "astro:content";
 import Pane from "@/layouts/Pane.astro";
 import projectFilter from "@/utils/projectFilter";
 
@@ -10,13 +10,6 @@ const projects = (await getCollection("projects", projectFilter)).sort(
 // With nothing public there is no page: a body-less response is never written
 // to dist, so production has no empty "0 apps" listing and no sitemap entry.
 if (projects.length === 0) return new Response(null, { status: 404 });
-
-const rendered = await Promise.all(
-  projects.map(async project => ({
-    ...project,
-    Content: (await render(project)).Content,
-  }))
-);
 ---
 
 <Pane
@@ -27,40 +20,17 @@ const rendered = await Promise.all(
   place="apps"
   head="Projects"
 >
-  <div class="projects">
+  <div class="apps-list">
     {
-      rendered.map(project => (
-        <article class="project">
-          <div class="project-head">
-            <h2 class="project-name">{project.data.name}</h2>
-            <span class={`state state-${project.data.status}`}>
-              {project.data.status}
-            </span>
-          </div>
-
-          <p class="project-tag">{project.data.tagline}</p>
-
-          <div class="project-body">
-            <project.Content />
-          </div>
-
-          <div class="project-meta">
-            {project.data.stack.map(tech => (
-              <span class="tech">{tech}</span>
-            ))}
-            <a href={project.data.repo} target="_blank" rel="noopener">
-              source ↗
-            </a>
-            {project.data.releases && (
-              <a href={project.data.releases} target="_blank" rel="noopener">
-                download ↗
-              </a>
-            )}
-            {project.data.post && (
-              <a href={`/posts/${project.data.post}`}>how it got built →</a>
-            )}
-          </div>
-        </article>
+      projects.map(project => (
+        <a class="file" href={`/projects/${project.id}`} data-kind="apps">
+          <span class="file-name">
+            <span class="file-dot" aria-hidden="true" />
+            <span class="file-title">{project.data.name}</span>
+          </span>
+          <span class="file-kind">{project.data.status}</span>
+          <span class="file-desc">{project.data.tagline}</span>
+        </a>
       ))
     }
   </div>

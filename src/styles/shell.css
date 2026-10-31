@@ -29,6 +29,14 @@
   min-height: 0;
 }
 
+/* Below the desktop layout the nav and pane stack, and a short pane must not
+   stretch the nav's row and push its own heading down. */
+@media (max-width: 1023px) {
+  .shell {
+    align-content: start;
+  }
+}
+
 @media (min-width: 1024px) {
   .shell {
     grid-template-columns: var(--side-w) minmax(0, 1fr);
@@ -1190,39 +1198,24 @@ a.rail-step:hover {
 
 /* --- project cards -------------------------------------------------------- */
 
-.projects {
-  display: grid;
-  gap: 0;
+/* Apps have a name, a status and a tagline, so their rows drop the post columns. */
+.apps-list .file {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.apps-list .file .file-kind {
+  display: inline;
+}
+
+.apps-list .file-desc {
+  white-space: normal;
 }
 
 .project {
   padding: 1.15rem clamp(0.85rem, 2.5vw, 1.75rem) 1.4rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.project-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.75rem;
-}
-
-.project-name {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.project-tag {
-  font-family: var(--font-read);
-  font-size: 0.95rem;
-  color: var(--soft);
-  margin-top: 0.2rem;
 }
 
 .project-body {
-  margin-top: 0.6rem;
   max-width: 72ch;
 }
 
@@ -1263,34 +1256,65 @@ a.rail-step:hover {
   color: var(--accent);
 }
 
-/* Status carries a hue and a shape, so it reads before it is read. */
-.state {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5ch;
+/* App screens stay dark in both themes, so only the border follows the theme. */
+.app-screen {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: #0b0c09;
+}
+
+.showcase {
+  /* One row: the steps fill the pane when they fit and scroll sideways when not. */
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(13rem, 1fr);
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+  padding: 0 0 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  list-style: none;
+  counter-reset: step;
+}
+
+.showcase-step {
+  counter-increment: step;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 640px) {
+  .showcase {
+    grid-auto-columns: min(78vw, 18rem);
+  }
+}
+
+.showcase-title {
+  margin-top: 0.8rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.showcase-title::before {
+  content: counter(step, decimal-leading-zero);
+  margin-right: 0.6ch;
   font-family: var(--font-app);
-  font-size: 0.66rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--kind, var(--faint));
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--k-apps);
 }
 
-.state::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 1px;
-  background: currentColor;
-}
-
-.state-shipping {
-  --kind: var(--k-apps);
-}
-.state-prototype {
-  --kind: var(--accent);
-}
-.state-archived {
-  --kind: var(--faint);
+.showcase-text {
+  margin-top: 0.3rem;
+  font-family: var(--font-read);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--soft);
 }
 
 /* --- plain reading pane (about, 404, search) ------------------------------ */
