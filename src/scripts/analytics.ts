@@ -83,7 +83,9 @@ function startReadDepth() {
     scheduled = false;
     const rect = article.getBoundingClientRect();
     if (rect.height <= 0) return;
-    const seen = (window.innerHeight - rect.top) / rect.height;
+    // 2px of slack: when the body ends exactly at the page bottom, sub-pixel
+    // heights leave the last measurement at 99.99% and 100 never fires.
+    const seen = (window.innerHeight + 2 - rect.top) / rect.height;
     const percent = Math.min(100, Math.max(0, seen * 100));
     for (const m of MILESTONES) {
       if (percent >= m && !sent.has(m)) {
