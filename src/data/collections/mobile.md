@@ -75,4 +75,7 @@ entries:
   - id: mobile-and-022
     post: diva
     section: "Labs/Other Labs"
+  - id: mobile-and-024
+    post: uncrackable-level1
+    section: "Labs/Other Labs"
 ---
