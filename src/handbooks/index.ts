@@ -1,4 +1,5 @@
 import type { HandbookConfig } from "./types";
+import { aiSecurity } from "./ai-security";
 import { mobile } from "./mobile";
 import { oscp } from "./oscp";
 
@@ -11,6 +12,7 @@ import { oscp } from "./oscp";
 export const HANDBOOKS: Record<string, HandbookConfig> = {
   oscp,
   mobile,
+  "ai-security": aiSecurity,
 };
 
 export type { HandbookConfig } from "./types";

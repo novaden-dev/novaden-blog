@@ -76,6 +76,27 @@ export const TAGS: Record<string, TagDefinition> = {
   mobile: { domain: "technical" },
   android: { domain: "technical" },
 
+  // AI and machine learning, including how those systems get attacked.
+  ai: {
+    domain: "technical",
+    aliases: [
+      "artificial-intelligence",
+      "machine-learning",
+      "ml",
+      "deep-learning",
+    ],
+  },
+
+  math: {
+    domain: "technical",
+    aliases: [
+      "mathematics",
+      "linear-algebra",
+      "statistics",
+      "probability",
+    ],
+  },
+
   // Services and protocols worth browsing on their own.
   smb: { domain: "technical" },
   ftp: { domain: "technical" },
