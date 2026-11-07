@@ -136,6 +136,9 @@ export const TAGS: Record<string, TagDefinition> = {
     aliases: ["regulatory-compliance", "frameworks"],
   },
 
+  // Life outside work.
+  music: { domain: "life" },
+
   // Certifications and their providers. The reviews are how someone reads a
   // certificate, so the certificate itself is the subject; a provider goes on
   // the post when the review is substantially about them.
