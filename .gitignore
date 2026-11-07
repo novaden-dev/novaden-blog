@@ -29,3 +29,6 @@ public/pagefind
 
 # temporary content backups pending deletion
 _TO_BE_DELETED_*/
+# python env for generating post figures
+scripts/figures/.venv/
+__pycache__/
