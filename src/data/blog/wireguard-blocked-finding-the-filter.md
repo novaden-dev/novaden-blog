@@ -4,7 +4,7 @@ pubDatetime: 2026-10-17T12:00:00Z
 title: "WireGuard Blocked in One Country: Finding the Filter and Tunnelling Around It"
 slug: wireguard-blocked-finding-the-filter
 featured: false
-draft: true
+draft: false
 tags: ["networking"]
 category: journal
 format: writeup
