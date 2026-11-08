@@ -56,7 +56,7 @@ A pure group, all malicious or all benign, scores 0. With two classes, the worst
 
 ### Entropy
 
-Entropy measures the same thing in bits, using the base-2 logarithm from [Math for Machine Learning](/posts/ai-math):
+Entropy measures the same thing in bits, using the base-2 logarithm from [Math for Machine Learning](/collections/ai-security/ai-math):
 
 $$
 H = -\sum_k p_k \log_2 p_k
@@ -131,7 +131,7 @@ This is a data problem. Separating a script that fetches a payload from one that
 
 ### Stopping before it overfits
 
-A tree grown until every leaf is pure ends up memorizing its training data, which is the overfitting described in [Supervised Learning](/posts/ai-supervised-learning). On a real dataset with hundreds of features, it creates leaves for single runs, based on a quirk such as a specific file name. Trees are limited in two ways:
+A tree grown until every leaf is pure ends up memorizing its training data, which is the overfitting described in [Supervised Learning](/collections/ai-security/ai-supervised-learning). On a real dataset with hundreds of features, it creates leaves for single runs, based on a quirk such as a specific file name. Trees are limited in two ways:
 
 - **Stopping rules**: a maximum depth (no more than, say, 5 questions on any path), a minimum number of runs a group needs before it can be split, or a minimum information gain a split has to reach.
 - **Pruning**: grow the full tree, then remove branches that do not improve accuracy on held-out data.
@@ -161,7 +161,7 @@ They also have weaknesses that the data has to make up for:
 |---|---|---|
 | Greedy choices | Each split is the best one at that moment, and the tree never revisits it, so a better overall tree can be missed | Ensembles of many trees |
 | Unstable | Changing a few training rows can change the first split and with it the whole tree | Random forests, which average many trees |
-| Splits are straight cuts on one feature at a time | A diagonal boundary, like the one in [Logistic Regression](/posts/ai-logistic-regression), becomes a staircase of many small splits | More data, or a feature that combines the two |
+| Splits are straight cuts on one feature at a time | A diagonal boundary, like the one in [Logistic Regression](/collections/ai-security/ai-logistic-regression), becomes a staircase of many small splits | More data, or a feature that combines the two |
 | Favours features with many values | A unique ID column splits every run into its own pure leaf and scores the highest information gain while meaning nothing | Remove ID-like columns, or use gain ratio, which penalizes splits into many small groups |
 | Class imbalance | With 1 malicious run per 1,000, a tree that always says benign has low impurity | Weight the rare class higher during training |
 

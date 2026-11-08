@@ -19,7 +19,7 @@ Machine learning formulas use a small set of operations written in compact notat
 
 A subscript picks one item out of a list. If $$x$$ is a list of failed login counts for each hour of the day, $$x_1$$ is the first hour, $$x_2$$ the second, and $$x_t$$ is hour $$t$$, whichever hour you are looking at. In code, $$x_t$$ is `x[t]`.
 
-Subscripts with arithmetic point at neighbours: $$x_{t-1}$$ is the hour before $$t$$, and $$x_{t+1}$$ the hour after. Sequence models, such as the RNNs in [AI, Machine Learning, and Deep Learning](/posts/ai-foundations), are written this way: the state at step $$t$$ is computed from the input at $$t$$ and the state at $$t-1$$.
+Subscripts with arithmetic point at neighbours: $$x_{t-1}$$ is the hour before $$t$$, and $$x_{t+1}$$ the hour after. Sequence models, such as the RNNs in [AI, Machine Learning, and Deep Learning](/collections/ai-security/ai-foundations), are written this way: the state at step $$t$$ is computed from the input at $$t$$ and the state at $$t-1$$.
 
 The ellipsis ($$\ldots$$) means "continue the pattern". $$x_1 + x_2 + \cdots + x_n$$ is every item from the first to the $$n$$th added together, where $$n$$ is the length of the list.
 

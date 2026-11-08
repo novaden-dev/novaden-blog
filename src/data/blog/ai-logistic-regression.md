@@ -11,7 +11,7 @@ description: "How logistic regression turns a weighted sum into a class probabil
 
 ## Introduction
 
-Logistic regression is a classification model. It predicts the probability that an example belongs to a class, such as "this login source is attacking", and a threshold turns that probability into a yes or no. Despite the name, it is not used to predict numbers: the "regression" comes from the weighted sum inside it, which it shares with [Linear Regression](/posts/ai-linear-regression).
+Logistic regression is a classification model. It predicts the probability that an example belongs to a class, such as "this login source is attacking", and a threshold turns that probability into a yes or no. Despite the name, it is not used to predict numbers: the "regression" comes from the weighted sum inside it, which it shares with [Linear Regression](/collections/ai-security/ai-linear-regression).
 
 The running example is a detector for password attacks. For each source IP, it looks at two features over the last 10 minutes:
 
@@ -28,7 +28,7 @@ Labeling attacks as 1 and benign sources as 0, then fitting linear regression, g
 
 ### The sigmoid
 
-Logistic regression keeps the weighted sum and passes it through the sigmoid from [Math for Machine Learning](/posts/ai-math), which squeezes any number into the range 0 to 1:
+Logistic regression keeps the weighted sum and passes it through the sigmoid from [Math for Machine Learning](/collections/ai-security/ai-math), which squeezes any number into the range 0 to 1:
 
 $$
 z = w_1 x_1 + w_2 x_2 + b
@@ -62,7 +62,7 @@ That gives every weight a direct meaning. Adding 1 to a feature adds its weight 
 - **One more failed login**: odds multiply by $$e^{0.3} \approx 1.35$$, so they go up 35%.
 - **One more distinct username**: odds multiply by $$e^{0.8} \approx 2.23$$, so they more than double.
 
-So in this model, trying a new username is stronger evidence of an attack than one more failed attempt. This is the statistics sense of inference from [Supervised Learning](/posts/ai-supervised-learning): reading what the trained model has learned about the data, in addition to using its predictions.
+So in this model, trying a new username is stronger evidence of an attack than one more failed attempt. This is the statistics sense of inference from [Supervised Learning](/collections/ai-security/ai-supervised-learning): reading what the trained model has learned about the data, in addition to using its predictions.
 
 ### Training
 
@@ -116,7 +116,7 @@ The attack is the same, only slower, and the probability drops from 0.69 to 0.06
 
 ## Choosing the Threshold
 
-0.5 is only the default threshold. Changing it moves the boundary parallel to itself, to one of the dashed lines in the figure. [Supervised Learning](/posts/ai-supervised-learning) covers the trade-off: a lower threshold catches more attacks (higher recall) and raises more false alarms (lower precision).
+0.5 is only the default threshold. Changing it moves the boundary parallel to itself, to one of the dashed lines in the figure. [Supervised Learning](/collections/ai-security/ai-supervised-learning) covers the trade-off: a lower threshold catches more attacks (higher recall) and raises more false alarms (lower precision).
 
 One model can serve several thresholds at once, each tied to an action:
 

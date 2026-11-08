@@ -11,7 +11,7 @@ description: "Predicting a number with a straight line: one feature and several,
 
 ## Introduction
 
-Regression is supervised learning where the label is a number instead of a category. [Supervised Learning](/posts/ai-supervised-learning) used classification, where the answer is phishing or legitimate. A regression model answers questions like "how many milliseconds will this request take?" or "how many GB of logs will the SIEM ingest tomorrow?". Linear regression is the simplest regression model: it predicts the number with a straight line, or with a flat surface when there are several features.
+Regression is supervised learning where the label is a number instead of a category. [Supervised Learning](/collections/ai-security/ai-supervised-learning) used classification, where the answer is phishing or legitimate. A regression model answers questions like "how many milliseconds will this request take?" or "how many GB of logs will the SIEM ingest tomorrow?". Linear regression is the simplest regression model: it predicts the number with a straight line, or with a flat surface when there are several features.
 
 The running example is a web server's response time. Its operators want to know how slow it gets as load grows, before the next traffic spike.
 
@@ -62,7 +62,7 @@ The squaring has a downside. One extreme measurement, such as a 2,000 ms respons
 
 ### The formula
 
-For one feature, OLS reduces to two lines that reuse the covariance and variance from [Math for Machine Learning](/posts/ai-math):
+For one feature, OLS reduces to two lines that reuse the covariance and variance from [Math for Machine Learning](/collections/ai-security/ai-math):
 
 $$
 w = \frac{\operatorname{Cov}(x, y)}{\operatorname{Var}(x)}
@@ -89,7 +89,7 @@ $$
 
 The slope is how much $$x$$ and $$y$$ move together, divided by how much $$x$$ moves on its own. The intercept places the line so that it passes through the point of averages, $$(\bar{x}, \bar{y}) = (30, 200)$$.
 
-With several features, the same calculation is written with matrices: $$\mathbf{w} = (X^T X)^{-1} X^T \mathbf{y}$$, where each row of $$X$$ is one example. On millions of rows, inverting that matrix gets expensive, so large models are fitted with the training loop from [Supervised Learning](/posts/ai-supervised-learning) instead: start with random weights and repeatedly step them in the direction that lowers the squared error. That method is called gradient descent, and it converges to the same line.
+With several features, the same calculation is written with matrices: $$\mathbf{w} = (X^T X)^{-1} X^T \mathbf{y}$$, where each row of $$X$$ is one example. On millions of rows, inverting that matrix gets expensive, so large models are fitted with the training loop from [Supervised Learning](/collections/ai-security/ai-supervised-learning) instead: start with random weights and repeatedly step them in the direction that lowers the squared error. That method is called gradient descent, and it converges to the same line.
 
 ## Several Features
 

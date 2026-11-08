@@ -11,7 +11,7 @@ description: "How a supervised model is built and judged: features and labels, t
 
 ## Introduction
 
-Supervised learning trains a model on examples that already have the correct answer attached, so it can produce answers for new examples. [AI, Machine Learning, and Deep Learning](/posts/ai-foundations) places it next to unsupervised and reinforcement learning. The running example is a classifier that decides whether a URL is phishing.
+Supervised learning trains a model on examples that already have the correct answer attached, so it can produce answers for new examples. [AI, Machine Learning, and Deep Learning](/collections/ai-security/ai-foundations) places it next to unsupervised and reinforcement learning. The running example is a classifier that decides whether a URL is phishing.
 
 ## The Dataset
 
@@ -40,7 +40,7 @@ The labeled data is split before training. Usually 80% becomes the training set,
 
 ## Model and Training
 
-A model is a function with adjustable numbers inside it, called parameters (or weights). For the URL classifier, a simple model gives each feature a weight, combines them with the dot product from [Math for Machine Learning](/posts/ai-math), and turns the result into a probability with the sigmoid:
+A model is a function with adjustable numbers inside it, called parameters (or weights). For the URL classifier, a simple model gives each feature a weight, combines them with the dot product from [Math for Machine Learning](/collections/ai-security/ai-math), and turns the result into a probability with the sigmoid:
 
 $$
 P(\text{phishing}) = \sigma(w_1 \cdot \text{length} + w_2 \cdot \text{dots} + w_3 \cdot \text{ip} + w_4 \cdot \text{age} + w_5 \cdot \text{keyword} + b)
