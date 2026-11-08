@@ -138,6 +138,7 @@ export const TAGS: Record<string, TagDefinition> = {
 
   // Life outside work.
   music: { domain: "life" },
+  guitar: { domain: "life", parent: "music" },
 
   // Certifications and their providers. The reviews are how someone reads a
   // certificate, so the certificate itself is the subject; a provider goes on
