@@ -11,6 +11,9 @@ entries:
   - id: ai-002
     post: ai-math
     section: "Foundations"
+  - id: ai-010
+    post: ai-lab-setup
+    section: "Environment"
   - id: ai-003
     post: ai-supervised-learning
     section: "Machine Learning"
@@ -23,15 +26,21 @@ entries:
   - id: ai-006
     post: ai-decision-trees
     section: "Machine Learning"
+  - id: ai-011
+    post: ai-naive-bayes
+    section: "Machine Learning"
   - id: ai-007
     post: ai-tools
     section: "Tools and Data"
   - id: ai-008
     post: ai-datasets
     section: "Tools and Data"
+  - id: ai-012
+    post: ai-preparing-text
+    section: "Tools and Data"
   - id: ai-009
     post: ai-ssh-attackers
-    section: "Tools and Data"
+    section: "Labs"
 ---
 
 I started this handbook when I began Hack The Box's COAE certification. Before that I was working through mobile app pentesting, and after a while I stopped enjoying it. I'm still not sure why. Each session left me less motivated than the one before, and I could feel myself burning out, so I started COAE to take a break from mobile.

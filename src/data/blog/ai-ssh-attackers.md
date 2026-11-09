@@ -2,6 +2,7 @@
 title: "Labeling SSH Attackers"
 slug: ai-ssh-attackers
 category: notes
+format: writeup
 handbook: ai-security
 tags: ["ai"]
 draft: false
@@ -11,15 +12,15 @@ description: "A hands-on pass with pandas that turns a real SSH server log into 
 
 ## Introduction
 
-This note applies the concepts from [Datasets and Preprocessing](/collections/ai-security/ai-datasets) to real data: an SSH server log, turned into a labeled dataset of login attackers. It includes only the steps this data needed.
+This lab applies the concepts from [Datasets and Preprocessing](/collections/ai-security/ai-datasets) to real data: an SSH server log, turned into a labeled dataset of login attackers. It includes only the steps this data needed.
 
 ## The Dataset
 
-The data is the OpenSSH log from [Loghub 2.0](https://zenodo.org/records/8275861), a public collection of system logs released under CC BY 4.0. It comes from a lab server that was reachable from the internet for about four weeks, from 10 December to 7 January. Its SSH port received constant password attacks, and a handful of real users also logged in to it. The log has no labels: nothing marks which sources are attackers, so labeling is part of the work. The per-IP features and labels below were made for this note.
+The data is the OpenSSH log from [Loghub 2.0](https://zenodo.org/records/8275861), a public collection of system logs released under CC BY 4.0. It comes from a lab server that was reachable from the internet for about four weeks, from 10 December to 7 January. Its SSH port received constant password attacks, and a handful of real users also logged in to it. The log has no labels: nothing marks which sources are attackers, so labeling is part of the work. The per-IP features and labels below were made for this lab.
 
 The goal is a table with one row per source IP, a few numeric features describing its behaviour, and a label: benign (a real user), brute force, password spraying, or probe.
 
-The steps run in a Jupyter notebook, in the environment described in [Jupyter, scikit-learn and PyTorch](/collections/ai-security/ai-tools). To get the data:
+The steps run in a Jupyter notebook, in the environment built in [AI Lab Setup](/collections/ai-security/ai-lab-setup). To get the data:
 
 ```bash
 mkdir -p ai-security-notebooks/data && cd ai-security-notebooks
@@ -197,7 +198,7 @@ Checking for month 1 works because this log covers only December and January. Fo
 
 Both cells above change `df` in a way that breaks if they run twice. Run the `invalid` line a second time and every value turns `True`, because `True` and `False` are both "not empty". Run the year fix twice and January moves to 2017. A notebook remembers the result of every cell that has run, so running a cell again after editing it can silently corrupt the data.
 
-While preparing this note, the `invalid` cell ran twice by accident, and every IP later showed 100% invalid usernames. **Kernel → Restart Kernel and Run All Cells** reran everything once from the top and fixed it. The run counter next to each cell, such as `[7]`, shows the order cells ran in. A gap means something ran in between.
+While preparing this lab, the `invalid` cell ran twice by accident, and every IP later showed 100% invalid usernames. **Kernel → Restart Kernel and Run All Cells** reran everything once from the top and fixed it. The run counter next to each cell, such as `[7]`, shows the order cells ran in. A gap means something ran in between.
 
 ## Step 5: One Row per IP
 

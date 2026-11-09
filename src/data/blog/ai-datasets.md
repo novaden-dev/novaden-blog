@@ -99,7 +99,7 @@ One source rarely holds everything a model needs. A login detector might join it
 
 ### Aggregating to the right unit
 
-Each row of the final dataset has to be one example of what the label describes. If the label says "this IP is attacking", the rows have to be IPs, while the raw data has one row per event. Aggregation groups the events by IP and summarizes each group into features, such as the number of attempts, the number of distinct usernames, and the time between the first and last attempt. In pandas, that is `groupby` followed by `agg`. The [SSH note](/collections/ai-security/ai-ssh-attackers#step-5-one-row-per-ip) reduces 197,769 login events to 1,042 IP rows this way.
+Each row of the final dataset has to be one example of what the label describes. If the label says "this IP is attacking", the rows have to be IPs, while the raw data has one row per event. Aggregation groups the events by IP and summarizes each group into features, such as the number of attempts, the number of distinct usernames, and the time between the first and last attempt. In pandas, that is `groupby` followed by `agg`. The [SSH lab](/collections/ai-security/ai-ssh-attackers#step-5-one-row-per-ip) reduces 197,769 login events to 1,042 IP rows this way.
 
 ## Encoding Categorical Features
 
@@ -241,7 +241,7 @@ Rows that belong together should stay on the same side. If one attacker's events
 
 Leakage is information in the training data that gives away the answer and will not be there in production. A model with leakage scores well in testing and fails in production. There are four common sources.
 
-**A feature the label was made from.** If the labels say "benign" for every source with a successful login, and the success count is also a feature, the model reads the answer from that column. The [SSH note](/collections/ai-security/ai-ssh-attackers#step-8-split-into-training-and-test-sets) leaves the success count out for this reason.
+**A feature the label was made from.** If the labels say "benign" for every source with a successful login, and the success count is also a feature, the model reads the answer from that column. The [SSH lab](/collections/ai-security/ai-ssh-attackers#step-8-split-into-training-and-test-sets) leaves the success count out for this reason.
 
 **A feature recorded after the event.** The ticket number of an incident only exists because an alert already fired. At prediction time it is not there yet.
 
