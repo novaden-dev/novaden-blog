@@ -26,6 +26,9 @@ entries:
   - id: ai-006
     post: ai-decision-trees
     section: "Machine Learning"
+  - id: ai-013
+    post: ai-random-forests
+    section: "Machine Learning"
   - id: ai-011
     post: ai-naive-bayes
     section: "Machine Learning"

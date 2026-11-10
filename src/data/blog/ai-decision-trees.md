@@ -165,4 +165,4 @@ They also have weaknesses that the data has to make up for:
 | Favours features with many values | A unique ID column splits every run into its own pure leaf and scores the highest information gain while meaning nothing | Remove ID-like columns, or use gain ratio, which penalizes splits into many small groups |
 | Class imbalance | With 1 malicious run per 1,000, a tree that always says benign has low impurity | Weight the rare class higher during training |
 
-Random forests and gradient-boosted trees (XGBoost, LightGBM) fix the stability problem by combining hundreds of trees. Each of their trees is built with the same splitting process.
+[Random forests](/collections/ai-security/ai-random-forests) and gradient-boosted trees (XGBoost, LightGBM) fix the stability problem by combining hundreds of trees. Each of their trees is built with the same splitting process.

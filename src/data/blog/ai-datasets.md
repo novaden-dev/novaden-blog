@@ -6,7 +6,7 @@ handbook: ai-security
 tags: ["ai"]
 draft: false
 pubDatetime: 2026-11-08T00:00:00+02:00
-description: "What makes a dataset usable for machine learning, and the preprocessing steps that turn raw data into model input: cleaning, fixing types and formats, combining and aggregating sources, encoding categories, scaling, reducing skew, and splitting without leakage."
+description: "What makes a dataset usable for machine learning, and the preprocessing steps that turn raw data into model input: cleaning, fixing types and formats, combining and aggregating sources, checking label mappings, encoding categories, scaling, reducing skew, splitting without leakage, and splitting for unseen attacks."
 ---
 
 ## Introduction
@@ -77,6 +77,33 @@ Duplicates appear when the same event is recorded twice, for example when two lo
 
 The opposite problem also happens. Logging systems often write a repeated message once, followed by a summary such as `message repeated 5 times`. Counting lines then undercounts events, and the data shows no gap or error. Before counting anything in a log, check whether some lines stand for more than one event. In the [SSH log](/collections/ai-security/ai-ssh-attackers#step-2-find-the-repeated-messages), summary lines hid 43% of all login attempts.
 
+### Labels that match nothing
+
+Labels often have to be mapped from detailed values to broader classes. [NSL-KDD](/collections/ai-security/ai-random-forests#introduction), a network intrusion dataset, labels each connection with one of 39 attack names, such as `neptune` or `httptunnel`, which are grouped into four attack classes. The mapping is written by hand, so it can miss names or misspell them.
+
+A mapping that ends with a default, such as "anything not listed is normal", hides those mistakes: rows with a misspelled or forgotten attack name are labeled normal traffic, the model learns from wrong labels, and nothing reports an error. A dictionary with `.map` leaves unmatched values empty instead, so a check can catch them:
+
+```python
+attack_class = {
+    "normal": 0,
+    "neptune": 1, "smurf": 1,            # DoS
+    "nmap": 2, "portsweep": 2,           # Probe
+    "buffer_overflow": 3, "rootkit": 3,  # U2R
+    "guess_passwd": 4, "httptunnel": 4,  # R2L
+    # one entry for every attack name in the data
+}
+df["label"] = df["attack"].map(attack_class)
+
+unmapped = df.loc[df["label"].isna(), "attack"].unique()
+assert len(unmapped) == 0, f"no class for: {unmapped}"
+```
+
+Map only the values you expect, and make every other value an error, so new or misspelled values are found when the code runs. Copy the names from the data, for example from `df["attack"].unique()`, instead of typing them.
+
+### Columns with one value
+
+A column with the same value in every row carries no information. In NSL-KDD, `num_outbound_cmds` is 0 in all 148,517 rows of the training and test sets. `df.nunique()` counts the distinct values in each column, and columns where it is 1 can be dropped.
+
 ## Fixing Types and Formats
 
 Data read from text files arrives as text, and each column has to be converted to the type it represents:
@@ -126,6 +153,8 @@ One-hot encoding (`OneHotEncoder` in scikit-learn) creates one yes/no column per
 | 4 | 0 | 0 | 1 |
 
 Each row has a 1 in the column for its value. This works for any column with a few distinct values.
+
+pandas has its own one-hot function, `pd.get_dummies`. It creates columns from the values present in the data it is given, so data with different values gets different columns: training data with `tcp` and `udp` gives `protocol_tcp` and `protocol_udp`, while a new batch containing only `icmp` gives a single `protocol_icmp` column, which the model has never seen. `OneHotEncoder` learns the columns during `fit` and produces the same columns for every later batch. With `handle_unknown="ignore"`, a value it never saw becomes all zeros. Use `get_dummies` to explore data, and `OneHotEncoder` for anything a model will be trained and used on.
 
 ### Ordinal
 
@@ -263,3 +292,21 @@ Fitted on all the data before the split, the scaler calculates them partly from 
 | Source IP | 831 of the 832 source IPs appear in only one class | One IP sent 7,000 queries, all labeled malicious |
 
 A model trained on it can score close to 100% by learning that August dates or certain IPs mean exfiltration, without learning anything about DNS tunneling. In production every day is a new date and attackers use new IPs. The dataset has no missing values and no duplicates, so the usual quality checks pass. The problem shows up only when the classes are compared column by column, for example with `pd.crosstab(df["src_ip"], df["label"])`.
+
+### Splitting for unseen attacks
+
+A random split usually puts rows of each attack type in both the training and the test set, so the test set contains almost only attack types the model has already seen. Real attackers also use techniques that were not in the training data.
+
+NSL-KDD comes with an official training set and an official test set, and the test set contains 17 attack types that never appear in training. They make up 3,750 of its 22,544 rows. The same [random forest](/collections/ai-security/ai-random-forests) setup scores very differently depending on the split:
+
+| Split | Accuracy | Macro F1 |
+|---|---|---|
+| Stratified 80/20 split of the official training set | 99.9% | 0.92 |
+| Official training set, measured on the official test set | 74.8% | 0.51 |
+
+On the official test set, the forest labels 82% of the connections from the unseen attack types as normal traffic. For attack types it did see in training, that share is 23%.
+
+The test set has to contain the situation the model will face. To measure how a model handles new attack types, keep whole attack types out of training: scikit-learn's `GroupShuffleSplit` and `GroupKFold` split by a group column, such as the attack name, so all rows of a group go to the same side.
+
+A classifier trained on labeled attacks recognizes those attacks and variations of them. Anomaly detection is the approach aimed at new ones: it learns only what normal traffic looks like, and flags anything that differs from it, whether or not that kind of attack was ever seen.
+
