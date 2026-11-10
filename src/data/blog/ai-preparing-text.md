@@ -6,7 +6,7 @@ handbook: ai-security
 tags: ["ai"]
 draft: false
 pubDatetime: 2026-11-09T00:00:00+03:00
-description: "Turning raw text into numeric features: lowercasing, regex cleanup, tokenization, stop words, stemming and lemmatization, bag of words with n-grams, min_df and max_df, and keeping preparation identical at prediction time. Worked on the SMS Spam Collection."
+description: "Turning raw text into numeric features: finding what to clean, regex cleanup, HTML tags and accents, tokenization, stop words and negations, stemming and lemmatization, bag of words with n-grams, min_df and max_df, TF-IDF, and keeping preparation identical at prediction time. Worked on the SMS Spam Collection and IMDB movie reviews."
 ---
 
 ## Introduction
@@ -50,6 +50,54 @@ Removing digits deletes phone numbers, short codes and prices. In this dataset, 
 x = re.sub(r"\d+", " num ", x)   # before removing other characters
 ```
 
+### Finding what to clean
+
+Which characters need handling depends on the dataset. Reading a few rows shows some of them. Counting every character that is not a letter, digit or space over the whole column shows all of them, with how often each one occurs:
+
+```python
+import re
+from collections import Counter
+
+tags = Counter()
+chars = Counter()
+for text in df["text"]:
+    tags.update(re.findall(r"<[^>]{0,20}>", text))      # anything shaped like an HTML tag
+    chars.update(re.findall(r"[^a-zA-Z0-9\s]", text))   # every character that is not a letter, digit or space
+
+print(tags.most_common(10))
+print(chars.most_common(40))
+```
+
+`re.findall` returns every match in one text, `Counter.update` adds them to the running totals, and `most_common(n)` lists the n most frequent with their counts.
+
+On the [IMDB movie reviews](https://ai.stanford.edu/~amaas/data/sentiment/) dataset, 50,000 reviews collected from web pages and labeled positive or negative, the counts show four things the SMS messages do not have:
+
+| Found | Example | Handling |
+|---|---|---|
+| HTML tags | `<br />` about 100,000 times in 25,000 reviews, and a few `<i>` and `<em>` | Remove every tag with one pattern |
+| Other apostrophe characters | `` ` ``, `´` and `’` | Convert them to `'` before tokenizing, so `didn’t` is split the same way as `didn't` |
+| Accented letters | `é` in `café` and `Pokémon` | Convert them to the plain letter, so `[^a-z]` does not split the word in two |
+| Characters from an old Windows encoding | `\x96` and `\x97`, which are dashes | Remove them together with the accents |
+
+### HTML tags, apostrophes and accents
+
+```python
+import unicodedata
+
+def clean(text):
+    text = text.lower()
+    text = re.sub(r"<[^>]+>", " ", text)                    # every HTML tag
+    text = re.sub(r"[`´’‘]", "'", text)                     # other apostrophe characters become '
+    text = unicodedata.normalize("NFKD", text)              # é becomes e followed by a separate accent mark
+    text = text.encode("ascii", "ignore").decode("ascii")   # drops the accent marks and every other non-ASCII character
+    text = re.sub(r"[^a-z\s']", " ", text)                  # remaining digits and punctuation become spaces
+    return text
+```
+
+Tags and punctuation are replaced with a space instead of an empty string, so `movie.<br />the` becomes `movie the`, and the two words stay separate. The extra spaces do no harm, because the tokenizer ignores whitespace.
+
+`unicodedata.normalize("NFKD", ...)` splits each accented letter into the plain letter and a separate accent character. Encoding to ASCII with `"ignore"` drops every character outside ASCII, which removes the accent characters and the `\x96` and `\x97` dashes. `CountVectorizer` and `TfidfVectorizer` can remove accents themselves with `strip_accents="unicode"`.
+
 ## Tokenization
 
 A token is one unit of text, usually a word or a punctuation mark. Tokenization splits a string into a list of tokens. NLTK (the Natural Language Toolkit) is a Python library for working with human-language text: it provides tokenizers, stop word lists, stemmers and lemmatizers. Their data files are downloaded separately with `nltk.download`. NLTK's `word_tokenize` does more than splitting on spaces. It separates punctuation from words and splits contractions:
@@ -76,7 +124,18 @@ df["message"] = df["message"].apply(lambda x: [w for w in x if w not in stop_wor
 
 On this dataset, removing them cuts the total number of tokens from 77,697 to 46,920.
 
-The list also contains `not` and `no`. After removal, `not free` and `free` look the same. For tasks where negation changes the meaning, such as sentiment analysis, these words have to stay.
+The list also contains `not` and `no`. After removal, `not free` and `free` look the same. For tasks where negation changes the meaning, such as sentiment analysis, these words have to stay. Removing them from the set before filtering keeps them in the text:
+
+```python
+negations = {"not", "no", "nor", "never", "n't"}
+stop_words = set(stopwords.words("english")) - negations
+```
+
+`word_tokenize` splits a contraction into two tokens: `didn't` becomes `did` and `n't`, and `isn't` becomes `is` and `n't`. `did` and `is` are stop words, so `n't` is the token that keeps the negation. Replacing it with `not` after tokenizing makes `isn't good` and `not good` the same feature:
+
+```python
+tokens = ["not" if t == "n't" else t for t in tokens]
+```
 
 The list contains `don't` and `don`, but the regex step runs first and has already turned `don't` into `dont`, which is not on the list, so `dont` stays in every message. A stop word list only works on text in the form the list expects.
 
@@ -221,6 +280,48 @@ An integer is a number of messages and a float is a fraction. `min_df=1` keeps e
 
 `fit` reads the training messages and creates one column for each word it finds. After that, the list of columns does not change. A word that was not in the training messages has no column, and `transform` ignores it, so a word that spammers start using after training has no effect on the prediction. The vectorizer belongs to the model and has to be fitted on the training set only, as described in [Splitting Without Leakage](/collections/ai-security/ai-datasets#splitting-without-leakage).
 
+## TF-IDF
+
+Bag-of-words counts have two problems on longer texts, such as reviews:
+
+- **Length**: a review of 2,000 words has larger counts than a review of 50 words that says the same thing.
+- **Common words**: words that appear in most documents, such as `movi` and `film` in movie reviews, get large counts and carry little information about the label.
+
+TF-IDF (term frequency, inverse document frequency) corrects both. Each value is the term's count in the document (TF) multiplied by a weight for the term (IDF), which is low for terms that appear in many documents and high for terms that appear in few. scikit-learn computes the IDF as
+
+$$
+\text{idf}(t) = \ln\frac{1 + n}{1 + \text{df}(t)} + 1
+$$
+
+where $$n$$ is the number of documents and $$\text{df}(t)$$ is the number of documents that contain the term $$t$$. The added 1s keep the IDF above 0, so a term that appears in every document still has a small weight. With 4 documents:
+
+| Term appears in | IDF |
+|---|---|
+| 4 of 4 documents | $$\ln(5/5) + 1 = 1.00$$ |
+| 2 of 4 documents | $$\ln(5/3) + 1 = 1.51$$ |
+| 1 of 4 documents | $$\ln(5/2) + 1 = 1.92$$ |
+
+After the multiplication, each row is divided by its [L2 norm](/collections/ai-security/ai-math#norms-the-size-of-a-vector), so every document's row has length 1, however many words the document has. That corrects the length problem.
+
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+vectorizer = TfidfVectorizer(ngram_range=(1, 2), min_df=2, max_df=0.9, sublinear_tf=True)
+X_train = vectorizer.fit_transform(train_texts)
+X_test = vectorizer.transform(test_texts)
+```
+
+`TfidfVectorizer` takes the same `ngram_range`, `min_df` and `max_df` parameters as `CountVectorizer`. `fit` learns the vocabulary and the IDF of every term from the training documents, and `transform` uses both unchanged on new documents.
+
+`sublinear_tf=True` replaces each count with $$1 + \ln(\text{count})$$. A word used 10 times in one review then counts 3.3 times as much as a word used once, instead of 10 times, so one long review that repeats a word does not dominate that word's column.
+
+| | Counts (`CountVectorizer`) | TF-IDF (`TfidfVectorizer`) |
+|---|---|---|
+| Values | Whole numbers | Decimals, each row of length 1 |
+| Documents of very different lengths | Longer documents get larger values | Every document on the same scale |
+| Terms common to most documents | The same weight as other terms | A lower weight |
+| Designed for | [Multinomial Naive Bayes](/collections/ai-security/ai-naive-bayes#multinomial-naive-bayes), which models word counts | Linear models such as [logistic regression](/collections/ai-security/ai-logistic-regression) |
+
 ## Preparing New Messages
 
 A trained model only works on text prepared exactly like its training data. If training stemmed `claiming` to `claim` and prediction does not, the new message's `claiming` matches no column. Every step, in the same order, has to run again before each prediction:
@@ -236,3 +337,5 @@ def preprocess_message(message):
 ```
 
 Keeping a separate copy of the steps for prediction means two copies that have to stay identical. Putting the preparation inside a scikit-learn [pipeline](/collections/ai-security/ai-tools#pipelines) keeps one copy, which runs at both training and prediction.
+
+A pipeline that includes a custom function, such as `preprocess_message` inside a `FunctionTransformer`, saves only the function's name, as described in [Saving a model](/collections/ai-security/ai-tools#saving-a-model). Loading it on another machine fails unless the same function is defined there. When the model will be loaded somewhere else, such as a service that scores submitted models, the vectorizer's built-in options can do much of the preparation instead: `lowercase=True` (the default), `strip_accents="unicode"`, `stop_words`, `token_pattern` and `ngram_range`. A pipeline made only of a vectorizer and a model needs nothing but scikit-learn to load.

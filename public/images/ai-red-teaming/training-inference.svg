@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 370" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="700" height="370" rx="12" fill="#f8fafc"/>
+
+  <!-- Training lane -->
+  <text x="40" y="34" font-size="13" font-weight="700" letter-spacing="1.5" fill="#64748b">TRAINING</text>
+  <text x="125" y="62" text-anchor="middle" font-size="13" fill="#b91c1c">poisoning, skewing</text>
+  <text x="575" y="62" text-anchor="middle" font-size="13" fill="#b91c1c">theft, tampering</text>
+
+  <rect x="40" y="72" width="170" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="125" y="102" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">Training data</text>
+  <rect x="290" y="72" width="150" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="365" y="102" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">Training</text>
+  <rect x="500" y="72" width="150" height="50" rx="8" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="575" y="102" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">Model weights</text>
+
+  <line x1="210" y1="97" x2="288" y2="97" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="440" y1="97" x2="498" y2="97" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Deploy -->
+  <line x1="575" y1="122" x2="575" y2="223" stroke="#475569" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="585" y="176" font-size="13" fill="#475569">deploy</text>
+
+  <!-- Inference lane -->
+  <text x="40" y="196" font-size="13" font-weight="700" letter-spacing="1.5" fill="#64748b">INFERENCE</text>
+
+  <rect x="40" y="225" width="150" height="50" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="115" y="255" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">User</text>
+  <rect x="270" y="225" width="150" height="50" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="345" y="255" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">Application</text>
+  <rect x="500" y="225" width="150" height="50" rx="8" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="575" y="255" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">Model</text>
+
+  <line x1="190" y1="240" x2="268" y2="240" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="268" y1="262" x2="192" y2="262" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="420" y1="240" x2="498" y2="240" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="498" y1="262" x2="422" y2="262" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="230" y="233" text-anchor="middle" font-size="12" fill="#475569">input</text>
+  <text x="460" y="233" text-anchor="middle" font-size="12" fill="#475569">input</text>
+
+  <text x="115" y="303" text-anchor="middle" font-size="13" fill="#b91c1c">crafted input:</text>
+  <text x="115" y="320" text-anchor="middle" font-size="13" fill="#b91c1c">evasion, prompt injection</text>
+  <text x="345" y="303" text-anchor="middle" font-size="13" fill="#b91c1c">unsafe output handling,</text>
+  <text x="345" y="320" text-anchor="middle" font-size="13" fill="#b91c1c">excessive tool access</text>
+  <text x="575" y="303" text-anchor="middle" font-size="13" fill="#b91c1c">extraction, inversion,</text>
+  <text x="575" y="320" text-anchor="middle" font-size="13" fill="#b91c1c">membership inference</text>
+
+  <text x="40" y="354" font-size="12" fill="#64748b">Red labels: attacks that target that point.</text>
+</svg>

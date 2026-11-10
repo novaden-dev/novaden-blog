@@ -264,6 +264,8 @@ The model trains on one part of the data and is measured on the other, which it 
 | `stratify=y` | Each class keeps the same share in both sets. With a rare class, a plain random split can leave the test set with almost none of it |
 | `random_state=0` | Fixes the shuffle, so every run produces the same split |
 
+`train_test_split` shuffles the rows before splitting (`shuffle=True` is the default). Datasets are often stored sorted, for example all positive reviews followed by all negative ones. Taking the last 20% of a sorted file as the test set, without shuffling, gives a test set of one class only. `df["label"].value_counts()` shows the real class counts, whatever the order of the rows.
+
 Rows that belong together should stay on the same side. If one attacker's events end up in both sets, the model can learn to recognize that attacker instead of the attack pattern. Aggregating to one row per source before splitting avoids this. For data collected over time, training on the earlier part and testing on the later part is closer to how the model will be used.
 
 ### Leakage

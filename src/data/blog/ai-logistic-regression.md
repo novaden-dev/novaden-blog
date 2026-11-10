@@ -68,6 +68,23 @@ So in this model, trying a new username is stronger evidence of an attack than o
 
 Least squares is not used here. Logistic regression is trained with log loss, also from the math note: for each example, the loss is $$-\ln p$$, where $$p$$ is the probability the model gave the correct class. There is no direct formula for the best weights, so they are found with gradient descent, the same training loop described in Supervised Learning.
 
+scikit-learn's `LogisticRegression` is regularized by default, with an L2 penalty. Its `C` parameter is the inverse of the regularization strength $$\lambda$$ from [Regularization](/collections/ai-security/ai-supervised-learning#regularization):
+
+$$
+C = \frac{1}{\lambda}
+$$
+
+A smaller `C` means stronger regularization, which is the opposite direction from $$\lambda$$. The default is `C=1`.
+
+| `C` | Effect on the weights | Risk |
+|---|---|---|
+| Small, such as 0.01 | Kept close to 0 | Underfitting: even the features that separate the classes get small weights |
+| Large, such as 100 | Allowed to grow large | Overfitting: a feature that happens to appear in a few training rows of one class, such as an actor's name in positive reviews, gets a large weight |
+
+`C` is chosen on a [validation set](/collections/ai-security/ai-supervised-learning#validation-set) or with a [grid search](/collections/ai-security/ai-tools#grid-search). Its effect is multiplicative, so the candidates are usually spaced by a factor of 10, such as 0.1, 1, 10 and 100.
+
+`max_iter` limits how many steps the solver takes, 100 by default. On text features with tens of thousands of columns, 100 steps may not be enough. scikit-learn then shows a `ConvergenceWarning`, and the weights are not fully trained. `max_iter=1000` or more avoids this.
+
 ## The Decision Boundary
 
 ### A line in two dimensions

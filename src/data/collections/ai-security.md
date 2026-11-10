@@ -32,6 +32,12 @@ entries:
   - id: ai-011
     post: ai-naive-bayes
     section: "Machine Learning"
+  - id: ai-014
+    post: ai-neural-networks
+    section: "Machine Learning"
+  - id: ai-015
+    post: ai-cnns
+    section: "Machine Learning"
   - id: ai-007
     post: ai-tools
     section: "Tools and Data"
@@ -41,6 +47,21 @@ entries:
   - id: ai-012
     post: ai-preparing-text
     section: "Tools and Data"
+  - id: ai-016
+    post: ai-red-teaming
+    section: "LLM Attacks"
+  - id: ai-017
+    post: ai-llm-recon
+    section: "LLM Attacks"
+  - id: ai-018
+    post: ai-prompt-injection
+    section: "LLM Attacks"
+  - id: ai-019
+    post: ai-jailbreaking
+    section: "LLM Attacks"
+  - id: ai-020
+    post: ai-llm-attack-tools
+    section: "LLM Attacks"
   - id: ai-009
     post: ai-ssh-attackers
     section: "Labs"
