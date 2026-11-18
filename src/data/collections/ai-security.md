@@ -62,6 +62,24 @@ entries:
   - id: ai-020
     post: ai-llm-attack-tools
     section: "LLM Attacks"
+  - id: ai-024
+    post: ai-application-system
+    section: "Application and System Attacks"
+  - id: ai-025
+    post: ai-model-reverse-engineering
+    section: "Application and System Attacks"
+  - id: ai-026
+    post: ai-denial-of-ml-service
+    section: "Application and System Attacks"
+  - id: ai-027
+    post: ai-integrated-components
+    section: "Application and System Attacks"
+  - id: ai-028
+    post: ai-storage-and-deployment
+    section: "Application and System Attacks"
+  - id: ai-029
+    post: ai-mcp
+    section: "Application and System Attacks"
   - id: ai-009
     post: ai-ssh-attackers
     section: "Labs"
