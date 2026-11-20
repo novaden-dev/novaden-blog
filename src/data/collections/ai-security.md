@@ -80,6 +80,9 @@ entries:
   - id: ai-029
     post: ai-mcp
     section: "Application and System Attacks"
+  - id: ai-030
+    post: ai-evasion
+    section: "Evasion Attacks"
   - id: ai-009
     post: ai-ssh-attackers
     section: "Labs"
