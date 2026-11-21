@@ -78,7 +78,11 @@ PyRIT also stores every prompt and reply in a database, so a run can be reviewed
 
 It also has defenses in `art.defences`, such as adversarial training and input preprocessing, so the same library measures how much a defense helps.
 
-The first step is to wrap the trained model in an ART estimator. This gives every attack the same interface to the model, whichever library produced it. The example below attacks the kind of scikit-learn model built in [Logistic Regression](/collections/ai-security/ai-logistic-regression), using the Fast Gradient Method, which moves each input a small step in the direction that most increases the model's loss:
+The example below runs an evasion attack: it changes test inputs slightly so that a trained model classifies them wrongly. The data is scikit-learn's `load_digits`, small images of handwritten digits from 0 to 9. Each image is 8 by 8 pixels, so it is a row of 64 numbers, one per pixel, and its label is the digit it shows.
+
+The model is a [logistic regression](/collections/ai-security/ai-logistic-regression) trained to recognize the digits. The attack is the Fast Gradient Method. For every pixel of every test image, it checks whether making the pixel darker or lighter makes the model more wrong, and moves the pixel a small fixed amount in that direction.
+
+Before attacking, the model is wrapped in an ART estimator. ART works with models from scikit-learn, PyTorch, TensorFlow and other libraries, and the wrapper gives every attack the same functions to call on the model, whichever library built it.
 
 ```python
 from sklearn.datasets import load_digits
@@ -87,19 +91,33 @@ from sklearn.model_selection import train_test_split
 from art.estimators.classification import SklearnClassifier
 from art.attacks.evasion import FastGradientMethod
 
+# X: one row of 64 pixel values per image. y: the digit each image shows
 X, y = load_digits(return_X_y=True)
-X = X / 16.0  # scale pixel values to 0-1
+# Pixels go from 0 to 16. Dividing by 16 puts them between 0 and 1,
+# so a change of 0.2 means a fifth of the way from white to black
+X = X / 16.0
 X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 
+# Train the model to be attacked. max_iter=1000 gives training enough steps to finish.
+# score() predicts every test image and returns the share it got right
 model = LogisticRegression(max_iter=1000).fit(X_train, y_train)
 print("clean accuracy:", model.score(X_test, y_test))
 
+# 1. Wrap the model for ART. clip_values keeps every pixel between 0 and 1,
+#    so the attack cannot produce pixel values that real images never have
 classifier = SklearnClassifier(model=model, clip_values=(0.0, 1.0))
+
+# 2. Choose the attack. eps=0.2 is the most any single pixel may change
 attack = FastGradientMethod(estimator=classifier, eps=0.2)
+
+# 3. Attack the test images. X_adv holds the changed copies ("adv" for adversarial)
 X_adv = attack.generate(x=X_test)
 
+# The same model, the same correct answers, only the images changed
 print("accuracy on adversarial inputs:", model.score(X_adv, y_test))
 ```
+
+Each pixel changes by at most 0.2, but all 64 change at once, and each one moves in the direction that makes the model more wrong. The model's score for a digit adds up every pixel times its weight, so 64 small changes in the worst direction add up to a large change in the score. That is enough to push many images across the decision boundary, while a person looking at them still sees the same digits.
 
 `eps` is the largest change allowed to each feature (here, to each pixel). Raising it lowers accuracy further and makes the changes more visible. The accuracy drop from the clean set to the adversarial set is the measurement to report.
 

@@ -26,6 +26,8 @@ The examples in this note use an online shop with two ML features:
 
 Both run on a GPU server in the cloud. Model files are stored in a storage bucket and loaded by a model serving program at startup.
 
+![The shop. A customer and an attacker with a customer account use the shop website, which talks to the support assistant, an LLM chatbot. The assistant calls three tools: lookup_order (orders database), issue_refund (payment provider) and send_email (the shop's mail account), and stores every chat and prompt log in a conversation database. Partner shops, and the attacker, call the public /api/fraud-score endpoint, which returns the fraud model's score from 0 to 1. Both models run on one GPU server under a model serving program, which loads the newest model file from the storage bucket shop-ml-models at startup. A weekly training pipeline uploads to the bucket. Red tags mark the attacks: prompt injection at the website, rogue actions at the tools, IDOR and card numbers in logs at the conversation database, denial of ML service at the GPU server, model reverse engineering at the fraud API, an open management API and old versions at the serving program, a public bucket and a replaced model file at the bucket, and deployment tampering at the pipeline.](/images/ai-application-system/shop.svg)
+
 ## The Code Around the Model
 
 ### Injection Through Prompts and Model Output

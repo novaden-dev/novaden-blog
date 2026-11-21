@@ -154,7 +154,38 @@ One-hot encoding (`OneHotEncoder` in scikit-learn) creates one yes/no column per
 
 Each row has a 1 in the column for its value. This works for any column with a few distinct values.
 
-pandas has its own one-hot function, `pd.get_dummies`. It creates columns from the values present in the data it is given, so data with different values gets different columns: training data with `tcp` and `udp` gives `protocol_tcp` and `protocol_udp`, while a new batch containing only `icmp` gives a single `protocol_icmp` column, which the model has never seen. `OneHotEncoder` learns the columns during `fit` and produces the same columns for every later batch. With `handle_unknown="ignore"`, a value it never saw becomes all zeros. Use `get_dummies` to explore data, and `OneHotEncoder` for anything a model will be trained and used on.
+pandas has its own one-hot function, `pd.get_dummies`. It looks simpler: one call, and it returns a DataFrame with readable column names. The difference is in what each one remembers.
+
+`get_dummies` remembers nothing between calls. Each call builds columns from the values in the data it is given that time:
+
+```python
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+
+train = pd.DataFrame({"protocol": ["tcp", "udp", "tcp"]})
+new = pd.DataFrame({"protocol": ["icmp"]})
+
+pd.get_dummies(train)  # 2 columns: protocol_tcp, protocol_udp
+pd.get_dummies(new)    # 1 column: protocol_icmp
+```
+
+A model trained on the first table learned one weight for the tcp column and one for the udp column, and expects every input to have those 2 numbers in that order. The second table has 1 column, so scikit-learn stops with an error saying the input has 1 feature and the model expects 2.
+
+The worse case is when the counts happen to match. A batch containing `icmp` and `sctp` gives 2 columns, `protocol_icmp` and `protocol_sctp`. Passed as a plain array (after `.to_numpy()`), the model only sees positions: it reads the first column as tcp and the second as udp, and gives icmp traffic the weight it learned for tcp. There is no error, and the predictions are wrong.
+
+`OneHotEncoder` keeps a list. `fit` records the values in the training data, and every later `transform` produces the columns in that list, in the same order:
+
+```python
+# handle_unknown="ignore": a value not seen during fit becomes all zeros instead of an error
+encoder = OneHotEncoder(handle_unknown="ignore")
+encoder.fit(train[["protocol"]])        # records the list: tcp, udp
+encoder.transform(train[["protocol"]])  # 2 columns: tcp, udp
+encoder.transform(new[["protocol"]])    # still 2 columns: icmp becomes 0, 0
+```
+
+It does not add `icmp` to the list, because the model has no weight for it. An unseen value becomes all zeros, meaning "none of the known values", and the input keeps the shape the model expects. The encoder is fitted once on the training data and reused for the test set and for live data, so all three get the same columns.
+
+Use `get_dummies` to look at a dataset, such as counting values or checking what a column contains. Use `OneHotEncoder` for any data a model trains on or predicts on.
 
 ### Ordinal
 

@@ -89,9 +89,11 @@
       @apply text-soft;
     }
 
-    /* Wide tables scroll in their own box rather than pushing the page. */
+    /* Wide tables scroll in their own box rather than pushing the page or
+       squeezing their columns, at every width. A table narrower than the
+       column keeps its natural width. */
     table {
-      @apply block overflow-x-auto sm:table;
+      @apply block w-max max-w-full overflow-x-auto;
 
       th,
       td {
@@ -102,8 +104,10 @@
         @apply bg-muted py-1.5 text-start;
       }
 
+      /* A code chip in a cell stays on one line; a table too wide for the
+         column scrolls instead of breaking chips mid-word. */
       code {
-        @apply break-all sm:break-normal;
+        @apply whitespace-nowrap;
       }
     }
 

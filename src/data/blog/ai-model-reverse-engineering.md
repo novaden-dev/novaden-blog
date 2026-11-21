@@ -18,6 +18,8 @@ A replica is useful to an attacker in two ways:
 - **Theft**: the replica does the same job as the original, without the cost of collecting data and training. A competitor can use it, or sell it.
 - **Offline testing**: the attacker can try thousands of inputs against the replica without sending a single request to the target, and without being rate limited or logged. Inputs that fool the replica, such as a payment the replica scores as legitimate, often fool the original as well. Only those inputs are then sent to the real model.
 
+![Five steps. On the attacker's machine, with no logs and no rate limits: 1, choose queries (random payments, realistic ones, or points near the boundary). 2, query the target: /api/fraud-score returns a score for each payment, so the target labels the attacker's data. 3, train a replica, for example a random forest, on the inputs and the target's answers. 4, measure agreement: how often the replica gives the target's answer, in the region the attack will use. If agreement is too low, go back to step 1 and query more points where the two models disagree. If it is high enough, 5, use the replica: try payments offline and send only the ones that pass to the real fraud model. Only steps 2 and 5 send requests to the target.](/images/ai-model-reverse-engineering/replica-loop.svg)
+
 The attack needs only the access a normal user has, so it belongs to black-box testing (see [AI Red Teaming](/collections/ai-security/ai-red-teaming)). In the OWASP Machine Learning Security Top 10 it is ML05 Model Theft, and in Google's SAIF it is Model Reverse Engineering.
 
 ## The Target

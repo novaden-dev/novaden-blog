@@ -172,25 +172,84 @@ df["message"] = df["message"].apply(lambda x: [stemmer.stem(w) for w in x])
 
 Stemming is faster and needs no tagger, and its non-words do not matter when the output only feeds a model and nobody reads it. On this dataset, stemming reduces the number of distinct words from 8,459 to 7,121.
 
-## From Tokens to Counts
+## Bag of Words
 
-After the steps above, each message is a list of tokens, such as `['free', 'entri', 'win']`. The next step turns the messages into counts with scikit-learn's `CountVectorizer`, described in [Bag of Words](#bag-of-words). Like every [scikit-learn](/collections/ai-security/ai-tools#scikit-learn) tool, it works in two steps: `fit` learns from the training messages, which for `CountVectorizer` means building the list of words, and `transform` turns any messages into counts using that list. `fit_transform` does both on the same data. By default, `CountVectorizer` expects each message as one string, because it runs its own steps on the text first: it lowercases it, splits it into tokens and builds n-grams. Given a list, it fails at the first of those steps:
+A bag of words represents each message by how often each word appears in it. Word order is lost, which is where the name comes from. `CountVectorizer` builds a vocabulary of every word in the training messages, gives each word a column, and turns each message into a row of counts. A list of numbers like this row is called a vector, so a tool that turns text into vectors is called a vectorizer. Like every [scikit-learn](/collections/ai-security/ai-tools#scikit-learn) tool, it works in two steps: `fit` learns from the training messages, which for `CountVectorizer` means building the list of words, and `transform` turns any messages into counts using that list. `fit_transform` does both on the same data. The table shows the counts for two messages, with `ngram_range=(1, 2)`, which is explained below:
+
+| | call | call free | cash | entri | entri win | free | free entri | free now | now | win | win cash |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `free entri win cash` | 0 | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
+| `call free now` | 1 | 1 | 0 | 0 | 0 | 1 | 0 | 1 | 1 | 0 | 0 |
+
+```python
+from sklearn.feature_extraction.text import CountVectorizer
+
+vectorizer = CountVectorizer(min_df=1, max_df=0.9, ngram_range=(1, 2))
+X = vectorizer.fit_transform(df["message"])
+vectorizer.get_feature_names_out()   # the vocabulary, one name per column
+```
+
+Here each message in `df["message"]` is one string, with its tokens joined by spaces. [Giving the Tokens to CountVectorizer](#giving-the-tokens-to-countvectorizer) explains why the token lists are joined, and how to pass them without joining.
+
+### N-grams
+
+An n-gram is a sequence of n adjacent tokens. Unigrams are single words and bigrams are pairs. `ngram_range=(1, 2)` creates a column for every unigram and every bigram. Bigrams keep some of the word order: `free entri` is a column of its own, separate from `free` and `entri`.
+
+Bigrams add many columns. On this dataset, unigrams alone give 7,101 columns, and unigrams plus bigrams give 37,069. More columns take more memory and more training time, and most of the new bigrams appear in only a few messages, so they carry little information about other messages. [Sparse matrices](#sparse-matrices) handles the memory, and [min_df](#min_df-and-max_df) removes the rare columns.
+
+### Sparse matrices
+
+A matrix is a grid of numbers in rows and columns, like the bag-of-words table. A matrix where almost every value is 0 is called sparse. Each message uses only a few of the 37,069 columns: of the matrix's 5,169 × 37,069 cells, 80,181 are non-zero, which is 0.04%. `fit_transform` therefore returns the matrix in a sparse format from scipy, a Python library for scientific computing. The format stores only the non-zero cells, each with its row and column, and every cell it does not list is 0. A dense array of the same shape, which stores every cell including the zeros, would need about 1.5 GB as 64-bit integers. scikit-learn models accept sparse matrices directly.
+
+### min_df and max_df
+
+Both remove columns based on document frequency: the number of messages a term appears in.
+
+| Parameter | Removes terms that appear in | Typical use |
+|---|---|---|
+| `min_df=5` | fewer than 5 messages | Drops typos, names and one-off words |
+| `min_df=0.01` | less than 1% of messages | The same, as a fraction |
+| `max_df=0.9` | more than 90% of messages | Drops words common in this dataset, like a stop word list built from the data |
+
+An integer is a number of messages and a float is a fraction. `min_df=1` keeps every term. On this dataset, `max_df=0.9` removes nothing either: the most common term, `call`, appears in 9.7% of messages. Raising `min_df` to 5 reduces the columns from 37,069 to 1,881.
+
+### Fitting on training data only
+
+`fit` reads the training messages and creates one column for each word it finds. After that, the list of columns does not change. A word that was not in the training messages has no column, and `transform` ignores it, so a word that spammers start using after training has no effect on the prediction. The vectorizer learns from data just as the model does: its list of columns comes from the messages it was fitted on. It is therefore fitted on the training set only, for the same reason as the model, as described in [Splitting Without Leakage](/collections/ai-security/ai-datasets#splitting-without-leakage). Fitted on all messages, it would create columns for words that appear only in the test messages, and the test score would no longer show how the model handles messages it has never seen. The fitted vectorizer is saved with the model, because every new message has to be turned into the same columns before the model can score it.
+
+## Giving the Tokens to CountVectorizer
+
+The cleaning steps earlier in this note turn each message into a list of tokens, such as `['free', 'entri', 'win']`. `CountVectorizer` expects each message as one string instead, because it cleans and splits the text itself: it lowercases the string, splits it into tokens and builds n-grams. Given a list, it fails at the first of those steps:
 
 ```text
 AttributeError: 'list' object has no attribute 'lower'
 ```
 
-There are two ways to give it the tokens.
+There are two ways to give it the tokens:
 
-| | Join the tokens into a string | Pass the token lists directly |
-|---|---|---|
-| How | `" ".join(tokens)`, then the default `CountVectorizer()` | `CountVectorizer` set up to skip its own lowercasing and splitting |
-| Tokenized | Twice: by NLTK, then again by `CountVectorizer` | Once, by NLTK |
-| `$`, `!` and single letters | Dropped by the second tokenizer | Kept |
-| Prepared data | Strings, easy to print, read and save to a CSV | Lists |
-| New messages | Passed as strings | Passed as token lists |
+- **Join each list back into a string**, with spaces between the tokens. The default `CountVectorizer` accepts it, and strings are easy to print and save to a CSV. `CountVectorizer` then splits the string again with its own rule, which drops `$`, `!` and single letters.
+- **Pass the lists as they are**, with `CountVectorizer` set up to skip its own lowercasing and splitting. Every token from the cleaning steps is kept, including `$` and `!`. New messages then have to be passed as token lists too.
 
-Pass the lists directly when the regex step kept symbols on purpose, since joining throws them away again. Joining is shorter and works with the default settings.
+Join the tokens when the default settings are enough. Pass the lists when the cleaning steps kept symbols on purpose, since joining drops them again. The rest of this note uses joined strings, because they are easier to show.
+
+### Joining the tokens into a string
+
+Joining each list with spaces turns it back into a string that the default `CountVectorizer` accepts:
+
+```python
+df["message"] = df["message"].apply(lambda x: " ".join(x))
+```
+
+```text
+Go until jurong point, crazy.. Available only in bugis n great world la e buffet... Cine there got amore wat...
+go jurong point crazi avail bugi n great world la e buffet cine got amor wat
+```
+
+`CountVectorizer` then splits the string into tokens a second time, with its own rules. Its default `token_pattern` is `(?u)\b\w\w+\b`: a token is two or more letters, digits or underscores. It drops `$`, `!` and single letters such as `u`, `n` and `c`, so keeping `$` and `!` in the regex step has no effect. `!` appears in 47% of spam messages and 12% of ham messages, so dropping it removes a feature that separates the two classes. Changing the pattern so that any run of non-space characters is a token keeps them:
+
+```python
+CountVectorizer(token_pattern=r"\S+")
+```
 
 ### Passing the token lists directly
 
@@ -216,70 +275,6 @@ N-grams still work: the vocabulary includes bigrams such as `win $`.
 
 `identity` is a named function and not a `lambda`, because a model saved with [joblib](/collections/ai-security/ai-tools#saving-a-model) can store a named function but cannot store a `lambda`.
 
-### Joining the tokens into a string
-
-Joining each list with spaces turns it back into a string that the default `CountVectorizer` accepts:
-
-```python
-df["message"] = df["message"].apply(lambda x: " ".join(x))
-```
-
-```text
-Go until jurong point, crazy.. Available only in bugis n great world la e buffet... Cine there got amore wat...
-go jurong point crazi avail bugi n great world la e buffet cine got amor wat
-```
-
-`CountVectorizer` then splits the string into tokens a second time, with its own rules. Its default `token_pattern` is `(?u)\b\w\w+\b`: a token is two or more letters, digits or underscores. It drops `$`, `!` and single letters such as `u`, `n` and `c`, so keeping `$` and `!` in the regex step has no effect. `!` appears in 47% of spam messages and 12% of ham messages, so dropping it removes a feature that separates the two classes. Changing the pattern so that any run of non-space characters is a token keeps them:
-
-```python
-CountVectorizer(token_pattern=r"\S+")
-```
-
-The rest of this note uses joined strings, because they are easier to show.
-
-## Bag of Words
-
-A bag of words represents each message by how often each word appears in it. Word order is lost, which is where the name comes from. `CountVectorizer` builds a vocabulary of every word in the training messages, gives each word a column, and turns each message into a row of counts. Here it is with two messages and `ngram_range=(1, 2)`, which is explained below:
-
-| | call | call free | cash | entri | entri win | free | free entri | free now | now | win | win cash |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| `free entri win cash` | 0 | 0 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
-| `call free now` | 1 | 1 | 0 | 0 | 0 | 1 | 0 | 1 | 1 | 0 | 0 |
-
-```python
-from sklearn.feature_extraction.text import CountVectorizer
-
-vectorizer = CountVectorizer(min_df=1, max_df=0.9, ngram_range=(1, 2))
-X = vectorizer.fit_transform(df["message"])
-vectorizer.get_feature_names_out()   # the vocabulary, one name per column
-```
-
-### N-grams
-
-An n-gram is a sequence of n adjacent tokens. Unigrams are single words and bigrams are pairs. `ngram_range=(1, 2)` creates a column for every unigram and every bigram. Bigrams keep some of the word order: `free entri` is a column of its own, separate from `free` and `entri`.
-
-The cost is the number of columns. On this dataset, unigrams alone give 7,101 columns, and unigrams plus bigrams give 37,069.
-
-### Sparse matrices
-
-Each message uses only a few of the 37,069 columns, so almost every value in the matrix is 0. Of its 5,169 × 37,069 cells, 80,181 are non-zero, which is 0.04%. `fit_transform` returns a scipy sparse matrix, which stores only the non-zero values and their positions. A dense array of the same shape would need about 1.5 GB as 64-bit integers.
-
-### min_df and max_df
-
-Both remove columns based on document frequency: the number of messages a term appears in.
-
-| Parameter | Removes terms that appear in | Typical use |
-|---|---|---|
-| `min_df=5` | fewer than 5 messages | Drops typos, names and one-off words |
-| `min_df=0.01` | less than 1% of messages | The same, as a fraction |
-| `max_df=0.9` | more than 90% of messages | Drops words common in this dataset, like a stop word list built from the data |
-
-An integer is a number of messages and a float is a fraction. `min_df=1` keeps every term. On this dataset, `max_df=0.9` removes nothing either: the most common term, `call`, appears in 9.7% of messages. Raising `min_df` to 5 reduces the columns from 37,069 to 1,881.
-
-### Fitting on training data only
-
-`fit` reads the training messages and creates one column for each word it finds. After that, the list of columns does not change. A word that was not in the training messages has no column, and `transform` ignores it, so a word that spammers start using after training has no effect on the prediction. The vectorizer belongs to the model and has to be fitted on the training set only, as described in [Splitting Without Leakage](/collections/ai-security/ai-datasets#splitting-without-leakage).
-
 ## TF-IDF
 
 Bag-of-words counts have two problems on longer texts, such as reviews:
@@ -287,21 +282,19 @@ Bag-of-words counts have two problems on longer texts, such as reviews:
 - **Length**: a review of 2,000 words has larger counts than a review of 50 words that says the same thing.
 - **Common words**: words that appear in most documents, such as `movi` and `film` in movie reviews, get large counts and carry little information about the label.
 
-TF-IDF (term frequency, inverse document frequency) corrects both. Each value is the term's count in the document (TF) multiplied by a weight for the term (IDF), which is low for terms that appear in many documents and high for terms that appear in few. scikit-learn computes the IDF as
+TF-IDF (term frequency, inverse document frequency) corrects both. Each value is the term's count in the document (TF) multiplied by a weight for the term (IDF), which is low for terms that appear in many documents and high for terms that appear in few.
 
-$$
-\text{idf}(t) = \ln\frac{1 + n}{1 + \text{df}(t)} + 1
-$$
-
-where $$n$$ is the number of documents and $$\text{df}(t)$$ is the number of documents that contain the term $$t$$. The added 1s keep the IDF above 0, so a term that appears in every document still has a small weight. With 4 documents:
+The IDF of a term depends on how many of the training documents contain it. A term in every document gets a weight of 1, so it still counts, and the weight rises as fewer documents contain the term. With 4 documents:
 
 | Term appears in | IDF |
 |---|---|
-| 4 of 4 documents | $$\ln(5/5) + 1 = 1.00$$ |
-| 2 of 4 documents | $$\ln(5/3) + 1 = 1.51$$ |
-| 1 of 4 documents | $$\ln(5/2) + 1 = 1.92$$ |
+| 4 of 4 documents | 1.00 |
+| 2 of 4 documents | 1.51 |
+| 1 of 4 documents | 1.92 |
 
-After the multiplication, each row is divided by its [L2 norm](/collections/ai-security/ai-math#norms-the-size-of-a-vector), so every document's row has length 1, however many words the document has. That corrects the length problem.
+The weight rises slowly. With 1,000 documents, a term that appears in only one of them gets an IDF of 7.2, so the rarest term weighs about 7 times as much as a term in every document, although it is 1,000 times rarer. The formula uses a logarithm, and scikit-learn computes it for you.
+
+After the multiplication, each row is scaled so that its size, measured as its [L2 norm](/collections/ai-security/ai-math#norms-the-size-of-a-vector), is 1. A 2,000-word review and a 50-word review that use their words in the same proportions end up with the same row. That corrects the length problem.
 
 ```python
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -313,14 +306,9 @@ X_test = vectorizer.transform(test_texts)
 
 `TfidfVectorizer` takes the same `ngram_range`, `min_df` and `max_df` parameters as `CountVectorizer`. `fit` learns the vocabulary and the IDF of every term from the training documents, and `transform` uses both unchanged on new documents.
 
-`sublinear_tf=True` replaces each count with $$1 + \ln(\text{count})$$. A word used 10 times in one review then counts 3.3 times as much as a word used once, instead of 10 times, so one long review that repeats a word does not dominate that word's column.
+`sublinear_tf=True` replaces each count with a smaller number that grows slowly: a count of 1 stays 1, 10 becomes 3.3, and 100 becomes 5.6. A word used 10 times in one review then counts 3.3 times as much as a word used once, instead of 10 times, so one long review that repeats a word does not dominate that word's column.
 
-| | Counts (`CountVectorizer`) | TF-IDF (`TfidfVectorizer`) |
-|---|---|---|
-| Values | Whole numbers | Decimals, each row of length 1 |
-| Documents of very different lengths | Longer documents get larger values | Every document on the same scale |
-| Terms common to most documents | The same weight as other terms | A lower weight |
-| Designed for | [Multinomial Naive Bayes](/collections/ai-security/ai-naive-bayes#multinomial-naive-bayes), which models word counts | Linear models such as [logistic regression](/collections/ai-security/ai-logistic-regression) |
+Which one to use depends on the model. [Multinomial Naive Bayes](/collections/ai-security/ai-naive-bayes#multinomial-naive-bayes) is built to model how often each word appears, so it takes the counts from `CountVectorizer` as they are. Linear models such as [logistic regression](/collections/ai-security/ai-logistic-regression) usually get TF-IDF, which fixes the length and common-word problems before the model sees the data.
 
 ## Preparing New Messages
 

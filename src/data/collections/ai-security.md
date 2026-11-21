@@ -62,6 +62,9 @@ entries:
   - id: ai-020
     post: ai-llm-attack-tools
     section: "LLM Attacks"
+  - id: ai-022
+    post: ai-data-pipeline
+    section: "Data Attacks"
   - id: ai-024
     post: ai-application-system
     section: "Application and System Attacks"

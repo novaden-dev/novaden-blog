@@ -44,52 +44,38 @@ The line misses every point by a little. The vertical gap between a measured val
 
 ### Ordinary least squares
 
-"Best" needs a definition. Ordinary least squares (OLS) defines it as the line with the smallest sum of squared residuals:
+"Best" needs a definition. Ordinary least squares (OLS) defines it as the line with the smallest total of squared misses. The name describes the method read backwards:
 
-$$
-\text{SSE} = \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
-$$
+- **Squares**: for each point, take the residual (measured value minus predicted value) and square it.
+- **Least**: choose the line where those squares add up to the smallest total.
+- **Ordinary**: the plain version, where every point counts equally and nothing else is added to the total. Variants such as weighted least squares or Ridge regression change one of those two things.
 
-For the fitted line, the residuals are $$+4, -8, +10, -12, +6$$, so $$\text{SSE} = 16 + 64 + 100 + 144 + 36 = 360$$. Any other slope or intercept gives a larger number.
+The total is called the sum of squared errors (SSE):
 
-The residuals are squared for three reasons:
+```text
+SSE = (measured - predicted)² for every point, added up
+```
 
-- **Signs cancel otherwise**: the raw residuals here add up to exactly 0, and so would those of many bad lines. Squaring makes every miss count as positive.
+For the fitted line, the residuals are +4, -8, +10, -12 and +6 ms:
+
+| Residual | +4 | -8 | +10 | -12 | +6 | Total |
+|---|---|---|---|---|---|---|
+| Squared | 16 | 64 | 100 | 144 | 36 | **360** |
+
+Any other slope or intercept gives a total above 360, so $$\hat{y} = 4.2x + 74$$ is the best line by this definition.
+
+The residuals are squared for two reasons:
+
+- **Signs cancel otherwise**: the raw residuals here add up to exactly 0, as would those of many bad lines. A miss of +4 and a miss of -4 would count as no miss at all. Squaring makes every miss positive.
 - **Large misses cost more**: a miss of 12 ms costs 144, while two misses of 6 ms cost 72 together. The line is pulled hardest toward the points it misses most.
-- **There is a formula for the answer**: the squared version can be solved directly, with no trial and error.
 
 The squaring has a downside. One extreme measurement, such as a 2,000 ms response caused by a garbage-collection pause, pulls the whole line toward itself. Remove or investigate outliers before fitting.
 
-### The formula
+### Computing the line
 
-For one feature, OLS reduces to two lines that reuse the covariance and variance from [Math for Machine Learning](/collections/ai-security/ai-math):
+You do not compute the line by hand. scikit-learn's `LinearRegression().fit(X, y)` solves for the weights with the smallest SSE directly, in one calculation, with no trial and error.
 
-$$
-w = \frac{\operatorname{Cov}(x, y)}{\operatorname{Var}(x)}
-\qquad
-b = \bar{y} - w \bar{x}
-$$
-
-Worked through for the load tests, with means $$\bar{x} = 30$$ and $$\bar{y} = 200$$:
-
-| $$x$$ | $$y$$ | $$x - \bar{x}$$ | $$y - \bar{y}$$ | $$(x - \bar{x})(y - \bar{y})$$ | $$(x - \bar{x})^2$$ |
-|---|---|---|---|---|---|
-| 10 | 120 | -20 | -80 | 1600 | 400 |
-| 20 | 150 | -10 | -50 | 500 | 100 |
-| 30 | 210 | 0 | 10 | 0 | 0 |
-| 40 | 230 | 10 | 30 | 300 | 100 |
-| 50 | 290 | 20 | 90 | 1800 | 400 |
-| | | | **Sum** | **4200** | **1000** |
-
-$$
-w = \frac{4200}{1000} = 4.2
-\qquad
-b = 200 - 4.2 \times 30 = 74
-$$
-
-The slope is how much $$x$$ and $$y$$ move together, divided by how much $$x$$ moves on its own. The intercept places the line so that it passes through the point of averages, $$(\bar{x}, \bar{y}) = (30, 200)$$.
-
-With several features, the same calculation is written with matrices: $$\mathbf{w} = (X^T X)^{-1} X^T \mathbf{y}$$, where each row of $$X$$ is one example. On millions of rows, inverting that matrix gets expensive, so large models are fitted with the training loop from [Supervised Learning](/collections/ai-security/ai-supervised-learning) instead: start with random weights and repeatedly step them in the direction that lowers the squared error. That method is called gradient descent, and it converges to the same line.
+On millions of rows, that direct calculation gets slow, so large models use the training loop from [Supervised Learning](/collections/ai-security/ai-supervised-learning) instead: start with random weights, check whether the SSE goes down when a weight moves up or down a little, move every weight that way, and repeat until the SSE stops going down. That method is called gradient descent, and it reaches the same line.
 
 ## Several Features
 
@@ -117,19 +103,24 @@ The URL classifier in the supervised learning note is logistic regression: the s
 
 Two numbers summarize how well the line fits.
 
-**RMSE** (root mean squared error) is the typical size of a miss, in the same unit as the label:
+**RMSE** (root mean squared error) is the typical size of a miss, in the same unit as the label. It comes from the SSE in three steps:
 
-$$
-\text{RMSE} = \sqrt{\frac{\text{SSE}}{n}} = \sqrt{\frac{360}{5}} \approx 8.5 \text{ ms}
-$$
+1. Take the SSE: 360.
+2. Divide by the number of points to get the average squared miss: 360 ÷ 5 = 72.
+3. Take the square root, which undoes the squaring and brings the number back to milliseconds: √72 ≈ 8.5 ms.
 
-**R²** (R-squared) is the share of the variation in $$y$$ that the model explains, from 0 to 1. It compares the model's error with the error of always predicting the mean:
+The line's predictions are typically about 8.5 ms off.
 
-$$
-R^2 = 1 - \frac{\text{SSE}}{\sum (y_i - \bar{y})^2} = 1 - \frac{360}{18000} = 0.98
-$$
+RMSE gives the size of a typical miss, but not whether that size is good. A miss of 8.5 ms is small when response times range from 120 to 290 ms, and large when they range from 200 to 210 ms. **R²** (R-squared) answers that with a score from 0 to 1, by comparing the line with a guess that knows nothing: it ignores the user count and always predicts the average of the five measurements, (120 + 150 + 210 + 230 + 290) ÷ 5 = 200 ms. That guess misses by much more:
 
-User count explains 98% of the variation in response time across these load tests. An R² of 0 would mean the line predicts no better than guessing 200 ms every time.
+| Measured | 120 | 150 | 210 | 230 | 290 | Total |
+|---|---|---|---|---|---|---|
+| Miss against 200 | -80 | -50 | +10 | +30 | +90 | |
+| Squared | 6400 | 2500 | 100 | 900 | 8100 | **18000** |
+
+Using the user count brings the total from 18,000 down to the line's SSE of 360. That removes 98% of the error, so R² is 0.98. R² is the share of the know-nothing guess's error that the model removes. An R² of 1 means no error is left, 0 means the line does no better than the average, and a value below 0, which can happen on a test set, means it does worse.
+
+User count explains 98% of the variation in response time across these load tests.
 
 Both numbers should be measured on a test set the model did not train on, for the same overfitting reasons as in classification.
 

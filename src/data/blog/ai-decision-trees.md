@@ -17,85 +17,60 @@ Trees are easy to read. A trained tree can be printed and checked line by line, 
 
 ## The Example Data
 
-An EDR (endpoint detection and response) tool recorded 10 PowerShell executions, and an analyst labeled each one. Three yes/no features describe each run:
+An EDR (endpoint detection and response) tool recorded 10 PowerShell runs, where a run is one time PowerShell was started on a machine, and an analyst labeled each run as malicious or benign. Three yes/no features describe each run:
 
-| # | Encoded command (`-enc`) | Downloads from the internet | Launched by an Office app | What it was | Label |
-|---|---|---|---|---|---|
-| 1 | yes | yes | yes | Word macro running an encoded download | malicious |
-| 2 | yes | yes | no | Scheduled task running an encoded download | malicious |
-| 3 | yes | no | yes | Excel macro running an encoded command | malicious |
-| 4 | no | yes | no | Plain script fetching a second-stage payload | malicious |
-| 5 | yes | no | no | Management tool running an encoded config script | benign |
-| 6 | no | yes | no | Admin script updating a PowerShell module | benign |
-| 7 | no | yes | no | Script downloading a vendor installer | benign |
-| 8 | no | no | no | Local admin script | benign |
-| 9 | no | no | no | Local admin script | benign |
-| 10 | no | no | no | Local admin script | benign |
+![Ten cards, one per PowerShell run, each listing encoded command, downloads from the internet and launched by an Office app, what the run was, and its label. Run 1: yes, yes, yes, Word macro running an encoded download, malicious. Run 2: yes, yes, no, scheduled task running an encoded download, malicious. Run 3: yes, no, yes, Excel macro running an encoded command, malicious. Run 4: no, yes, no, plain script fetching a second-stage payload, malicious. Run 5: yes, no, no, management tool running an encoded config script, benign. Run 6: no, yes, no, admin script updating a PowerShell module, benign. Run 7: no, yes, no, script downloading a vendor installer, benign. Runs 8, 9 and 10: no, no, no, local admin script, benign.](/images/ai-decision-trees/runs.svg)
 
 No single feature separates malicious from benign. Encoded commands are mostly malicious, but run 5 is a management tool. Downloads are mixed. The tree has to combine questions.
 
+![The 10 runs split by each feature on its own, as numbered dots colored malicious or benign. Encoded command: yes holds runs 1, 2 and 3 (malicious) and 5 (benign); no holds 4 (malicious) and 6 to 10 (benign). Both sides are mixed. Downloads from the internet: yes holds 1, 2 and 4 (malicious) and 6 and 7 (benign); no holds 3 (malicious) and 5, 8, 9 and 10 (benign). Both sides are mixed. Launched by an Office app: yes holds 1 and 3, both malicious, so that side is pure; no holds 2 and 4 (malicious) and 5 to 10 (benign).](/images/ai-decision-trees/feature-splits.svg)
+
 ## Measuring a Mixed Group
 
-At every step, the tree looks for the question that splits the current group into groups that are as close to all-malicious or all-benign as possible. That needs a number for how mixed a group is, called impurity. Two measures are used.
+At every step, the tree looks for the question that splits the current group into groups that are as close to all-malicious or all-benign as possible. To compare questions, it needs a score for how mixed a group is, called impurity. A group where every run has the same label scores 0, and the score rises as the labels get more mixed. scikit-learn, the standard Python ML library, offers two impurity scores: Gini impurity and entropy.
 
 ### Gini impurity
 
-Gini impurity is the chance that two runs picked at random from the group (with replacement) have different labels. For a group where a share $$p_k$$ of the runs belongs to class $$k$$:
+Gini impurity is the chance that two runs picked at random from the group have different labels.
 
-$$
-\text{Gini} = 1 - \sum_k p_k^2
-$$
+- A group of only malicious runs scores 0: any two runs you pick match.
+- A group that is half malicious and half benign scores 0.5, the highest possible with two labels: two picks disagree half the time.
+- The full dataset, 4 malicious and 6 benign, scores 0.48. That is close to the highest score, because the labels are well mixed.
 
-The full dataset is 4 malicious out of 10, so $$p_{\text{mal}} = 0.4$$ and $$p_{\text{ben}} = 0.6$$:
-
-$$
-\text{Gini} = 1 - (0.4^2 + 0.6^2) = 1 - (0.16 + 0.36) = 0.48
-$$
-
-A pure group, all malicious or all benign, scores 0. With two classes, the worst case is a 50/50 mix at 0.5.
+Lower is better. The tree looks for the question whose groups have the lowest Gini.
 
 ### Entropy
 
-Entropy measures the same thing in bits, using the base-2 logarithm from [Math for Machine Learning](/collections/ai-security/ai-math):
+Entropy measures the same mixing as how unpredictable a run's label is. Pick a run from the group at random and guess its label before looking. In a group of only malicious runs, the guess is always right, so the entropy is 0. In a half-and-half group, the guess is a coin flip, the most unpredictable case, and the entropy is 1, the highest score with two labels.
 
-$$
-H = -\sum_k p_k \log_2 p_k
-$$
-
-For the full dataset:
-
-$$
-H = -(0.4 \log_2 0.4 + 0.6 \log_2 0.6) = 0.529 + 0.442 = 0.971
-$$
-
-Entropy is the average number of yes/no questions needed to learn a run's label once you know which group it is in. A pure group needs none, so it scores 0. A 50/50 group needs a full question, so it scores 1.
+The full dataset, 4 malicious and 6 benign, has an entropy of 0.97: almost as unpredictable as a coin flip. The formula uses logarithms, and scikit-learn computes it for you.
 
 ![Gini impurity and entropy plotted against the share of a node that is malicious. Both are 0 at 0% and 100%, and peak at 50%: Gini at 0.5, entropy at 1.0. A dashed line at 40% marks the root node at Gini 0.48 and entropy 0.97.](/images/ai-decision-trees/impurity.svg)
 
-The two curves have the same shape, and in practice they nearly always choose the same splits. Gini is the default in scikit-learn, the standard Python ML library, because it skips the logarithm and is faster to compute.
+The two curves have the same shape, and in practice they nearly always choose the same splits. Gini is the default in scikit-learn because it has no logarithm and is faster to compute.
 
 ## Choosing a Split
 
-### Information gain
+Training a tree means choosing which question to ask at each step. The tree starts with all 10 runs and one decision: which of the three questions to ask first. Every later question is asked inside one of the groups that this first question creates. This section shows how the tree makes that choice with the impurity scores from [Measuring a Mixed Group](#measuring-a-mixed-group), and how it does the same for numeric features such as command length.
 
-Information gain is how much a split lowers entropy. It is the parent group's entropy minus the average entropy of the child groups, weighted by how many runs each child holds:
+### Scoring a question
 
-$$
-\text{IG} = H(\text{parent}) - \sum_{\text{children}} \frac{n_{\text{child}}}{n_{\text{parent}}} H(\text{child})
-$$
+The tree tries each of the three questions, splits the 10 runs by it, and gives the question a score: how mixed the two groups are after the split. The question whose groups are least mixed is the one the tree asks. These are the three splits drawn in [The Example Data](#the-example-data).
 
-For the question "launched by Office?":
+Each group has its own Gini score, and the question's score is their average weighted by size: each group's Gini is multiplied by its share of the runs, and the results are added. A group holding 8 of the 10 runs then counts for 80% of the score. Without the weights, a question that splits off a single run into a pure group would score well even though the other 9 runs stay as mixed as before.
 
-- **Yes**: runs 1 and 3, both malicious. Pure, so $$H = 0$$.
-- **No**: the other 8 runs, 2 malicious and 6 benign. $$H = -(0.25 \log_2 0.25 + 0.75 \log_2 0.75) = 0.811$$.
+For "launched by Office?":
 
-$$
-\text{IG} = 0.971 - \left(\frac{2}{10} \times 0 + \frac{8}{10} \times 0.811\right) = 0.971 - 0.649 = 0.322
-$$
+- **Before**: all 10 runs, Gini 0.48.
+- **Yes**: runs 1 and 3, both malicious. Gini 0. This group holds 2 of the 10 runs.
+- **No**: the other 8 runs, 2 malicious and 6 benign. Gini 0.375, still mixed. This group holds 8 of the 10 runs.
+- **After**: most of the runs (8 of 10) are in the group scoring 0.375, and the rest are in the group scoring 0. Weighted by size, that averages to 0.30.
 
-The same calculation with Gini uses the weighted Gini of the children, and the split with the lowest weighted Gini wins. Running both for every feature:
+The score drops from 0.48 to 0.30. The question with the lowest score after the split wins.
 
-| Question | Yes group | No group | Weighted Gini | Information gain |
+The example above uses Gini. Information gain is the same comparison done with entropy, written as a drop: entropy before the split minus entropy after it. For the Office question it is 0.97 - 0.65 = 0.32. A bigger drop is better, so the question with the highest information gain wins. Every question starts from the same entropy before the split, so the question with the biggest drop is also the one with the least mixed groups after it.
+
+| Question | Yes group | No group | Gini after the split | Information gain |
 |---|---|---|---|---|
 | Encoded command? | 4 runs, 3 malicious | 6 runs, 1 malicious | 0.317 | 0.256 |
 | Downloads from the internet? | 5 runs, 3 malicious | 5 runs, 1 malicious | 0.400 | 0.125 |
@@ -119,7 +94,7 @@ After the first split, the tree treats each child group as a new dataset and rep
 
 The "launched by Office" group is already pure. The other 8 runs split on "downloads from the internet?" (information gain 0.311), which separates out 4 benign runs that download nothing. The remaining 4 runs split on "encoded command?":
 
-![The finished tree. Launched by Office? Yes leads to Malicious, 2 of 2. No leads to Downloads from internet? No leads to Benign, 4 of 4. Yes leads to Encoded command? Yes leads to Malicious, 1 of 1. No leads to Benign, 2 of 3, marked impure.](/images/ai-decision-trees/tree.svg)
+![The finished tree, with the runs that reach each node as numbered dots colored malicious or benign. Launched by Office? holds all 10 runs. Yes leads to a malicious leaf with runs 1 and 3, 2 of 2. No leads to Downloads from the internet? with runs 2, 4 and 5 to 10. Its no branch is a benign leaf with runs 5, 8, 9 and 10, 4 of 4. Its yes branch is Encoded command? with runs 2, 4, 6 and 7. Yes leads to a malicious leaf with run 2, 1 of 1. No leads to a benign leaf with runs 4, 6 and 7, 2 of 3, marked impure because run 4 is malicious.](/images/ai-decision-trees/decision-tree.svg)
 
 A new execution is classified by walking from the top. PowerShell launched by `explorer.exe` that downloads a file with an encoded command goes no, yes, yes, and ends at malicious.
 

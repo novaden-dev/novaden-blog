@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="700" height="400" rx="12" fill="#f8fafc"/>
+
+  <!-- attack labels, top row -->
+  <text x="125" y="58" text-anchor="middle" font-size="13" fill="#b91c1c">data poisoning</text>
+  <text x="350" y="58" text-anchor="middle" font-size="13" fill="#b91c1c">storage tampering</text>
+  <text x="575" y="58" text-anchor="middle" font-size="13" fill="#b91c1c">processing manipulation</text>
+
+  <!-- top row: data stages -->
+  <rect x="40" y="70" width="170" height="64" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="125" y="98" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">1. Collection</text>
+  <text x="125" y="119" text-anchor="middle" font-size="12" fill="#475569">mail and user reports</text>
+
+  <rect x="265" y="70" width="170" height="64" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="350" y="98" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">2. Storage</text>
+  <text x="350" y="119" text-anchor="middle" font-size="12" fill="#475569">object storage bucket</text>
+
+  <rect x="490" y="70" width="170" height="64" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="575" y="98" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">3. Processing</text>
+  <text x="575" y="119" text-anchor="middle" font-size="12" fill="#475569">labels and features</text>
+
+  <line x1="210" y1="102" x2="263" y2="102" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="435" y1="102" x2="488" y2="102" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="575" y1="134" x2="575" y2="254" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- bottom row: model stages, right to left -->
+  <rect x="490" y="256" width="170" height="64" rx="8" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="575" y="284" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">4. Modeling</text>
+  <text x="575" y="305" text-anchor="middle" font-size="12" fill="#475569">training, model file</text>
+
+  <rect x="265" y="256" width="170" height="64" rx="8" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="350" y="284" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">5. Deployment</text>
+  <text x="350" y="305" text-anchor="middle" font-size="12" fill="#475569">scoring service</text>
+
+  <rect x="40" y="256" width="170" height="64" rx="8" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="125" y="284" text-anchor="middle" font-size="15" font-weight="600" fill="#1e293b">6. Monitoring</text>
+  <text x="125" y="305" text-anchor="middle" font-size="12" fill="#475569">metrics, retraining</text>
+
+  <line x1="490" y1="288" x2="437" y2="288" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="265" y1="288" x2="212" y2="288" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- retraining loop -->
+  <line x1="125" y1="256" x2="125" y2="136" stroke="#475569" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="135" y="200" font-size="13" fill="#475569">new reports feed</text>
+  <text x="135" y="216" font-size="13" fill="#475569">the next training run</text>
+
+  <!-- attack labels, bottom row -->
+  <text x="575" y="342" text-anchor="middle" font-size="13" fill="#b91c1c">model poisoning</text>
+  <text x="350" y="342" text-anchor="middle" font-size="13" fill="#b91c1c">deployment injection</text>
+  <text x="125" y="342" text-anchor="middle" font-size="13" fill="#b91c1c">retraining exploitation</text>
+
+  <text x="350" y="378" text-anchor="middle" font-size="12" fill="#64748b">Red: the attack that targets each stage. Light boxes work on data, dark boxes on the trained model.</text>
+</svg>

@@ -177,20 +177,53 @@ An underfit classifier that only sees URL length cannot separate phishing from l
 
 ## Regularization
 
-Regularization reduces overfitting by adding a penalty on large weights to the loss. Training then has to balance fitting the data against keeping the weights small:
+Regularization reduces overfitting by making large weights cost something during training. Without it, training judges a model only on its mistakes. With it, training adds a second charge for the size of the weights:
 
-$$
-\text{total loss} = \text{prediction loss} + \lambda \cdot \text{penalty}(\mathbf{w})
-$$
+```text
+training score = mistakes on the training data + strength × size of the weights
+```
 
-$$\lambda$$ (lambda) sets the strength. At $$\lambda = 0$$ there is no regularization. If $$\lambda$$ is too large, the weights are forced so close to zero that the model underfits.
+- **Mistakes on the training data**: the normal loss, which grows the more often and the more confidently the model is wrong.
+- **Size of the weights**: one number that grows as the weights grow. [L1 and L2](#l1-and-l2) below are two ways to measure it.
+- **Strength**: a setting you choose, which decides how much the size of the weights counts. Books and papers write it as λ (lambda).
 
-The penalty is a norm of the weight vector. For weights $$\mathbf{w} = (3, -0.5, 0.01)$$:
+Training looks for the weights with the lowest training score. Take two possible models:
 
-| Type | Penalty | For (3, -0.5, 0.01) | Effect |
+| | Mistakes | Size of the weights |
+|---|---|---|
+| Model A, which memorized coincidences | 10 | 50 |
+| Model B | 12 | 5 |
+
+| Strength | Model A's score | Model B's score | Training picks |
 |---|---|---|---|
-| L1 (lasso) | $$\sum \lvert w_i \rvert$$ | $$3 + 0.5 + 0.01 = 3.51$$ | Pushes small weights to exactly zero, which removes those features from the model |
-| L2 (ridge) | $$\sum w_i^2$$ | $$9 + 0.25 + 0.0001 = 9.25$$ | Shrinks all weights, and punishes the large ones hardest because of the square |
+| 0 (no regularization) | 10 + 0 × 50 = 10 | 12 + 0 × 5 = 12 | A |
+| 0.1 | 10 + 0.1 × 50 = 15 | 12 + 0.1 × 5 = 12.5 | B |
+
+With regularization, training accepts a few more mistakes on the training data in exchange for much smaller weights. If the strength is set too high, the size of the weights outweighs the mistakes, every weight is pushed close to zero, and the model underfits. scikit-learn's `LogisticRegression` sets the strength with `C`, which works the other way round: a smaller `C` means stronger regularization (see [Logistic Regression](/collections/ai-security/ai-logistic-regression#training)).
+
+### A pattern versus a coincidence
+
+Suppose the URL classifier also has a feature for the word "update" in the URL. In the training data, by chance, it appears in 3 phishing URLs and in no legitimate ones. Domain age, on the other hand, separates hundreds of training URLs.
+
+Without regularization, training gives "update" a large positive weight. A larger weight keeps lowering the loss on those 3 rows, and no training row shows it causing a mistake. After deployment, a legitimate software page such as `https://vendor.example/software/update` gets blocked.
+
+With regularization, every bit of weight adds to the training score, so a large weight has to remove more in mistakes than it adds in weight size:
+
+| Feature | Training rows a large weight gets right | Result |
+|---|---|---|
+| Domain age | Hundreds | The gain is far larger than the penalty, so the weight stays large |
+| "update" in the URL | 3 | The gain is smaller than the penalty, so the weight stays small |
+
+The model keeps large weights only for patterns that many training rows support. A coincidence in a few rows is the kind of quirk an overfit model learns, and regularization keeps its weight small.
+
+### L1 and L2
+
+L1 and L2 are two ways to measure the size of the weights. For a model with the three weights 3, -0.5 and 0.01:
+
+| Type | How it measures the size | For 3, -0.5 and 0.01 | Effect |
+|---|---|---|---|
+| L1 (lasso) | Adds up the weights, ignoring minus signs | 3 + 0.5 + 0.01 = 3.51 | Pushes small weights to exactly zero, which removes those features from the model |
+| L2 (ridge) | Squares each weight, then adds them up | 9 + 0.25 + 0.0001 = 9.25 | Shrinks all weights. Squaring turns the 3 into 9, so large weights are pushed down hardest |
 
 In the URL classifier, L1 regularization would likely set the weight on URL length to zero if length adds little once domain age and the IP feature are known. That doubles as feature selection: the features with non-zero weights are the ones the model needs.
 
@@ -202,7 +235,7 @@ A single 80/20 split gives one test score, and that score depends on which URLs 
 
 Every example is used for testing exactly once. The average of the five scores is a steadier estimate than any single split, and a large spread between rounds is a warning that the model's performance depends heavily on which data it sees.
 
-Cross-validation is also how the regularization strength $$\lambda$$ gets chosen: try several values, cross-validate each, and keep the value with the best average score.
+Cross-validation is also how the regularization strength gets chosen: try several values, cross-validate each, and keep the value with the best average score.
 
 ## Class Imbalance
 

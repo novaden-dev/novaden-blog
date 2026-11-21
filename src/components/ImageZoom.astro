@@ -48,7 +48,24 @@
         const full = overlay.querySelector("img");
         full.src = image.currentSrc || image.src;
         full.alt = image.alt || "";
+        // An image that would shrink below 60% to fit the screen, such as a
+        // large mind map, opens at its full size and the overlay scrolls in
+        // both directions, starting from the center.
+        const fit = Math.min(
+          window.innerWidth / image.naturalWidth,
+          window.innerHeight / image.naturalHeight
+        );
+        const large = fit < 0.6;
+        overlay.classList.toggle("zoom--large", large);
+        full.style.width = large ? `${image.naturalWidth}px` : "";
         overlay.hidden = false;
+        if (large) {
+          // The image has no height until it is decoded.
+          full.decode().catch(() => {}).then(() => {
+            overlay.scrollLeft = (overlay.scrollWidth - overlay.clientWidth) / 2;
+            overlay.scrollTop = (overlay.scrollHeight - overlay.clientHeight) / 2;
+          });
+        }
         document.documentElement.style.overflow = "hidden";
       });
     }
